@@ -1,5 +1,7 @@
 -- KoalaSwap Core Schema v1.0  (PostgreSQL ≥13)
 -- ===============================================================
+-- 启用 UUID 生成扩展
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- 1. ENUM 类型 ---------------------------------------------------
 CREATE TYPE product_condition AS ENUM ('NEW','LIKE_NEW','GOOD','FAIR','POOR');

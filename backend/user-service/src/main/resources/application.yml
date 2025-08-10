@@ -1,12 +1,41 @@
+# application.yml （默认：读取环境变量，适合在 Docker Compose 中运行）
+server:
+  port: 8080  # 你的 compose 映射了 8080:8080，所以这里保持 8080
+
 spring:
   datasource:
+    # 直接吃环境变量（由 docker-compose 注入）
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
+
   jpa:
     hibernate:
-      ddl-auto: update
+      # 你已经用 SQL 脚本建好表结构了，这里建议用 none（不让 JPA 擅自改表）
+      ddl-auto: none
     show-sql: true
+    properties:
+      hibernate.format_sql: true
 
-server:
-  port: 8080
+  # 邮件发送配置（Google Gmail SMTP）
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${APP_MAIL_USERNAME}   # 你的 Gmail 地址
+    password: ${APP_MAIL_PASSWORD}   # Gmail 应用专用密码
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# 自定义配置（JWT 等）
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET:CHANGE_ME_TO_A_RANDOM_256bit_STRING}
+    accessTtlMs: ${APP_JWT_ACCESS_TTL_MS:900000} # 15分钟
+  mail:
+    from: ${APP_MAIL_FROM:${APP_MAIL_USERNAME}} # 发件人地址（默认=用户名）
+  urls:
+    verifyRedirectBase: http://localhost:5173/verified

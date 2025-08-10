@@ -1,0 +1,37 @@
+# application-local.yml
+server:
+  port: 8080  # 你的 compose 映射了 8080:8080，所以这里保持 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:15433/koalaswap_dev
+    username: koalaswap
+    password: secret
+
+  jpa:
+    hibernate:
+      # 你已经用 SQL 脚本建好表结构了，这里建议用 none（不让 JPA 擅自改表）
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate.format_sql: true
+
+  # 邮件发送配置（Google Gmail SMTP）
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: weihaimoau@gmail.com        # ← 直接写
+    password: mjokiewawgsyzayu
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+# 自定义配置（JWT 等）
+app:
+  jwt:
+    secret: "p9P2JYpN4mVJXWm7XyQw6kBsF3uCz7rGQh5M8tQ2nA1rS6vY0kL9dH4eT8uZ3xB1"
+    accessTtlMs: 900000 # 15分钟
+  mail:
+    from: weihaimoau@gmail.com            # ← 直接写
+  urls:
+    verifyRedirectBase: http://localhost:5173/verified

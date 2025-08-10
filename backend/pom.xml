@@ -1,32 +1,31 @@
-<!-- koalaswap/backend/pom.xml -->
+<!-- backend/pom.xml：聚合 POM，不产出可执行 jar，只用来统一管理版本/模块 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- 所有后端模块共享的坐标 -->
+    <!-- 你自己的坐标（groupId 可统一用 com.koalaswap） -->
     <groupId>com.koalaswap</groupId>
     <artifactId>backend</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <packaging>pom</packaging>
+    <packaging>pom</packaging> <!-- 关键：聚合工程 -->
 
-    <!-- 统一继承 Spring Boot Parent，集中管理版本 -->
+    <!-- 统一继承 Spring Boot 的依赖管理（不用自己写每个依赖的版本号） -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.3.0</version>
-        <relativePath/>   <!-- 直接用中央仓库 -->
+        <relativePath/>
     </parent>
-
-    <!-- 子模块列表 -->
-    <modules>
-        <module>common</module>
-        <module>user-service</module>
-        <!-- 以后再加 card-service、order-service 等 -->
-    </modules>
 
     <properties>
         <java.version>21</java.version>
     </properties>
+
+    <!-- 声明子模块（顺序先 common，再各业务模块） -->
+    <modules>
+        <module>common</module>
+        <module>user-service</module>
+        <!-- 以后再加：listing-service / order-service / chat-service -->
+    </modules>
 </project>

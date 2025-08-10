@@ -10,24 +10,39 @@ services:
       POSTGRES_PASSWORD: secret
       POSTGRES_DB: koalaswap_dev
     ports:
-      - "6432:5432"
+      - "15433:5432"
     volumes:
       - koalaswap-db-data:/var/lib/postgresql/data   # ←★ 数据持久化
 
 
-  # ───────────────────── user-service ────────────────────
-  user-service:
-    build:
-      context: ../backend                 # 把 backend 整个目录作为上下文
-      dockerfile: user-service/Dockerfile # 明确使用子目录里的 Dockerfile
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/koalaswap_dev
-      SPRING_DATASOURCE_USERNAME: koalaswap
-      SPRING_DATASOURCE_PASSWORD: secret
-    depends_on:
-      - db
-    ports:
-      - "8080:8080"
+#  # ───────────────────── user-service ────────────────────
+#  user-service:
+#    build:
+#      context: ../backend                 # 把 backend 整个目录作为上下文
+#      dockerfile: user-service/Dockerfile # 使用子目录里的 Dockerfile
+#    # 如果想沿用根目录 .env，可加：
+#    # env_file:
+#    #   - ../.env
+#    environment:
+#      # 数据库（与 application.yml 对应）
+#      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+#      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+#      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+#
+#      # 邮件（Gmail SMTP）
+#      APP_MAIL_USERNAME: ${APP_MAIL_USERNAME}
+#      APP_MAIL_PASSWORD: ${APP_MAIL_PASSWORD}
+#
+#      # JWT（现在先占位，做到 JWT 再用）
+#      APP_JWT_SECRET: ${APP_JWT_SECRET}
+#
+#      # 可选：前端验证完成后的跳转基址
+#      APP_VERIFY_REDIRECT_BASE: ${APP_VERIFY_REDIRECT_BASE:-http://localhost:5173/verified}
+#    depends_on:
+#      - db
+#    ports:
+#      - "8080:8080"
+
 
 
 volumes:
