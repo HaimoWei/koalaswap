@@ -9,9 +9,11 @@ import com.koalaswap.user.dto.RegisterReq;
 import com.koalaswap.user.service.AuthService;
 import com.koalaswap.user.repository.UserRepository;
 import com.koalaswap.user.service.EmailVerificationService;
+import org.springframework.security.core.Authentication;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import java.util.UUID;
 
 /**
  * 认证相关的 HTTP API 入口。
@@ -39,6 +41,13 @@ public class AuthController {
     public ApiResponse<LoginRes> login(@Valid @RequestBody LoginReq req) {
         var profile = authService.login(req);
         return ApiResponse.ok(profile);
+    }
+
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout(Authentication auth) {
+        UUID uid = UUID.fromString(auth.getName()); // JwtAuthFilter里把 userId 放进了 Authentication
+        authService.logoutAll(uid);
+        return ApiResponse.ok(null);
     }
 
     /** GET /api/auth/verify?token=...  点击邮件里的链接后调用；校验并激活账号 */

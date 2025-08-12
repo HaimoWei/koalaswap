@@ -11,6 +11,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import com.koalaswap.common.security.TokenFreshnessFilter;
+import com.koalaswap.common.security.TokenVersionProvider;
+import com.koalaswap.common.security.JwtService;
 
 /**
  * 产品服务安全配置：
@@ -24,6 +27,14 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final SecurityJsonHandlers handlers;
+    private final JwtService jwtService;
+    private final TokenVersionProvider tokenVersionProvider;
+
+    @Bean
+    public TokenFreshnessFilter tokenFreshnessFilter() {
+        return new TokenFreshnessFilter(jwtService, tokenVersionProvider);
+    }
+
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -40,10 +51,9 @@ public class SecurityConfig {
                 )
                 .exceptionHandling(eh -> eh
                         .authenticationEntryPoint(handlers.json401())
-                        .accessDeniedHandler(handlers.json403())
-                )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
+                        .accessDeniedHandler(handlers.json403()))
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(tokenFreshnessFilter(), JwtAuthFilter.class);
         return http.build();
     }
 }

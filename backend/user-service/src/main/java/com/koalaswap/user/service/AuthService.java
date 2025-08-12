@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -131,8 +132,16 @@ public class AuthService {
             // 也可以保留中文提示，但前端要根据 message 文本判断就没那么稳
         }
 
-        String token = jwtService.generateAccessToken(u.getId(), u.getEmail());
+        int tokenVersion = repo.findTokenVersionById(u.getId()).orElse(1);
+        String token = jwtService.generateAccessToken(u.getId(), u.getEmail(), tokenVersion);
         return new LoginRes(token, toMyProfile(u));
+    }
+
+    @Transactional
+    public void logoutAll(UUID userId) {
+        int n = repo.bumpTokenVersion(userId);
+        if (n == 0) throw new IllegalArgumentException("用户不存在");
+        // 若你后面接入 Redis，可在这里顺手写入 Redis: user:pv:{uid} = newVersion
     }
 
 

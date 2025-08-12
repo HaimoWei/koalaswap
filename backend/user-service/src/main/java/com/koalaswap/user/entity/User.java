@@ -48,6 +48,7 @@ public class User {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
+    @Column
     private String bio;
 
     // 1) emailVerified：NOT NULL，默认 false。这里直接在 Java 层给默认值 false
@@ -70,5 +71,20 @@ public class User {
 
     @Column(name = "password_updated_at")
     private Instant passwordUpdatedAt;
+
+    // ★ 新增：令牌版本号（与表 token_version 对应）
+    @Column(name = "token_version", nullable = false)
+    private int tokenVersion = 1;
+
+    /** 确保插入时不触发 NOT NULL 约束（让 DB 默认值或这里的兜底生效） */
+    @PrePersist
+    void prePersist() {
+        if (passwordUpdatedAt == null) {
+            passwordUpdatedAt = Instant.now(); // 与 schema 默认 NOW() 对齐
+        }
+        if (ratingAvg == null) {
+            ratingAvg = BigDecimal.ZERO;
+        }
+    }
 
 }

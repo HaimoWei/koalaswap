@@ -22,4 +22,12 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     @Query("select u.passwordUpdatedAt from User u where u.id = :id")
     Optional<Instant> findPasswordUpdatedAt(@Param("id") UUID id);
+
+    @Query("select u.tokenVersion from User u where u.id = :id")
+    java.util.Optional<Integer> findTokenVersionById(@org.springframework.data.repository.query.Param("id") java.util.UUID id);
+
+    // backend/user-service/src/main/java/com/koalaswap/user/repository/UserRepository.java
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update User u set u.tokenVersion = u.tokenVersion + 1 where u.id = :id")
+    int bumpTokenVersion(@Param("id") UUID id);
 }

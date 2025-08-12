@@ -37,17 +37,6 @@ public class JwtService {
         this.accessTtlMs = accessTtlMs;
     }
 
-    /** 生成 Access Token：sub=用户ID，附带常用 email claim（仅 user-service 调用） */
-    public String generateAccessToken(UUID userId, String email) {
-        long now = System.currentTimeMillis();
-        return Jwts.builder()
-                .setSubject(userId.toString())                    // sub：用户ID
-                .setIssuedAt(new Date(now))                       // iat
-                .setExpiration(new Date(now + accessTtlMs))       // exp
-                .addClaims(Map.of("email", email))                // 自定义 claims
-                .signWith(key, SignatureAlgorithm.HS256)          // HS256 签名
-                .compact();
-    }
 
     /** 解析 + 验签 + 过期检查；无效则抛异常（交由上层统一处理） */
     public Jws<Claims> parse(String token) {
@@ -68,4 +57,23 @@ public class JwtService {
         Date iat = parse(token).getBody().getIssuedAt();
         return (iat == null) ? Instant.EPOCH : iat.toInstant();
     }
+
+    // 新增在类中：
+    public String generateAccessToken(UUID userId, String email, int tokenVersion) {
+        long now = System.currentTimeMillis();
+        return Jwts.builder()
+                .setSubject(userId.toString())
+                .setIssuedAt(new Date(now))
+                .setExpiration(new Date(now + accessTtlMs))
+                .addClaims(Map.of("email", email, "pv", tokenVersion)) // ← 关键：pv
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    // 旧方法保留（兼容老调用）
+    @Deprecated
+    public String generateAccessToken(UUID userId, String email) {
+        return generateAccessToken(userId, email, 1);
+    }
+
 }

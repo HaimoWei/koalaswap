@@ -31,6 +31,13 @@ public class GlobalExceptionHandler {
         return ApiResponse.error(ex.getMessage());
     }
 
+    // 400: 业务入参/状态不满足（比如账号或密码错误、用户不存在等）
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiResponse<Void> handleIllegalArg(IllegalArgumentException ex) {
+        return ApiResponse.error(ex.getMessage());
+    }
+
     // 400: JSON 解析失败/类型不匹配
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -63,6 +70,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiResponse<Void> handleOther(Exception ex){
+        ex.printStackTrace();
         return ApiResponse.error("服务器开小差了，请稍后再试");
     }
 }

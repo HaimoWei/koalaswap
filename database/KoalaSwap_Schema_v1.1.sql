@@ -1,14 +1,15 @@
 -- =====================================================================
--- KoalaSwap 全量 Schema v1.1  (PostgreSQL ≥ 13)
--- 覆盖：用户/邮箱验证/密码重置 + 商品/图片/收藏 + 订单/评价 + 会话/消息
--- 增强：令牌版本号(token_version)机制、更新时间触发器、搜索索引修正
+-- KoalaSwap Schema (compat with current codebase)
+-- 兼容：email_verification_tokens（老表名/老字段）
+-- 保留：users.token_version / password_updated_at、搜索索引等
+-- PostgreSQL >= 13
 -- =====================================================================
 
 -- 扩展 -------------------------------------------------------------------
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
--- ENUM 类型 --------------------------------------------------------------
+-- ENUM -------------------------------------------------------------------
 DO $$
     BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'product_condition') THEN
@@ -19,7 +20,7 @@ DO $$
         END IF;
     END $$;
 
--- 通用：自动更新时间戳 ---------------------------------------------------
+-- 通用函数：自动更新时间戳 -------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_touch_updated_at() RETURNS trigger AS $$
 BEGIN
     NEW.updated_at := NOW();
@@ -27,7 +28,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 用户域 -----------------------------------------------------------------
+-- 用户 -------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
                                      id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                      email               VARCHAR(320) UNIQUE NOT NULL,
@@ -38,20 +39,18 @@ CREATE TABLE IF NOT EXISTS users (
                                      email_verified      BOOLEAN NOT NULL DEFAULT FALSE,
                                      rating_avg          NUMERIC(2,1) NOT NULL DEFAULT 0,
                                      rating_count        INT NOT NULL DEFAULT 0,
-    -- 新增：令牌版本号与密码更新时间（用于“改密后旧 token 立刻失效”）
+    -- 为“改密后旧 token 失效”保留：
                                      token_version       INT NOT NULL DEFAULT 1,
                                      password_updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
                                      created_at          TIMESTAMP NOT NULL DEFAULT NOW(),
                                      updated_at          TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- users.updated_at 自动更新
 DROP TRIGGER IF EXISTS trg_touch_users_updated_at ON users;
 CREATE TRIGGER trg_touch_users_updated_at
     BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION fn_touch_updated_at();
 
--- 密码变更自动提升 token_version + 更新时间
 CREATE OR REPLACE FUNCTION fn_bump_token_version_on_password() RETURNS trigger AS $$
 BEGIN
     IF NEW.password_hash IS DISTINCT FROM OLD.password_hash THEN
@@ -90,13 +89,11 @@ CREATE TABLE IF NOT EXISTS products (
                                         search_vector tsvector
 );
 
--- products.updated_at 自动更新
 DROP TRIGGER IF EXISTS trg_touch_products_updated_at ON products;
 CREATE TRIGGER trg_touch_products_updated_at
     BEFORE UPDATE ON products
     FOR EACH ROW EXECUTE FUNCTION fn_touch_updated_at();
 
--- 全文搜索触发器
 CREATE OR REPLACE FUNCTION products_search_trigger() RETURNS trigger AS $$
 BEGIN
     NEW.search_vector :=
@@ -152,7 +149,6 @@ CREATE TABLE IF NOT EXISTS order_reviews (
                                              UNIQUE (order_id, reviewer_id)
 );
 
--- 写评价后刷新被评人均分/次数
 CREATE OR REPLACE FUNCTION fn_update_user_rating() RETURNS trigger AS $$
 BEGIN
     UPDATE users u
@@ -199,49 +195,42 @@ CREATE TABLE IF NOT EXISTS messages (
                                         sent_at         TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- 邮箱验证 ---------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS email_verifications (
-                                                   token_id   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                                                   user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                                                   token_hash VARCHAR(128) NOT NULL,
-                                                   expires_at TIMESTAMP NOT NULL,
-                                                   used       BOOLEAN NOT NULL DEFAULT FALSE,
-                                                   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-                                                   used_at    TIMESTAMP
+-- ✅ 邮箱验证（老表名/老字段，与你当前代码匹配） --------------------------
+CREATE TABLE IF NOT EXISTS email_verification_tokens (
+                                                         id         UUID PRIMARY KEY,
+                                                         user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                                                         token      VARCHAR(255) NOT NULL UNIQUE,
+                                                         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                                                         expires_at TIMESTAMPTZ NOT NULL,
+                                                         used_at    TIMESTAMPTZ
 );
 
--- 密码重置令牌 -----------------------------------------------------------
+CREATE INDEX IF NOT EXISTS ix_evt_user_expires ON email_verification_tokens(user_id, expires_at);
+
+-- ✅ 密码重置令牌：和当前代码一致（使用 token_hash）
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
-                                                     token_id   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                                                     user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                                                     token_hash VARCHAR(128) NOT NULL,
-                                                     expires_at TIMESTAMP NOT NULL,
-                                                     used       BOOLEAN NOT NULL DEFAULT FALSE,
-                                                     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-                                                     used_at    TIMESTAMP
+                                                     token_id    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                                                     user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                                                     token_hash  VARCHAR(128) NOT NULL,      -- 存哈希，不存明文
+                                                     expires_at  TIMESTAMPTZ NOT NULL,
+                                                     used        BOOLEAN NOT NULL DEFAULT FALSE,
+                                                     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                                                     used_at     TIMESTAMPTZ
 );
+
+-- 常用索引：按哈希查找、按用户/过期时间清理
+CREATE UNIQUE INDEX IF NOT EXISTS ux_prt_token_hash ON password_reset_tokens(token_hash);
+CREATE INDEX        IF NOT EXISTS ix_prt_user_expires ON password_reset_tokens(user_id, expires_at);
 
 -- 索引 -------------------------------------------------------------------
--- 商品：分类+价格；上架+时间；上架+价格；全文搜索
-CREATE INDEX IF NOT EXISTS idx_products_category_price            ON products(category_id, price);
-CREATE INDEX IF NOT EXISTS idx_products_active_created_at         ON products(is_active, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_products_active_price              ON products(is_active, price);
-CREATE INDEX IF NOT EXISTS idx_products_search                    ON products USING GIN (search_vector);
+CREATE INDEX IF NOT EXISTS idx_products_category_price    ON products(category_id, price);
+CREATE INDEX IF NOT EXISTS idx_products_active_created_at ON products(is_active, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_products_active_price      ON products(is_active, price);
+CREATE INDEX IF NOT EXISTS idx_products_search            ON products USING GIN (search_vector);
 
--- 订单：买家/卖家
-CREATE INDEX IF NOT EXISTS idx_orders_buyer                       ON orders(buyer_id);
-CREATE INDEX IF NOT EXISTS idx_orders_seller                      ON orders(seller_id);
+CREATE INDEX IF NOT EXISTS idx_orders_buyer               ON orders(buyer_id);
+CREATE INDEX IF NOT EXISTS idx_orders_seller              ON orders(seller_id);
 
--- 消息：会话+时间
-CREATE INDEX IF NOT EXISTS idx_messages_conv_time                 ON messages(conversation_id, sent_at DESC);
-
--- 收藏/参与者：便于查我的列表
-CREATE INDEX IF NOT EXISTS idx_favourites_user_time               ON favourites(user_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_conv_participants_user             ON conversation_participants(user_id);
-
--- 邮件/重置：按哈希/过期清理
-CREATE UNIQUE INDEX IF NOT EXISTS ux_ev_token_hash                ON email_verifications(token_hash);
-CREATE INDEX        IF NOT EXISTS ix_ev_user_expires             ON email_verifications(user_id, expires_at);
-
-CREATE UNIQUE INDEX IF NOT EXISTS ux_prt_token_hash               ON password_reset_tokens(token_hash);
-CREATE INDEX        IF NOT EXISTS ix_prt_user_expires            ON password_reset_tokens(user_id, expires_at);
+CREATE INDEX IF NOT EXISTS idx_messages_conv_time         ON messages(conversation_id, sent_at DESC);
+CREATE INDEX IF NOT EXISTS idx_favourites_user_time       ON favourites(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_conv_participants_user     ON conversation_participants(user_id);

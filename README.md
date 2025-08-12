@@ -75,3 +75,14 @@ This project is licensed under the MIT License.
 
 ./mvnw -pl product-service -am clean package -DskipTests
 ./mvnw -pl product-service spring-boot:run -Dspring-boot.run.profiles=local
+
+./mvnw -pl common -am -DskipTests clean install
+./mvnw -pl user-service -DskipTests clean compile
+./mvnw -pl product-service -DskipTests clean compile
+./mvnw -pl product-service spring-boot:run -Dspring-boot.run.profiles=local
+./mvnw -pl user-service spring-boot:run -Dspring-boot.run.profiles=local
+
+
+docker compose down -v
+docker compose up -d db
+docker logs -f koalaswap-pg
