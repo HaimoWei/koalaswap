@@ -71,3 +71,7 @@ SPRING_DATASOURCE_PASSWORD=secret
 ## 📄 License
 
 This project is licensed under the MIT License.
+
+
+./mvnw -pl product-service -am clean package -DskipTests
+./mvnw -pl product-service spring-boot:run -Dspring-boot.run.profiles=local

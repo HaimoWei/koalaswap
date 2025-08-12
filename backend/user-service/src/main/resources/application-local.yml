@@ -1,6 +1,6 @@
 # application-local.yml
 server:
-  port: 8080  # 你的 compose 映射了 8080:8080，所以这里保持 8080
+  port: 12649  # 你的 compose 映射了 8080:8080，所以这里保持 8080
 
 spring:
   datasource:
@@ -30,7 +30,7 @@ spring:
 app:
   jwt:
     secret: "p9P2JYpN4mVJXWm7XyQw6kBsF3uCz7rGQh5M8tQ2nA1rS6vY0kL9dH4eT8uZ3xB1"
-    accessTtlMs: 900000 # 15分钟
+    accessTtlMs: 90000000 # 15分钟
   mail:
     from: weihaimoau@gmail.com            # ← 直接写
   urls:

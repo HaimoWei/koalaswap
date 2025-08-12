@@ -34,12 +34,13 @@ CREATE TABLE products (
                           seller_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                           title          VARCHAR(200) NOT NULL,
                           description    TEXT,
-                          price_numeric  NUMERIC(10,2) NOT NULL CHECK (price_numeric >= 0),
+                          price  NUMERIC(10,2) NOT NULL CHECK (price >= 0),
                           currency       VARCHAR(10)   NOT NULL DEFAULT 'AUD',
                           category_id    INT REFERENCES product_categories(id),
                           condition      product_condition NOT NULL DEFAULT 'GOOD',
                           is_active      BOOLEAN NOT NULL DEFAULT TRUE,
-                          created_at     TIMESTAMP NOT NULL DEFAULT NOW()
+                          created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
+                          updated_at     TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- 5. product_images 商品图片表 ----------------------------------
@@ -112,6 +113,15 @@ CREATE INDEX idx_products_category_price ON products(category_id, price_numeric)
 CREATE INDEX idx_orders_buyer           ON orders(buyer_id);
 CREATE INDEX idx_orders_seller          ON orders(seller_id);
 CREATE INDEX idx_messages_conv_time     ON messages(conversation_id, sent_at DESC);
+-- 索引补充（浏览/筛选/排序常用列）
+CREATE INDEX IF NOT EXISTS idx_products_active_created_at
+    ON products (is_active, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_products_active_category_created_at
+    ON products (is_active, category_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_products_active_price
+    ON products (is_active, price_numeric);
 
 -- 13. 商品全文搜索 ----------------------------------------------
 ALTER TABLE products ADD COLUMN search_vector tsvector;

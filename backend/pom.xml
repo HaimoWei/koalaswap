@@ -26,6 +26,7 @@
     <modules>
         <module>common</module>
         <module>user-service</module>
+        <module>product-service</module>
         <!-- 以后再加：listing-service / order-service / chat-service -->
     </modules>
 </project>
