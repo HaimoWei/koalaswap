@@ -1,21 +1,20 @@
-// backend/common/src/main/java/com/koalaswap/common/exception/GlobalExceptionHandler.java
 package com.koalaswap.common.exception;
 
 import com.koalaswap.common.dto.ApiResponse;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.dao.DataIntegrityViolationException;
 
+import java.util.Map;
 
-/**
- * 捕获控制器里抛出的常见异常，统一返回 ApiResponse，避免到处写 try/catch。
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Bean 校验失败（@Valid）时
+    // 400: Bean 校验（多字段，返回首条 + 可选字段列表）
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiResponse<Void> handleArgValid(MethodArgumentNotValidException ex){
@@ -25,31 +24,45 @@ public class GlobalExceptionHandler {
         return ApiResponse.error(first);
     }
 
-    // 单字段校验失败（例如手动调用 Validator）
+    // 400: 单字段校验
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiResponse<Void> handleConstraint(ConstraintViolationException ex){
         return ApiResponse.error(ex.getMessage());
     }
 
-    // 唯一约束等数据库层冲突（如邮箱已存在）
-    @ExceptionHandler(DataIntegrityViolationException.class)
+    // 400: JSON 解析失败/类型不匹配
+    @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiResponse<Void> handleUniqueConflict(DataIntegrityViolationException ex) {
-        // 这里可根据 ex.getMostSpecificCause() 进一步判断是哪个唯一键冲突
-        return ApiResponse.error("邮箱已存在或数据唯一性冲突");
+    public ApiResponse<Void> handleNotReadable(HttpMessageNotReadableException ex){
+        return ApiResponse.error("请求体格式不正确");
     }
 
-    // 兜底
+    // 401: 未认证（统一把“未登录/身份无效”映射为 401）
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ApiResponse<Void> handleIllegalState(IllegalStateException ex){
+        return ApiResponse.error("未登录或凭证无效");
+    }
+
+    // 403: 已认证但权限不足（Controller/Service 主动抛 AccessDeniedException）
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ApiResponse<Void> handleDenied(AccessDeniedException ex){
+        return ApiResponse.error("无权限执行该操作");
+    }
+
+    // 409: 唯一约束/外键冲突
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiResponse<Void> handleUniqueConflict(DataIntegrityViolationException ex) {
+        return ApiResponse.error("数据唯一性或约束冲突");
+    }
+
+    // 500: 兜底（避免把内部异常信息直接暴露给前端）
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiResponse<Void> handleOther(Exception ex){
-        return ApiResponse.error(ex.getMessage());
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiResponse<Void> handleIllegalArgument(IllegalArgumentException ex) {
-        return ApiResponse.error(ex.getMessage()); // 前端可识别 EMAIL_NOT_VERIFIED
+        return ApiResponse.error("服务器开小差了，请稍后再试");
     }
 }

@@ -8,7 +8,7 @@ import java.util.UUID;
 public final class SecuritySupport {
     private SecuritySupport() {}
 
-    /** 需要登录的接口：强制取 userId，取不到抛异常（交给全局异常处理） */
+    /** 需要登录的接口：强制取 userId，取不到抛异常（交给全局异常处理 → 401） */
     public static UUID requireUserId(Authentication auth) {
         if (auth == null || auth.getName() == null) {
             throw new IllegalStateException("未登录");
