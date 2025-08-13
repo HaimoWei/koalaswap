@@ -1,4 +1,4 @@
-// [NEW] backend/product-service/src/main/java/com/koalaswap/product/config/RedisSubscriberConfig.java
+// backend/product-service/src/main/java/com/koalaswap/product/config/RedisSubscriberConfig.java
 package com.koalaswap.product.config;
 
 import com.koalaswap.common.security.TokenFreshnessProperties;

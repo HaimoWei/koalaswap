@@ -1,4 +1,4 @@
-// [NEW] backend/product-service/src/main/java/com/koalaswap/product/security/PvChangedSubscriber.java
+// backend/product-service/src/main/java/com/koalaswap/product/security/PvChangedSubscriber.java
 package com.koalaswap.product.security;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -34,6 +34,6 @@ public class PvChangedSubscriber {
         // 策略 B（可选）：也可以直接回填最新 pv
         // l1.put(uid, pv);
 
-        log.info("L1 invalidated by pubsub: uid={} pv={}", uid, pv);
+        log.debug("L1 invalidated by pubsub: uid={} pv={}", uid, pv);
     }
 }

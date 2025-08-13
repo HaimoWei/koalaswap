@@ -4,6 +4,7 @@ import com.koalaswap.common.dto.ApiResponse;
 import com.koalaswap.user.dto.ForgotPasswordReq;
 import com.koalaswap.user.dto.ResetPasswordReq;
 import com.koalaswap.user.service.PasswordResetService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,7 @@ public class PasswordResetController {
     private final PasswordResetService service;
 
     @PostMapping("/forgot-password")
-    public ApiResponse<Void> forgot(@RequestBody ForgotPasswordReq req) {
+    public ApiResponse<Void> forgot(@Valid @RequestBody ForgotPasswordReq req) {
         service.requestReset(req.email());
         return ApiResponse.ok(null);
     }
@@ -33,7 +34,7 @@ public class PasswordResetController {
     }
 
     @PostMapping("/reset-password")
-    public ApiResponse<Void> reset(@RequestBody ResetPasswordReq req) {
+    public ApiResponse<Void> reset(@Valid @RequestBody ResetPasswordReq req) {
         service.resetPassword(req.token(), req.newPassword());
         return ApiResponse.ok(null);
     }

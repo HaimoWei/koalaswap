@@ -1,4 +1,4 @@
-// [NEW] backend/common/src/main/java/com/koalaswap/common/security/RedisTokenVersionProvider.java
+// backend/common/src/main/java/com/koalaswap/common/security/RedisTokenVersionProvider.java
 package com.koalaswap.common.security;
 
 import lombok.RequiredArgsConstructor;
@@ -14,7 +14,7 @@ import java.util.UUID;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "app.tokenFreshness", name = "useRedis", havingValue = "true")
+@ConditionalOnProperty(prefix = "app.token-freshness", name = "use-redis", havingValue = "true")
 public class RedisTokenVersionProvider implements TokenVersionProvider {
 
     private final TokenVersionCache l1;
@@ -25,7 +25,7 @@ public class RedisTokenVersionProvider implements TokenVersionProvider {
     private final RestClient rest = RestClient.create();
 
     // user-service 内部地址（用于 HTTP 回退）
-    @org.springframework.beans.factory.annotation.Value("${app.userService.internalBaseUrl}")
+    @org.springframework.beans.factory.annotation.Value("${app.user-service.internal-base-url}")
     private String userServiceBaseUrl;
 
     private static String key(UUID uid) {
@@ -46,7 +46,7 @@ public class RedisTokenVersionProvider implements TokenVersionProvider {
                 return pv;
             }
         } catch (Exception e) {
-            log.warn("Redis read failed, fallback to HTTP. uid={}", uid, e);
+            log.warn("Redis read failed, fallback to HTTP. uid={}, ex={}", uid, e.getClass().getSimpleName());
         }
 
         // 2) 回退 HTTP 调 user-service

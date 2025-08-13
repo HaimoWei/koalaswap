@@ -30,12 +30,13 @@ app:
     secret: "p9P2JYpN4mVJXWm7XyQw6kBsF3uCz7rGQh5M8tQ2nA1rS6vY0kL9dH4eT8uZ3xB1"
   product:
     max-images: 8
-  userService:
-    internalBaseUrl: http://localhost:12649
+  user-service:
+    internal-base-url: http://localhost:12649
   tokenFreshness:
-    cacheTtlSec: 8   # 建议 5~10；想几乎秒杀可设 0~2（0=禁用缓存）
-    useRedis: true   # 使用 RedisProvider
-    pubsubChannel: auth:pv:changed
+    cache-ttl-sec: 8   # 建议 5~10；想几乎秒杀可设 0~2（0=禁用缓存）
+    use-redis: true   # 使用 RedisProvider
+    pubsub-channel: auth:pv:changed
+
 
 logging:
   level:

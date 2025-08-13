@@ -18,13 +18,13 @@ import java.util.UUID;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "app.tokenFreshness", name = "useRedis", havingValue = "false", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "app.token-freshness", name = "use-redis", havingValue = "false", matchIfMissing = true)
 public class HttpTokenVersionProvider implements TokenVersionProvider {
 
     private final RestClient rest = RestClient.create();
     private final TokenVersionCache l1; // [ADDED]
 
-    @Value("${app.userService.internalBaseUrl}")
+    @Value("${app.user-service.internal-base-url}")
     private String userServiceBaseUrl; // 例：http://localhost:12649
 
     @Override

@@ -34,17 +34,18 @@ app:
   mail:
     from: weihaimoau@gmail.com            # ← 直接写
   urls:
-    verifyRedirectBase: http://localhost:5173/verified
+    verify-redirect-base: http://localhost:5173/verified
 
   # Token 新鲜度配置（user-service 也用，以便自身校验）
-  tokenFreshness:
-    useRedis: true
-    cacheTtlSec: 8
-    pubsubChannel: auth:pv:changed
+  token-freshness:
+    use-redis: true
+    cache-ttl-sec: 8
+    pubsub-channel: auth:pv:changed
+
 
   # Provider 的 HTTP 回退需要内部地址（本服务可指向自身）
-  userService:
-    internalBaseUrl: http://localhost:12649
+  user-service:
+    internal-base-url: http://localhost:12649
 
 logging:
   level:

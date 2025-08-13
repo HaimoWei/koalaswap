@@ -1,4 +1,4 @@
-package com.koalaswap.common.logging;
+package com.koalaswap.common.security.logging;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
