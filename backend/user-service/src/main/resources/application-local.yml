@@ -35,3 +35,17 @@ app:
     from: weihaimoau@gmail.com            # ← 直接写
   urls:
     verifyRedirectBase: http://localhost:5173/verified
+
+  # Token 新鲜度配置（user-service 也用，以便自身校验）
+  tokenFreshness:
+    useRedis: true
+    cacheTtlSec: 8
+    pubsubChannel: auth:pv:changed
+
+  # Provider 的 HTTP 回退需要内部地址（本服务可指向自身）
+  userService:
+    internalBaseUrl: http://localhost:12649
+
+logging:
+  level:
+    com.koalaswap.common.security: DEBUG  # 观察 L1/L2 命中与发布日志

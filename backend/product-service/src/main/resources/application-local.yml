@@ -13,6 +13,11 @@ spring:
     show-sql: true
     properties:
       hibernate.jdbc.time_zone: UTC
+  # Redis 连接
+  data:
+    redis:
+      host: localhost
+      port: 6379
 # 如果你启用了 Flyway，就在本地也开（否则删掉这块）
 #  flyway:
 #    enabled: true
@@ -29,8 +34,11 @@ app:
     internalBaseUrl: http://localhost:12649
   tokenFreshness:
     cacheTtlSec: 8   # 建议 5~10；想几乎秒杀可设 0~2（0=禁用缓存）
+    useRedis: true   # 使用 RedisProvider
+    pubsubChannel: auth:pv:changed
 
 logging:
   level:
     com.koalaswap.common.security: DEBUG
     org.springframework.security: INFO
+    com.koalaswap.product.security: DEBUG   # 订阅/失效日志

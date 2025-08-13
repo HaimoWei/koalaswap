@@ -11,11 +11,14 @@ import com.koalaswap.user.mail.MailService;
 import com.koalaswap.user.repository.EmailVerificationTokenRepository;
 import com.koalaswap.user.repository.UserRepository;
 import com.koalaswap.common.security.JwtService;
+import com.koalaswap.user.events.PvBumpedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
+
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -47,6 +50,8 @@ public class AuthService {
     private final MailService mailService;
     private final EmailVerificationService verificationService;
     private final JwtService jwtService; // 构造注入
+    // 发布领域事件（用于事务提交后写 Redis + 发布消息）
+    private final ApplicationEventPublisher events;
 
     @Value("${app.urls.verifyRedirectBase}")
     private String verifyRedirectBase;
@@ -141,7 +146,8 @@ public class AuthService {
     public void logoutAll(UUID userId) {
         int n = repo.bumpTokenVersion(userId);
         if (n == 0) throw new IllegalArgumentException("用户不存在");
-        // 若你后面接入 Redis，可在这里顺手写入 Redis: user:pv:{uid} = newVersion
+        // 事务提交后发布事件 → 由监听器写 Redis 并 Pub/Sub
+        events.publishEvent(new PvBumpedEvent(userId));
     }
 
 

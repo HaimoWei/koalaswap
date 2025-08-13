@@ -4,11 +4,14 @@ import com.koalaswap.user.entity.PasswordResetToken;
 import com.koalaswap.user.mail.MailService;
 import com.koalaswap.user.repository.PasswordResetTokenRepository;
 import com.koalaswap.user.repository.UserRepository;
+import com.koalaswap.user.events.PvBumpedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
+
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -35,6 +38,7 @@ public class PasswordResetService {
     private final PasswordResetTokenRepository tokenRepo;
     private final PasswordEncoder passwordEncoder;
     private final MailService mailService; // ← 直接使用你已有的邮件服务
+    private final ApplicationEventPublisher events;
 
     /** 前端重置页 URL 前缀（例如 http://localhost:5173） */
     @Value("${app.reset.frontendUrl:http://localhost:5173}")
@@ -121,7 +125,12 @@ public class PasswordResetService {
             throw new IllegalArgumentException("INVALID_TOKEN");
         }
 
-        // 3) 可选：顺手清理过期/已用
+        // 3) bump token_version（如果你有 DB 触发器，这一步等价；这里显式调用更稳妥）
+        userRepo.bumpTokenVersion(user.getId());
+        // 事务提交后写入 Redis 并发布事件
+        events.publishEvent(new PvBumpedEvent(user.getId()));
+
+        // 4) 可选：顺手清理过期/已用
         tokenRepo.deleteExpired(Instant.now());
     }
 
