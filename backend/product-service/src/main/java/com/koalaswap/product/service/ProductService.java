@@ -132,7 +132,9 @@ public class ProductService {
     public Page<ProductRes> search(String kw, Integer catId,
                                    BigDecimal minPrice, BigDecimal maxPrice,
                                    int page, int size, String sort) {
-        var pageable = PageRequest.of(page, size, safeSort(sort));
+        int page0 = Math.max(0, page);
+        int sizeClamped = Math.min(Math.max(size, 1), 50); // 1..50
+        var pageable = PageRequest.of(page0, sizeClamped, safeSort(sort));
 
         // 先把 keyword 规范化为小写字符串；为空则置 null
         var normalizedKw = normalizeKeyword(kw);

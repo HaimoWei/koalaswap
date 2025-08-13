@@ -26,7 +26,7 @@ public class EmailVerificationService {
     private final UserRepository userRepo;                    // 用户数据访问
     private final MailService mail;                            // 邮件发送服务
 
-    @Value("${app.urls.verifyRedirectBase:http://localhost:5173/verified}")
+    @Value("${app.urls.verify-redirect-base:http://localhost:5173/verified}")
     private String verifyRedirectBase; // 邮箱验证成功后跳转的前端页面
 
     @Value("${app.auth.verifyTtlSec:86400}") // Token 有效时间（秒），默认 24 小时

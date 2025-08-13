@@ -1,4 +1,4 @@
-// [NEW] backend/user-service/src/main/java/com/koalaswap/user/events/PvBumpedEvent.java
+// backend/user-service/src/main/java/com/koalaswap/user/events/PvBumpedEvent.java
 package com.koalaswap.user.events;
 
 import java.util.UUID;

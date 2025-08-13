@@ -11,6 +11,7 @@ import com.koalaswap.user.repository.UserRepository;
 import com.koalaswap.user.service.EmailVerificationService;
 import org.springframework.security.core.Authentication;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
@@ -59,14 +60,13 @@ public class AuthController {
 
     /** POST /api/auth/resend?email=...  未登录也可调用；用于“等待验证”页或登录页的重发按钮 */
     @PostMapping("/resend")
-    public ApiResponse<Void> resend(@RequestParam String email) {
-        var user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
-        if (!user.isEmailVerified()) {
-            verificationService.issueAndSend(user); // 含 60s 冷却
-        }
-        return ApiResponse.ok(null); // 始终 200，避免邮箱枚举
+    public ApiResponse<Void> resend(@RequestParam @Email String email) {
+        userRepository.findByEmail(email).ifPresent(u -> {
+            if (!u.isEmailVerified()) {
+                try { verificationService.issueAndSend(u); } catch (IllegalArgumentException ignored) {}
+            }
+        });
+        return ApiResponse.ok(null); // 始终 200
     }
-
 
 }

@@ -41,7 +41,7 @@ public class TokenFreshnessFilter extends OncePerRequestFilter {
 
             // 兼容旧 token（无 pv）：先放行；若想强制失效可改成 (pv == null || pv < current)
             if (pv == null || pv < current) {
-                log.info("Token freshness fail: uid={}, pv(token)={}, pv(current)={}", userId, pv, current);
+                log.debug("Token freshness mismatch: uid={}, pv(token)={}, pv(current)={}", userId, pv, current);
                 SecurityContextHolder.clearContext();
             }
         } catch (Exception e) {

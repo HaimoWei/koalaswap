@@ -53,7 +53,7 @@ public class AuthService {
     // 发布领域事件（用于事务提交后写 Redis + 发布消息）
     private final ApplicationEventPublisher events;
 
-    @Value("${app.urls.verifyRedirectBase}")
+    @Value("${app.urls.verify-redirect-base}")
     private String verifyRedirectBase;
     /**
      * 用户注册

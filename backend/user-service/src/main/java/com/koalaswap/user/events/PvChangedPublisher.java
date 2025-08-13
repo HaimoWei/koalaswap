@@ -1,4 +1,4 @@
-// [NEW] backend/user-service/src/main/java/com/koalaswap/user/events/PvChangedPublisher.java
+// backend/user-service/src/main/java/com/koalaswap/user/events/PvChangedPublisher.java
 package com.koalaswap.user.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,9 +36,9 @@ public class PvChangedPublisher {
                     .put("pv", pv)
                     .toString();
             redis.convertAndSend(props.getPubsubChannel(), payload);
-            log.info("PV changed published: uid={} pv={} key={} channel={}", uid, pv, key, props.getPubsubChannel());
+            log.debug("PV changed published: uid={} pv={} key={} channel={}", uid, pv, key, props.getPubsubChannel());
         } catch (Exception e) {
-            log.warn("Publish pv change failed: uid={} pv={} err={}", uid, pv, e.toString());
+            log.warn("Publish pv change failed: uid={} pv={} err={}", uid, pv, e.getClass().getSimpleName());
         }
     }
 }

@@ -38,4 +38,4 @@ app:
   mail:
     from: ${APP_MAIL_FROM:${APP_MAIL_USERNAME}} # 发件人地址（默认=用户名）
   urls:
-    verifyRedirectBase: http://localhost:5173/verified
+    verify-redirect-base: http://localhost:5173/verified
