@@ -1,8 +1,6 @@
 package com.koalaswap.common.security;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
-import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -10,49 +8,32 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-import java.time.Duration;
 import java.util.UUID;
 
 /**
- * 通过调用 user-service 内部接口获取 token 版本号，并做短期本地缓存。
- * - TTL 可配置（秒），默认 8s；设置为 0 可禁用缓存（每次直连 user-service）。
+ * 通过调用 user-service 内部接口获取 token 版本号。
+ * [MODIFIED] 改为复用共享的 L1（TokenVersionCache），不在类内自建 LoadingCache。
+ * 启用条件：app.tokenFreshness.useRedis=false（或缺省）且存在 app.userService.internalBaseUrl。
  */
 @Slf4j
 @Component
-@ConditionalOnProperty(prefix = "app.userService", name = "internalBaseUrl")
+@RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "app.tokenFreshness", name = "useRedis", havingValue = "false", matchIfMissing = true)
 public class HttpTokenVersionProvider implements TokenVersionProvider {
 
     private final RestClient rest = RestClient.create();
+    private final TokenVersionCache l1; // [ADDED]
 
     @Value("${app.userService.internalBaseUrl}")
     private String userServiceBaseUrl; // 例：http://localhost:12649
 
-    /** 本地缓存 TTL，单位秒；默认 8。设为 0 表示不缓存（每次直连） */
-    @Value("${app.tokenFreshness.cacheTtlSec:8}")
-    private int cacheTtlSec;
-
-    private LoadingCache<UUID, Integer> cache;
-
-    @PostConstruct
-    void initCache() {
-        if (cacheTtlSec > 0) {
-            this.cache = Caffeine.newBuilder()
-                    .expireAfterWrite(Duration.ofSeconds(cacheTtlSec))
-                    .maximumSize(100_000)
-                    .build(this::loadFromUserService);
-            log.info("TokenVersionProvider cache enabled: {}s TTL", cacheTtlSec);
-        } else {
-            this.cache = null;
-            log.info("TokenVersionProvider cache disabled (cacheTtlSec = 0)");
-        }
-    }
-
     @Override
     public int currentVersion(UUID userId) {
-        if (cache == null) {
-            return safeLoad(userId);
-        }
-        return cache.get(userId);
+        Integer cached = l1.getIfPresent(userId); // [ADDED]
+        if (cached != null) return cached;       // [ADDED]
+        int pv = safeLoad(userId);               // [ADDED]
+        l1.put(userId, pv);                      // [ADDED]
+        return pv;                               // [ADDED]
     }
 
     private Integer loadFromUserService(UUID userId) {

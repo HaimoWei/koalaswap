@@ -23,6 +23,20 @@ services:
       timeout: 5s
       retries: 5
 
+  # ───────────────────── redis ────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: koalaswap-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
 
 #  # ───────────────────── user-service ────────────────────
 #  user-service:
