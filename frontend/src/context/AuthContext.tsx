@@ -1,6 +1,5 @@
 // src/context/AuthContext.tsx
 // 功能：全局管理登录 token（启动时恢复、登录时保存、登出时清空）。
-
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import * as SecureStore from "expo-secure-store";
 import { AuthService } from "../services/auth";
@@ -11,15 +10,24 @@ type Ctx = {
     user: UserLite;
     loading: boolean;
     login: (email: string, password: string) => Promise<void>;
-    register: (email: string, password: string, displayName: string) => Promise<{ verifyToken: string }>;
+    register: (email: string, password: string, displayName: string) => Promise<void>;
     logout: () => Promise<void>;
     setPendingAction: (fn: (() => void) | null) => void;
     runPendingAction: () => void;
 };
 
-const AuthContext = createContext<Ctx>({} as Ctx);
+const AuthContext = createContext<Ctx>({
+    token: null,
+    user: null,
+    loading: true,
+    login: async () => {},
+    register: async () => {},
+    logout: async () => {},
+    setPendingAction: () => {},
+    runPendingAction: () => {},
+});
 
-export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [token, setToken] = useState<string | null>(null);
     const [user, setUser] = useState<UserLite>(null);
     const [loading, setLoading] = useState(true);
@@ -44,8 +52,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     };
 
     const register = async (email: string, password: string, displayName: string) => {
-        const res = await AuthService.register(email, password, displayName);
-        return { verifyToken: res.verifyToken };
+        await AuthService.register(email, password, displayName);
     };
 
     const logout = async () => {

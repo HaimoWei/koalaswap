@@ -1,59 +1,82 @@
-// src/features/products/ProductListScreen.tsx
 import React from "react";
-import { View, Text, FlatList, RefreshControl, TextInput, Button } from "react-native";
-import { ProductService } from "../../services/products";
-import { useNavigation } from "@react-navigation/native";
-import { useAuth } from "../../context/AuthContext";
+import { View, Text, FlatList, RefreshControl, Pressable } from "react-native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { UsersService, UserBrief } from "../../services/users";
+import HomeService from "../../services/home";
 import ProductCard from "../home/ProductCard";
 
 export default function ProductListScreen() {
     const nav = useNavigation<any>();
-    const { user } = useAuth();
-
     const [page, setPage] = React.useState(0);
     const [size] = React.useState(10);
-    const [keyword, setKeyword] = React.useState("");
-    const [list, setList] = React.useState<any[]>([]);
+    const [items, setItems] = React.useState<any[]>([]);
     const [totalPages, setTotalPages] = React.useState(1);
     const [loading, setLoading] = React.useState(false);
+    const [sellerMap, setSellerMap] = React.useState<Record<string, UserBrief>>({});
 
-    const load = async (p = page, kw = keyword) => {
+    const load = React.useCallback(async (p = 0) => {
         setLoading(true);
-        const res = await ProductService.list({ page: p, size, keyword: kw || undefined, excludeSellerId: user?.id || undefined });
-        setList(res.content);
-        setTotalPages(res.totalPages);
-        setPage(res.page);
-        setLoading(false);
-    };
+        try {
+            const res = await HomeService.list({ page: p, size, sort: "createdAt,desc" });
+            setItems(res.content);
+            setTotalPages(res.totalPages);
+            setPage(p);
 
-    React.useEffect(() => { load(0, ""); }, [user?.id]);
+            const ids = Array.from(new Set(res.content.map((x: any) => x.sellerId).filter(Boolean)));
+            if (ids.length) {
+                const m = await UsersService.getBriefs(ids);
+                setSellerMap(m);
+            } else {
+                setSellerMap({});
+            }
+        } finally {
+            setLoading(false);
+        }
+    }, [size]);
+
+    useFocusEffect(React.useCallback(() => { load(0); }, [load]));
+
+    const SearchBarLink = () => (
+        <Pressable
+            onPress={() => nav.navigate("Search")}
+            style={{
+                margin: 12,
+                paddingVertical: 10,
+                paddingHorizontal: 12,
+                borderWidth: 1,
+                borderColor: "#ddd",
+                borderRadius: 8,
+                backgroundColor: "#f7f7f7",
+            }}
+        >
+            <Text style={{ color: "#888" }}>搜索商品</Text>
+        </Pressable>
+    );
 
     return (
-        <View style={{ flex:1, padding:12 }}>
-            <View style={{ flexDirection:"row", gap:8, marginBottom:8 }}>
-                <TextInput
-                    placeholder="搜索你想要的宝贝"
-                    value={keyword}
-                    onFocus={() => nav.getParent()?.navigate("Search", { q: keyword })}
-                    onChangeText={setKeyword}
-                    style={{ borderWidth:1, borderRadius:20, paddingHorizontal:14, paddingVertical:8, flex:1 }}
-                />
-                <Button title="搜索" onPress={() => nav.getParent()?.navigate("Search", { q: keyword })} />
-            </View>
-
+        <View style={{ flex: 1, paddingTop: 4 }}>
+            <SearchBarLink />
             <FlatList
-                data={list}
-                keyExtractor={(item) => item.id}
-                refreshControl={<RefreshControl refreshing={loading} onRefresh={() => load(page, keyword)} />}
+                data={items}
+                keyExtractor={(it: any) => it.id}
+                refreshControl={<RefreshControl refreshing={loading} onRefresh={() => load(page)} />}
                 renderItem={({ item }) => (
-                    <ProductCard item={item} onPress={() => nav.getParent()?.navigate("ProductDetail", { id: item.id })} />
+                    <ProductCard
+                        item={item}
+                        seller={sellerMap[item.sellerId]}
+                        onPress={() => nav.navigate("ProductDetail", { id: item.id })}
+                    />
                 )}
+                ListEmptyComponent={<Text style={{ textAlign: "center", color: "#888", marginTop: 40 }}>暂无商品</Text>}
             />
-
-            <View style={{ flexDirection:"row", justifyContent:"space-between", marginTop:8 }}>
-                <Button title="上一页" onPress={() => load(Math.max(0, page-1), keyword)} disabled={page<=0 || loading} />
-                <Text>第 {page+1}/{totalPages} 页</Text>
-                <Button title="下一页" onPress={() => load(Math.min(totalPages-1, page+1), keyword)} disabled={page>=totalPages-1 || loading} />
+            <View style={{ flexDirection: "row", justifyContent: "space-between", margin: 12 }}>
+                <Pressable onPress={() => load(Math.max(0, page - 1))} disabled={page <= 0 || loading}>
+                    <Text style={{ padding: 10, color: page <= 0 || loading ? "#bbb" : "#06c" }}>上一页</Text>
+                </Pressable>
+                <Text>第 {page + 1}/{totalPages} 页</Text>
+                <Pressable onPress={() => load(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1 || loading}>
+                    <Text style={{ padding: 10, color: page >= totalPages - 1 || loading ? "#bbb" : "#06c" }}>下一页</Text>
+                </Pressable>
             </View>
         </View>
     );

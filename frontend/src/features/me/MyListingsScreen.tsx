@@ -1,6 +1,6 @@
 // src/features/me/MyListingsScreen.tsx
 import React from "react";
-import { View, Text, FlatList, Pressable, Modal, TextInput, Button, Alert } from "react-native";
+import { View, Text, FlatList, RefreshControl, Button } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { ProductService } from "../../services/products";
@@ -9,65 +9,54 @@ import ProductCard from "../home/ProductCard";
 export default function MyListingsScreen() {
     const { token } = useAuth();
     const nav = useNavigation<any>();
-    const [list, setList] = React.useState<any[]>([]);
-    const [priceModal, setPriceModal] = React.useState<{ visible: boolean; id?: string; price?: string }>({ visible: false });
+    const [page, setPage] = React.useState(0);
+    const [size] = React.useState(10);
+    const [items, setItems] = React.useState<any[]>([]);
+    const [totalPages, setTotalPages] = React.useState(1);
+    const [loading, setLoading] = React.useState(false);
 
-    const load = React.useCallback(async () => {
-        if (!token) return setList([]);
-        const mine = await ProductService.listMine(token);
-        setList(mine);
-    }, [token]);
+    const load = React.useCallback(async (p = 0) => {
+        if (!token) { setItems([]); setTotalPages(1); setPage(0); return; }
+        setLoading(true);
+        try {
+            const res: any = await ProductService.listMine(p, size, "createdAt,desc");
+            const list = Array.isArray(res?.content) ? res.content : (Array.isArray(res) ? res : []);
+            const tp = typeof res?.totalPages === "number" ? res.totalPages : 1;
+            setItems(list);
+            setTotalPages(tp);
+            setPage(p);
+        } finally {
+            setLoading(false);
+        }
+    }, [size, token]);
 
-    useFocusEffect(React.useCallback(() => { load(); }, [load]));
+    // 回到“我的发布”时自动刷新（例如从详情删除后返回）
+    useFocusEffect(React.useCallback(() => { load(page); }, [load, page]));
 
-    const openLowerPrice = (id: string, cur: number) => setPriceModal({ visible: true, id, price: String(cur) });
-    const submitLowerPrice = async () => {
-        const id = priceModal.id!;
-        const p = Number(priceModal.price);
-        if (isNaN(p) || p <= 0) { Alert.alert("提示", "请输入正确的价格"); return; }
-        await ProductService.updatePrice(id, p, token!);
-        setPriceModal({ visible: false });
-        load();
-    };
+    if (!token) {
+        return (
+            <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 16 }}>
+                <Text style={{ color: "#888" }}>请先登录后查看“我的发布”</Text>
+            </View>
+        );
+    }
 
     return (
         <View style={{ flex: 1, padding: 12 }}>
             <FlatList
-                data={list}
-                keyExtractor={(i) => i.id}
+                data={items}
+                keyExtractor={(it) => it.id}
+                refreshControl={<RefreshControl refreshing={loading} onRefresh={() => load(page)} />}
                 renderItem={({ item }) => (
-                    <View style={{ marginBottom: 12, backgroundColor: "#fff", borderRadius: 12 }}>
-                        <ProductCard item={item} onPress={() => nav.navigate("ProductPreview", { id: item.id })} />
-                        <View style={{ flexDirection: "row", justifyContent: "flex-end", padding: 8, gap: 12 }}>
-                            <Pressable onPress={() => nav.navigate("ProductEdit", { id: item.id })}>
-                                <Text style={{ color: "#06c" }}>编辑</Text>
-                            </Pressable>
-                            <Pressable onPress={() => openLowerPrice(item.id, item.price)}>
-                                <Text style={{ color: "#d2691e" }}>降价</Text>
-                            </Pressable>
-                        </View>
-                    </View>
+                    <ProductCard item={item} onPress={() => nav.navigate("ProductPreview", { id: item.id })} />
                 )}
-                ListEmptyComponent={<Text style={{ textAlign: "center", color: "#888", marginTop: 40 }}>还没有发布的商品</Text>}
+                ListEmptyComponent={<Text style={{ textAlign: "center", color: "#888", marginTop: 40 }}>暂无发布</Text>}
             />
-
-            <Modal transparent visible={priceModal.visible} onRequestClose={() => setPriceModal({ visible: false })}>
-                <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "center", padding: 24 }}>
-                    <View style={{ backgroundColor: "#fff", borderRadius: 12, padding: 16, gap: 12 }}>
-                        <Text style={{ fontSize: 16, fontWeight: "700" }}>修改价格</Text>
-                        <TextInput
-                            value={priceModal.price}
-                            onChangeText={(t) => setPriceModal((s) => ({ ...s, price: t }))}
-                            keyboardType="numeric"
-                            style={{ borderWidth: 1, borderRadius: 8, padding: 10 }}
-                        />
-                        <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 12 }}>
-                            <Button title="取消" onPress={() => setPriceModal({ visible: false })} />
-                            <Button title="确定" onPress={submitLowerPrice} />
-                        </View>
-                    </View>
-                </View>
-            </Modal>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 8 }}>
+                <Button title="上一页" onPress={() => load(Math.max(0, page - 1))} disabled={page <= 0 || loading} />
+                <Text>第 {page + 1}/{totalPages} 页</Text>
+                <Button title="下一页" onPress={() => load(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1 || loading} />
+            </View>
         </View>
     );
 }

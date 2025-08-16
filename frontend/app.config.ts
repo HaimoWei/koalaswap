@@ -10,11 +10,11 @@ const config: ExpoConfig = {
     scheme: "koalaswap",
     extra: {
         // 将来联调再把地址改成 10.0.2.2（Android 模拟器访问宿主机）
-        USER_API_BASE_URL: "http://localhost:12649",
-        PRODUCT_API_BASE_URL: "http://localhost:12648",
+        USER_API_BASE_URL: "http://10.0.2.2:12649",
+        PRODUCT_API_BASE_URL: "http://10.0.2.2:12648",
 
         // 👇 新增：离线开发开关
-        USE_MOCKS: true,
+        USE_MOCKS: false,
     },
 };
 

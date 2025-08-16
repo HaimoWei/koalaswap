@@ -46,6 +46,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(reg -> reg
                         .requestMatchers(HttpMethod.POST, "/api/auth/logout").authenticated()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/users/brief", "/api/users/*/brief").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/health/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/internal/**").permitAll() // 给内部探针放行
                         .anyRequest().authenticated()
