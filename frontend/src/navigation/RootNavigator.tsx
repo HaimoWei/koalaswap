@@ -1,5 +1,4 @@
 // src/navigation/RootNavigator.tsx
-// src/navigation/RootNavigator.tsx
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator, BottomTabBarProps } from "@react-navigation/bottom-tabs";
@@ -20,6 +19,8 @@ import ResetPasswordScreen from "../features/auth/ResetPasswordScreen";
 import VerifyEmailScreen from "../features/auth/VerifyEmailScreen";
 
 import SearchScreen from "../features/search/SearchScreen";
+import SearchResultScreen from "../features/search/SearchResultScreen";
+
 import MyListingsScreen from "../features/me/MyListingsScreen";
 import FavoritesScreen from "../features/me/FavoritesScreen";
 import MyOrdersScreen from "../features/me/MyOrdersScreen";
@@ -30,12 +31,10 @@ import SettingsScreen from "../features/settings/SettingsScreen";
 const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
 
-// 统一的标题组件（避免 RN 报“字符串必须包在 <Text> 中”）
 const Title = ({ children }: { children?: React.ReactNode }) => (
     <Text style={{ fontSize: 17, fontWeight: "600" }}>{String(children ?? "")}</Text>
 );
 
-/** 中间的“发布”大按钮 */
 function SellButton() {
     const rootNav = useNavigation<any>();
     const { token } = useAuth();
@@ -63,7 +62,6 @@ function SellButton() {
     );
 }
 
-/** 自定义底栏 */
 function KoalaTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
     const { token } = useAuth();
     return (
@@ -113,7 +111,6 @@ function AppTabs() {
 
     return (
         <Tabs.Navigator
-            // ★★★ 给 Tabs 也加 headerTitle 封装成 <Text> ★★★
             screenOptions={{
                 headerTitleAlign: "center",
                 headerTitle: ({ children }) => <Title>{children}</Title>,
@@ -132,13 +129,14 @@ export default function RootNavigator() {
         <Stack.Navigator
             screenOptions={{
                 headerTitleAlign: "center",
-                headerTitle: ({ children }) => <Title>{children}</Title>, // Stack 这边我们之前已处理，保留
+                headerTitle: ({ children }) => <Title>{children}</Title>,
             }}
         >
             <Stack.Screen name="AppTabs" component={AppTabs} options={{ headerShown: false }} />
 
             {/* 搜索 & 商品相关 */}
             <Stack.Screen name="Search" component={SearchScreen} options={{ title: "搜索" }} />
+            <Stack.Screen name="SearchResult" component={SearchResultScreen} options={{ title: "搜索结果" }} />
             <Stack.Screen name="ProductDetail" component={ProductDetailScreen} options={{ title: "商品详情" }} />
             <Stack.Screen name="ProductPreview" component={ProductPreviewScreen} options={{ title: "预览" }} />
             <Stack.Screen name="ProductEdit" component={ProductEditScreen} options={{ title: "发布/编辑" }} />
@@ -151,7 +149,7 @@ export default function RootNavigator() {
             <Stack.Screen name="PendingReviews" component={PendingReviewsScreen} options={{ title: "待评价" }} />
             <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: "设置" }} />
 
-            {/* 登录（关闭按钮用 <Text> 包裹；能返回就返回，否则回首页） */}
+            {/* 登录 */}
             <Stack.Screen
                 name="Login"
                 component={LoginScreen}

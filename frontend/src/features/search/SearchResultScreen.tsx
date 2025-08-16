@@ -1,9 +1,10 @@
-// src/features/search/SearchResultScreen.tsx  —— “结果页”
+// src/features/search/SearchResultScreen.tsx —— “结果页”
 import React from "react";
 import { View, Text, TextInput, FlatList, Pressable } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { ProductService } from "../../services/products";
 import { useAuth } from "../../context/AuthContext";
+import { ProductService } from "../../services/products";
+import { UsersService, UserBrief } from "../../services/users";
 import ProductCard from "../home/ProductCard";
 
 type Sort = "relevance" | "price_asc" | "price_desc" | "newest";
@@ -14,66 +15,69 @@ export default function SearchResultScreen() {
     const { user } = useAuth();
     const qParam = route.params?.q ?? "";
 
-    const [q, setQ] = React.useState(qParam);
-    const [raw, setRaw] = React.useState<any[]>([]);
-    const [list, setList] = React.useState<any[]>([]);
+    const [kw, setKw] = React.useState<string>(qParam);
     const [sort, setSort] = React.useState<Sort>("relevance");
+    const [loading, setLoading] = React.useState(false);
+    const [items, setItems] = React.useState<any[]>([]);
+    const [sellerMap, setSellerMap] = React.useState<Record<string, UserBrief>>({});
 
-    const applySort = (arr: any[], s: Sort) => {
-        const cp = [...arr];
-        if (s === "price_asc") cp.sort((a,b)=>a.price-b.price);
-        if (s === "price_desc") cp.sort((a,b)=>b.price-a.price);
-        if (s === "newest") cp.sort((a,b)=> new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        return cp;
-    };
+    const sortToApi = (s: Sort) =>
+        s === "price_asc" ? "price,asc" : s === "price_desc" ? "price,desc" : s === "newest" ? "createdAt,desc" : undefined;
 
-    const search = async (kw: string) => {
-        const res = await ProductService.list({ page:0, size:50, keyword: kw, excludeSellerId: user?.id || undefined });
-        setRaw(res.content);
-        setList(applySort(res.content, sort));
-    };
+    const search = React.useCallback(async (keyword: string) => {
+        setLoading(true);
+        try {
+            const page = await ProductService.list({
+                page: 0,
+                size: 50,
+                keyword,
+                sort: sortToApi(sort),
+                excludeSellerId: user?.id, // ← 过滤掉自己发布的
+            });
+            setItems(page.content);
 
-    React.useEffect(()=> { search(qParam); }, [qParam]);
-    React.useEffect(()=> { setList(applySort(raw, sort)); }, [sort, raw]);
+            const ids = Array.from(new Set(page.content.map((x) => x.sellerId).filter(Boolean)));
+            const m = await UsersService.getBriefs(ids);
+            setSellerMap(m);
+        } finally {
+            setLoading(false);
+        }
+    }, [sort, user?.id]);
 
-    const SortBar = () => (
-        <View style={{ flexDirection:"row", gap:16, paddingVertical:8, borderBottomWidth:1, borderColor:"#eee" }}>
-            {[
-                { key:"relevance", label:"综合" },
-                { key: sort==="price_asc"?"price_desc":"price_asc", label:"价格" + (sort==="price_asc"?"↑":sort==="price_desc"?"↓":"") },
-                { key:"newest", label:"新发" },
-            ].map(it=>(
-                <Pressable key={it.key} onPress={()=> setSort(it.key as Sort)}>
-                    <Text style={{ fontWeight: sort===it.key ? "700" : "400" }}>{it.label}</Text>
-                </Pressable>
-            ))}
-        </View>
-    );
+    React.useEffect(() => { search(qParam); }, [qParam, search]);
 
     return (
-        <View style={{ flex:1, padding:12 }}>
-            {/* 顶部搜索框 —— 点击回到“输入页” */}
-            <Pressable onPress={()=> nav.navigate("Search", { q })} style={{ borderWidth:1, borderRadius:20, paddingHorizontal:14, paddingVertical:8, marginBottom:10 }}>
-                <Text style={{ color:"#666" }}>{q || "搜索你要的宝贝"}</Text>
-            </Pressable>
+        <View style={{ flex: 1, padding: 12 }}>
+            <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
+                <TextInput value={kw} onChangeText={setKw}
+                           placeholder="关键字" style={{ flex: 1, borderWidth: 1, borderColor: "#ddd", paddingHorizontal: 10, borderRadius: 8 }} />
+                <Pressable onPress={() => search(kw)}><Text style={{ padding: 10, color: "#06c" }}>搜索</Text></Pressable>
+            </View>
 
-            {raw.length > 0 ? (
-                <>
-                    <SortBar />
-                    <FlatList
-                        data={list}
-                        keyExtractor={i=>i.id}
-                        renderItem={({item}) => <ProductCard item={item} onPress={() => nav.navigate("ProductDetail",{id:item.id})} />}
-                    />
-                </>
-            ) : (
-                <View style={{ flex:1, alignItems:"center", justifyContent:"center" }}>
-                    <Text style={{ color:"#888", marginBottom:8 }}>没有搜索结果</Text>
-                    <Pressable onPress={()=> search(qParam)} style={{ paddingHorizontal:16, paddingVertical:10, backgroundColor:"#eee", borderRadius:8 }}>
-                        <Text>刷新</Text>
+            <View style={{ flexDirection: "row", gap: 10, marginBottom: 8 }}>
+                {(["relevance","price_asc","price_desc","newest"] as Sort[]).map((s) => (
+                    <Pressable key={s} onPress={() => setSort(s)} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: s===sort?"#222":"#eee", borderRadius: 14 }}>
+                        <Text style={{ color: s===sort?"#fff":"#333" }}>
+                            {s==="relevance"?"相关度":s==="price_asc"?"价格↑":s==="price_desc"?"价格↓":"最新"}
+                        </Text>
                     </Pressable>
-                </View>
-            )}
+                ))}
+            </View>
+
+            <FlatList
+                data={items}
+                keyExtractor={(it) => it.id}
+                renderItem={({ item }) => (
+                    <ProductCard
+                        item={item}
+                        seller={sellerMap[item.sellerId]}
+                        onPress={() => nav.navigate("ProductDetail", { id: item.id })}
+                    />
+                )}
+                refreshing={loading}
+                onRefresh={() => search(kw)}
+                ListEmptyComponent={<Text style={{ textAlign:"center", color:"#888", marginTop:40 }}>没有搜索结果</Text>}
+            />
         </View>
     );
 }

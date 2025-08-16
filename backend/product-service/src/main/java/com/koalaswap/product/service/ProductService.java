@@ -1,7 +1,3 @@
-// ===============================
-// backend/product-service/src/main/java/com/koalaswap/product/service/ProductService.java
-// 业务层｜发布 + 详情 + 修改 + 软删除 + 搜索分页
-// ===============================
 package com.koalaswap.product.service;
 
 import com.koalaswap.product.config.ProductProperties;
@@ -19,18 +15,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
-import java.util.Locale;
 
-/**
- * 商品服务（MVP）
- * - create：写入 products + product_images（按顺序）
- * - find：根据 id 返回详情（含图片列表）
- * - update：仅作者可改；图片全量替换
- * - softDelete：仅作者可软删（active=false）
- * - search：分页/排序/条件查询（仅 active=true）
- */
 @Service
 @RequiredArgsConstructor
 public class ProductService {
@@ -75,7 +63,7 @@ public class ProductService {
         return toRes(p, imageUrlsOf(id));
     }
 
-    /** 修改商品（仅作者；图片全量替换） */
+    /** 修改商品（仅作者；图片全量替换 → 先删后插 + flush 防止唯一键冲突） */
     @Transactional
     public ProductRes update(UUID editorId, UUID id, ProductUpdateReq req) {
         var p = products.findById(id).orElseThrow(() -> new IllegalArgumentException("商品不存在"));
@@ -93,8 +81,9 @@ public class ProductService {
             if (req.images().size() > props.getMaxImages()) {
                 throw new IllegalArgumentException("最多上传 " + props.getMaxImages() + " 张图片");
             }
-            var old = images.findByProductIdOrderBySortOrderAsc(id);
-            images.deleteAll(old);
+            images.deleteByProductId(id);
+            images.flush(); // ⭐ 关键：避免 (product_id, sort_order) 冲突
+
             int i = 0;
             for (var url : req.images()) {
                 var img = new ProductImage();
@@ -114,7 +103,7 @@ public class ProductService {
     public void softDelete(UUID requesterId, UUID id) {
         var p = products.findById(id).orElseThrow(() -> new IllegalArgumentException("商品不存在"));
         assertOwner(p, requesterId);
-        if (!p.isActive()) return; // 幂等：已是下架/软删状态则直接返回
+        if (!p.isActive()) return; // 幂等
         p.setActive(false);
         products.save(p);
     }
@@ -128,20 +117,38 @@ public class ProductService {
      * @param page     页号（0 起）
      * @param size     页大小
      * @param sort     排序（如 "createdAt,desc" / "price,asc"）
+     * @param excludeSellerId 排除的卖家（可选）
      */
     public Page<ProductRes> search(String kw, Integer catId,
                                    BigDecimal minPrice, BigDecimal maxPrice,
-                                   int page, int size, String sort) {
+                                   int page, int size, String sort,
+                                   UUID excludeSellerId) {
         int page0 = Math.max(0, page);
-        int sizeClamped = Math.min(Math.max(size, 1), 50); // 1..50
+        int sizeClamped = Math.min(Math.max(size, 1), 50);
         var pageable = PageRequest.of(page0, sizeClamped, safeSort(sort));
 
-        // 先把 keyword 规范化为小写字符串；为空则置 null
         var normalizedKw = normalizeKeyword(kw);
-        // 在 Java 里拼好 %pattern%
         String kwLike = (normalizedKw == null) ? null : "%" + normalizedKw + "%";
 
-        var pageData = products.searchByLike(kwLike, catId, minPrice, maxPrice, pageable);
+        var pageData = products.searchByLike(kwLike, catId, minPrice, maxPrice, excludeSellerId, pageable);
+        return pageData.map(pp -> toRes(pp, imageUrlsOf(pp.getId())));
+    }
+
+    /** 我的发布（需要登录） */
+    public Page<ProductRes> listMine(UUID sellerId, int page, int size, String sort) {
+        int page0 = Math.max(0, page);
+        int sizeClamped = Math.min(Math.max(size, 1), 50);
+        var pageable = PageRequest.of(page0, sizeClamped, safeSort(sort));
+        var pageData = products.findBySellerId(sellerId, pageable);
+        return pageData.map(p -> toRes(p, imageUrlsOf(p.getId())));
+    }
+
+    /** ✅ 首页推荐：不走 search()，走仓库专用 JPQL（active=true + 可选排除本人） */
+    public Page<ProductRes> home(UUID excludeSellerId, int page, int size, String sort) {
+        int page0 = Math.max(0, page);
+        int sizeClamped = Math.min(Math.max(size, 1), 50);
+        var pageable = PageRequest.of(page0, sizeClamped, safeSort(sort));
+        var pageData = products.home(excludeSellerId, pageable);
         return pageData.map(p -> toRes(p, imageUrlsOf(p.getId())));
     }
 
@@ -170,36 +177,24 @@ public class ProductService {
         );
     }
 
-    private static String emptyToNull(String s) {
-        return (s == null || s.isBlank()) ? null : s;
-    }
-
-    /**
-     * 排序字段白名单，防止用户传入非法字段导致运行期错误或注入
-     * 允许：createdAt / price / title
-     * 默认：createdAt,desc
-     */
+    /** 排序字段白名单（默认 createdAt,desc） */
     private static Sort safeSort(String sortParam) {
         if (sortParam == null || sortParam.isBlank()) {
             return Sort.by(Sort.Order.desc("createdAt"));
         }
         var parts = sortParam.split(",", 2);
         var field = parts[0].trim();
-        var dir = parts.length > 1 ? parts[1].trim().toLowerCase() : "desc";
+        var dir = parts.length > 1 ? parts[1].trim().toLowerCase(Locale.ROOT) : "desc";
 
         Set<String> allowed = Set.of("createdAt", "price", "title");
-        if (!allowed.contains(field)) {
-            field = "createdAt";
-        }
+        if (!allowed.contains(field)) field = "createdAt";
         var direction = "asc".equals(dir) ? Sort.Direction.ASC : Sort.Direction.DESC;
         return Sort.by(new Sort.Order(direction, field));
     }
 
-    // 在类里新增这个工具方法（保留原来的 emptyToNull 也行）
     private static String normalizeKeyword(String s) {
         if (s == null) return null;
-        var t = s.trim();
-        return t.isEmpty() ? null : t.toLowerCase(Locale.ROOT);
+        var t = s.trim().toLowerCase(Locale.ROOT);
+        return t.isEmpty() ? null : t;
     }
 }
-
