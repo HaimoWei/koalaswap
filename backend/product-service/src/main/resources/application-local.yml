@@ -17,7 +17,7 @@ spring:
   data:
     redis:
       host: localhost
-      port: 6379
+      port: 16379
 # 如果你启用了 Flyway，就在本地也开（否则删掉这块）
 #  flyway:
 #    enabled: true

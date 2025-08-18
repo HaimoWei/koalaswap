@@ -1,0 +1,189 @@
+package com.koalaswap.order.service;
+
+import com.koalaswap.order.client.ProductClient;
+import com.koalaswap.order.dto.*;
+import com.koalaswap.order.entity.OrderEntity;
+import com.koalaswap.order.model.OrderStatus;
+import com.koalaswap.order.repository.OrderRepository;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
+import org.springframework.stereotype.Service;
+import org.springframework.security.access.AccessDeniedException;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.UUID;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.*;
+
+@Service
+@RequiredArgsConstructor
+public class OrderService {
+
+    private final OrderRepository orders;
+    private final ProductClient productClient;
+
+    // “进行中”状态集合：用于并发占用检查
+    private static final Set<OrderStatus> OPEN = EnumSet.of(
+            OrderStatus.PENDING, OrderStatus.PAID, OrderStatus.SHIPPED
+    );
+
+    /** 创建订单（买家发起） */
+    @Transactional
+    public OrderRes create(UUID buyerId, OrderCreateReq req) {
+        var p = productClient.getProduct(req.productId());
+        if (!p.active()) throw new IllegalArgumentException("该商品已下架或不可售");
+        if (buyerId.equals(p.sellerId())) throw new IllegalArgumentException("不能购买自己的商品");
+
+        // 并发占用：由部分唯一索引兜底，这里先行检查提升体验
+        if (orders.existsByProductIdAndStatusIn(p.id(), OPEN)) {
+            throw new IllegalArgumentException("该商品已有进行中的订单");
+        }
+
+        var e = new OrderEntity();
+        e.setProductId(p.id());
+        e.setBuyerId(buyerId);
+        e.setSellerId(p.sellerId());
+        e.setPriceSnapshot(p.price());
+        e.setStatus(OrderStatus.PENDING);
+
+        var saved = orders.save(e);
+        return toRes(saved);
+    }
+
+    /** 订单详情（参与者可见） */
+    public OrderRes get(UUID userId, UUID id) {
+        var e = orders.findById(id).orElseThrow(() -> new IllegalArgumentException("订单不存在"));
+        assertParticipant(e, userId);
+        return toRes(e);
+    }
+
+    /** 分页列表：我买到的 / 我卖出的；可按状态过滤 */
+    public Page<OrderRes> list(UUID userId, String role, OrderStatus status, int page, int size, String sortParam) {
+        var pageable = PageRequest.of(Math.max(0,page), Math.min(100, Math.max(1,size)), safeSort(sortParam));
+        Page<OrderEntity> pageData;
+        boolean buyer = "buyer".equalsIgnoreCase(role);
+        boolean seller = "seller".equalsIgnoreCase(role);
+        if (!buyer && !seller) throw new IllegalArgumentException("role 只能为 buyer 或 seller");
+
+        if (buyer) {
+            pageData = (status == null)
+                    ? orders.findByBuyerId(userId, pageable)
+                    : orders.findByBuyerIdAndStatus(userId, status, pageable);
+        } else {
+            pageData = (status == null)
+                    ? orders.findBySellerId(userId, pageable)
+                    : orders.findBySellerIdAndStatus(userId, status, pageable);
+        }
+        return pageData.map(this::toRes);
+    }
+
+    /** 支付（模拟）：PENDING -> PAID，仅买家 */
+    @Transactional
+    public OrderRes pay(UUID buyerId, UUID id, PayReq req) {
+        var e = orders.findById(id).orElseThrow(() -> new IllegalArgumentException("订单不存在"));
+        if (!e.getBuyerId().equals(buyerId)) throw new IllegalArgumentException("只能支付自己的订单");
+
+        if (e.getStatus() == OrderStatus.CANCELLED || e.getStatus() == OrderStatus.COMPLETED) return toRes(e);
+        if (e.getStatus() != OrderStatus.PENDING) return toRes(e); // 幂等：非 PENDING 直接返回
+
+        e.setStatus(OrderStatus.PAID);
+        return toRes(orders.save(e));
+    }
+
+    /** 发货：PAID -> SHIPPED，仅卖家 */
+    @Transactional
+    public OrderRes ship(UUID sellerId, UUID id, ShipReq req) {
+        var e = orders.findById(id).orElseThrow(() -> new IllegalArgumentException("订单不存在"));
+        if (!e.getSellerId().equals(sellerId)) throw new IllegalArgumentException("只能发自己售出的订单");
+
+        if (e.getStatus() == OrderStatus.CANCELLED || e.getStatus() == OrderStatus.COMPLETED) return toRes(e);
+        if (e.getStatus() != OrderStatus.PAID) throw new IllegalArgumentException("当前状态不可发货");
+
+        e.setStatus(OrderStatus.SHIPPED);
+        return toRes(orders.save(e));
+    }
+
+    /** 确认收货：SHIPPED -> COMPLETED，仅买家 */
+    @Transactional
+    public OrderRes confirm(UUID buyerId, UUID id) {
+        var e = orders.findById(id).orElseThrow(() -> new IllegalArgumentException("订单不存在"));
+        if (!e.getBuyerId().equals(buyerId)) throw new IllegalArgumentException("只能确认自己的订单");
+
+        if (e.getStatus() == OrderStatus.CANCELLED || e.getStatus() == OrderStatus.COMPLETED) return toRes(e);
+        if (e.getStatus() != OrderStatus.SHIPPED) throw new IllegalArgumentException("当前状态不可确认收货");
+
+        e.setStatus(OrderStatus.COMPLETED);
+        e.setClosedAt(Instant.now());
+        return toRes(orders.save(e));
+    }
+
+    /** 取消：买家 PENDING/PAID；卖家 PENDING */
+    @Transactional
+    public OrderRes cancel(UUID actorId, UUID id, CancelReq req) {
+        var e = orders.findById(id).orElseThrow(() -> new IllegalArgumentException("订单不存在"));
+
+        boolean seller = e.getSellerId().equals(actorId);
+        boolean buyer  = e.getBuyerId().equals(actorId);
+        if (!seller && !buyer) {
+            throw new AccessDeniedException("只能由买家/卖家取消订单");
+        }
+
+        switch (e.getStatus()) {
+            case CANCELLED, COMPLETED -> {
+                // ★ 变更点：不再返回原单据，而是给出明确拒绝（避免前端看到 ok:true 的误解）
+                throw new AccessDeniedException("该订单已完成或已取消，无法再次取消");
+            }
+            case PENDING -> {
+                // 买家/卖家均可取消
+                e.setStatus(OrderStatus.CANCELLED);
+                e.setClosedAt(Instant.now());
+                return toRes(orders.save(e));
+            }
+            case PAID -> {
+                // 仅买家可取消
+                if (!buyer) throw new AccessDeniedException("仅买家可在已支付状态取消");
+                e.setStatus(OrderStatus.CANCELLED);
+                e.setClosedAt(Instant.now());
+                return toRes(orders.save(e));
+            }
+            case SHIPPED -> {
+                // 已发货不可取消
+                throw new AccessDeniedException("订单已发货，无法取消");
+            }
+            default -> throw new IllegalStateException("未知状态：" + e.getStatus());
+        }
+    }
+
+    // ---------- 内部工具 ----------
+
+    private void assertParticipant(OrderEntity e, UUID userId) {
+        if (!Objects.equals(e.getBuyerId(), userId) && !Objects.equals(e.getSellerId(), userId)) {
+            throw new IllegalArgumentException("无权访问该订单");
+        }
+    }
+
+    private OrderRes toRes(OrderEntity e) {
+        return new OrderRes(
+                e.getId(), e.getProductId(), e.getBuyerId(), e.getSellerId(),
+                e.getPriceSnapshot(), e.getStatus(), e.getCreatedAt(), e.getClosedAt()
+        );
+    }
+
+    /** 排序字段白名单（默认 createdAt,desc） */
+    private static Sort safeSort(String sortParam) {
+        if (sortParam == null || sortParam.isBlank()) return Sort.by(Sort.Order.desc("createdAt"));
+        var parts = sortParam.split(",");
+        var field = parts[0].trim();
+        var dir = parts.length > 1 ? parts[1].trim().toLowerCase(Locale.ROOT) : "desc";
+
+        Set<String> allowed = Set.of("createdAt", "priceSnapshot");
+        if (!allowed.contains(field)) field = "createdAt";
+        var direction = "asc".equals(dir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        return Sort.by(new Sort.Order(direction, field));
+    }
+}
