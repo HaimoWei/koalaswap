@@ -29,7 +29,7 @@ services:
     container_name: koalaswap-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "16379:6379"
     command: ["redis-server", "--appendonly", "no"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
