@@ -1,6 +1,6 @@
 # 本地开发 profile=local
 server:
-  port: 12650
+  port: 12651
 
 spring:
   datasource:
@@ -13,35 +13,45 @@ spring:
     show-sql: true
     properties:
       hibernate.jdbc.time_zone: UTC
-
-  # 如需 Redis + Pub/Sub（和 product-service 一致）
   data:
     redis:
       host: localhost
       port: 16379
+      database: 0
 
+# 自定义配置（与其它服务相同层级/前缀）
 app:
-  # ===== JWT（本地给出明确的值，避免占位符报错）=====
+  token-freshness:
+    cache-ttl-sec: 8
+    use-redis: true
+    pubsub-channel: auth:pv:changed
+
   jwt:
     secret: "p9P2JYpN4mVJXWm7XyQw6kBsF3uCz7rGQh5M8tQ2nA1rS6vY0kL9dH4eT8uZ3xB1"
     issuer: koalaswap
     access-token-minutes: 60
 
-  product-service:
-    internal-base-url: http://localhost:12648
+  order-events:
+    enabled: true
+    channel: orders:completed
+
+  # 依赖服务：指向本机其它服务的 local 端口（按你的现有习惯）
+  services:
+    user:
+      base-url: http://localhost:12649
+    product:
+      base-url: http://localhost:12648
+
+  # 兼容键（与你其他服务相同风格）
   user-service:
     internal-base-url: http://localhost:12649
+  product-service:
+    internal-base-url: http://localhost:12648
 
-  token-freshness:
-    cache-ttl-sec: 8
-    use-redis: true         # 如果你本机没起 redis，临时改为 false 也可以
-    pubsub-channel: auth:pv:changed
 
-  order-events:
-    channel: orders:completed
 
 logging:
   level:
     com.koalaswap.common.security: DEBUG
+    com.koalaswap.review.security: DEBUG
     org.springframework.security: INFO
-    com.koalaswap.order.security: DEBUG

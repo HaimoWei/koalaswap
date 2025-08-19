@@ -1,0 +1,47 @@
+# review-service ｜ 通用配置（可被环境变量覆盖）
+server:
+  port: 8083
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: none            # 与其它服务一致：不让 JPA 改表
+    show-sql: true
+    properties:
+      hibernate.jdbc.time_zone: UTC
+
+# 自定义配置（与其它服务同一前缀与键名）
+app:
+  # 令牌新鲜度（前缀固定：app.token-freshness）
+  token-freshness:
+    cache-ttl-sec: ${APP_TOKEN_FRESHNESS_TTL_SEC:8}
+    use-redis: ${APP_TOKEN_FRESHNESS_USE_REDIS:false}
+    pubsub-channel: ${APP_TOKEN_FRESHNESS_CHANNEL:auth:pv:changed}
+
+  # 订单完成事件（Redis Pub/Sub 通道）
+  order-events:
+    channel: ${APP_ORDER_COMPLETED_CHANNEL:orders:completed}
+
+  # 依赖服务：review-service 通过“公开 API”访问其他服务
+  # —— 为了兼容你已有写法，我同时提供 services.* 与 *-service.internal-base-url 两套键
+  services:
+    user:
+      base-url: ${APP_USER_SERVICE_EXTERNAL_BASE_URL:http://user-service:8080}
+    product:
+      base-url: ${APP_PRODUCT_SERVICE_EXTERNAL_BASE_URL:http://product-service:8081}
+
+  # 兼容键（若你以后在 Provider 里回源会用到）
+  user-service:
+    internal-base-url: ${APP_USER_SERVICE_INTERNAL_BASE_URL:http://user-service:8080}
+  product-service:
+    internal-base-url: ${APP_PRODUCT_SERVICE_INTERNAL_BASE_URL:http://product-service:8081}
+
+logging:
+  level:
+    com.koalaswap.review: INFO
+    org.springframework.web: INFO
+    org.springframework.security: INFO
