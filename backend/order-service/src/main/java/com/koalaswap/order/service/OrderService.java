@@ -3,6 +3,7 @@ package com.koalaswap.order.service;
 import com.koalaswap.order.client.ProductClient;
 import com.koalaswap.order.dto.*;
 import com.koalaswap.order.entity.OrderEntity;
+import com.koalaswap.order.events.OrderCompletedEvent;
 import com.koalaswap.order.model.OrderStatus;
 import com.koalaswap.order.repository.OrderRepository;
 import jakarta.transaction.Transactional;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.Instant;
 import java.util.List;
@@ -20,10 +22,12 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
 
+
 @Service
 @RequiredArgsConstructor
 public class OrderService {
 
+    private final ApplicationEventPublisher publisher;
     private final OrderRepository orders;
     private final ProductClient productClient;
 
@@ -119,6 +123,9 @@ public class OrderService {
 
         e.setStatus(OrderStatus.COMPLETED);
         e.setClosedAt(Instant.now());
+        var saved = orders.save(e);
+        // 发布订单完成事件（最终一致性：review-service 订阅后创建待评价槽位）
+        publisher.publishEvent(new OrderCompletedEvent(saved.getId(), saved.getBuyerId(), saved.getSellerId(), saved.getProductId(), saved.getClosedAt()));
         return toRes(orders.save(e));
     }
 

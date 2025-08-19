@@ -80,9 +80,11 @@ This project is licensed under the MIT License.
 ./mvnw -pl user-service -DskipTests clean compile
 ./mvnw -pl product-service -DskipTests clean compile
 ./mvnw -pl order-service -DskipTests clean compile
-./mvnw -pl product-service spring-boot:run -Dspring-boot.run.profiles=local
+./mvnw -pl review-service -DskipTests clean compile
 ./mvnw -pl user-service spring-boot:run -Dspring-boot.run.profiles=local
+./mvnw -pl product-service spring-boot:run -Dspring-boot.run.profiles=local
 ./mvnw -pl order-service spring-boot:run -Dspring-boot.run.profiles=local
+./mvnw -pl review-service spring-boot:run -Dspring-boot.run.profiles=local
 
 docker compose down -v
 docker compose up -d db
