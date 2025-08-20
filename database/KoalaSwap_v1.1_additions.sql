@@ -73,3 +73,31 @@ CREATE TABLE IF NOT EXISTS order_review_appends (
 
 CREATE INDEX IF NOT EXISTS idx_review_appends_review_time ON order_review_appends(review_id, created_at DESC);
 
+-- 1) 重命名表
+ALTER TABLE IF EXISTS public.favourites RENAME TO favorites;
+
+-- 2) （可选）如果有主键或唯一索引名里带 favourites，可按需重命名
+--   下面这些名字仅作常见示例，存在才会成功；不存在会报错，可逐条执行或加 IF EXISTS
+-- 主键索引（若存在）
+DO $$
+    BEGIN
+        IF EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'favourites_pkey') THEN
+            EXECUTE 'ALTER INDEX favourites_pkey RENAME TO favorites_pkey';
+        END IF;
+    END$$;
+
+-- 复合唯一约束（若你创建过）
+-- 例如：favourites_user_id_product_id_key
+DO $$
+    BEGIN
+        IF EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'favourites_user_id_product_id_key') THEN
+            EXECUTE 'ALTER INDEX favourites_user_id_product_id_key RENAME TO favorites_user_id_product_id_key';
+        END IF;
+    END$$;
+
+-- 外键/检查约束名如果包含 favourites，也可以按需 rename
+-- 示例（把具体旧约束名替换为实际名称后执行）：
+-- ALTER TABLE favorites RENAME CONSTRAINT favourites_user_id_fkey TO favorites_user_id_fkey;
+-- ALTER TABLE favorites RENAME CONSTRAINT favourites_product_id_fkey TO favorites_product_id_fkey;
+
+
