@@ -5,6 +5,7 @@
 package com.koalaswap.product.entity;
 
 import com.koalaswap.product.model.Condition;
+import com.koalaswap.product.model.ProductStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -56,9 +57,20 @@ public class Product {
     @Column(nullable = false, columnDefinition = "product_condition") // ← 你的 PG enum 名
     private Condition condition = Condition.GOOD;
 
-    @Column(name = "is_active", nullable = false)
-    private boolean active = true;
+    // === 状态机字段（替代 is_active） ===
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false, columnDefinition = "product_status")
+    private ProductStatus status = ProductStatus.ACTIVE;
 
+    // === 兼容：保留同名方法 isActive()/setActive(Boolean) 给现有 Service/DTO 用 ===
+    public boolean isActive() {
+        return this.status == ProductStatus.ACTIVE;
+    }
+
+    public void setActive(boolean active) {
+        this.status = active ? ProductStatus.ACTIVE : ProductStatus.HIDDEN;
+    }
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;

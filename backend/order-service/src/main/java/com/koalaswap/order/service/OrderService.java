@@ -48,6 +48,11 @@ public class OrderService {
             throw new IllegalArgumentException("该商品已有进行中的订单");
         }
 
+        // 核心：占用（ON_SALE -> RESERVED），失败则认为被并发抢占
+        if (!productClient.reserve(p.id())) {
+            throw new IllegalArgumentException("该商品已被下单，请刷新后重试");
+        }
+
         var e = new OrderEntity();
         e.setProductId(p.id());
         e.setBuyerId(buyerId);
@@ -96,7 +101,11 @@ public class OrderService {
         if (e.getStatus() != OrderStatus.PENDING) return toRes(e); // 幂等：非 PENDING 直接返回
 
         e.setStatus(OrderStatus.PAID);
-        return toRes(orders.save(e));
+        var saved = orders.save(e);
+
+        // 核心：支付后标记商品 SOLD（允许幂等）
+        productClient.markSold(e.getProductId());
+        return toRes(saved);
     }
 
     /** 发货：PAID -> SHIPPED，仅卖家 */
@@ -147,6 +156,7 @@ public class OrderService {
             }
             case PENDING -> {
                 // 买家/卖家均可取消
+                productClient.release(e.getProductId());
                 e.setStatus(OrderStatus.CANCELLED);
                 e.setClosedAt(Instant.now());
                 return toRes(orders.save(e));
@@ -154,6 +164,8 @@ public class OrderService {
             case PAID -> {
                 // 仅买家可取消
                 if (!buyer) throw new AccessDeniedException("仅买家可在已支付状态取消");
+                // 释放占用（如果未被 markSold，也允许幂等释放）
+                productClient.release(e.getProductId());
                 e.setStatus(OrderStatus.CANCELLED);
                 e.setClosedAt(Instant.now());
                 return toRes(orders.save(e));
@@ -166,7 +178,28 @@ public class OrderService {
         }
     }
 
+
+
+
+
     // ---------- 内部工具 ----------
+
+    // —— 自动过期（系统内部调用） —— //
+    @Transactional
+    public boolean expireAndCancel(UUID id) {
+        // 仅当仍处于 PENDING 才执行（避免并发修改）
+        var e = orders.findById(id).orElse(null);
+        if (e == null || e.getStatus() != OrderStatus.PENDING) return false;
+        productClient.release(e.getProductId());
+        e.setStatus(OrderStatus.CANCELLED);
+        e.setClosedAt(Instant.now());
+        orders.save(e);
+        return true;
+    }
+
+
+
+
 
     private void assertParticipant(OrderEntity e, UUID userId) {
         if (!Objects.equals(e.getBuyerId(), userId) && !Objects.equals(e.getSellerId(), userId)) {
