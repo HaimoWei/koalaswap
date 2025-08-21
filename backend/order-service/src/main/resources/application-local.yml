@@ -32,6 +32,11 @@ app:
   user-service:
     internal-base-url: http://localhost:12649
 
+
+  order:
+    pending-expire-minutes: ${APP_ORDER_PENDING_EXPIRE_MINUTES:30}
+
+
   token-freshness:
     cache-ttl-sec: 8
     use-redis: true         # 如果你本机没起 redis，临时改为 false 也可以

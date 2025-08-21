@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Collection;
 import java.util.UUID;
+import java.time.Instant;
 
 public interface OrderRepository extends JpaRepository<OrderEntity, UUID> {
 
@@ -21,4 +22,8 @@ public interface OrderRepository extends JpaRepository<OrderEntity, UUID> {
     // —— 列表查询：不带状态（查全部） —— //
     Page<OrderEntity> findByBuyerId(UUID buyerId, Pageable pageable);
     Page<OrderEntity> findBySellerId(UUID sellerId, Pageable pageable);
+
+
+    // —— 自动过期用：分页拉取到期 PENDING —— //
+    Page<OrderEntity> findByStatusAndCreatedAtBefore(OrderStatus status, Instant before, Pageable pageable);
 }

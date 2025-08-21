@@ -26,21 +26,47 @@ public class ProductClient {
     @Value("${app.product-service.internal-base-url}")
     private String productServiceBaseUrl; // 例：http://localhost:12648
 
-    public ProductBrief getProduct(UUID productId) {
-        try {
-            var type = new ParameterizedTypeReference<ApiResponse<ProductBrief>>() {};
-            var resp = rest.get()
-                    .uri(productServiceBaseUrl.replaceAll("/+$","") + "/api/products/{id}", productId)
-                    .header(HttpHeaders.ACCEPT, "application/json")
-                    .retrieve()
-                    .body(type);
-            if (resp == null || !resp.ok() || resp.data() == null) {
-                throw new IllegalStateException("商品不存在或服务返回异常");
-            }
-            return resp.data();
-        } catch (Exception e) {
-            throw new IllegalArgumentException("商品不存在或不可用");
+    private RestClient client() {
+        return RestClient.builder().baseUrl(productServiceBaseUrl).build();
+    }
+
+    /** 读取商品（对外接口 /api/products/{id}，用于校验 active、卖家等） */
+    public ProductBrief getProduct(UUID id) {
+        var type = new ParameterizedTypeReference<ApiResponse<ProductBrief>>() {};
+        var resp = client().get()
+                .uri("/api/products/{id}", id)
+                .header(HttpHeaders.ACCEPT, "application/json")
+                .retrieve()
+                .body(type);
+        if (resp == null || !resp.ok() || resp.data() == null) {
+            throw new IllegalArgumentException("商品不存在");
         }
+        return resp.data();
+    }
+
+    public boolean reserve(UUID productId) {
+        var type = new ParameterizedTypeReference<ApiResponse<Boolean>>() {};
+        var resp = client().post()
+                .uri("/api/internal/products/{id}/reserve", productId)
+                .retrieve().body(type);
+        return resp != null && Boolean.TRUE.equals(resp.data());
+    }
+
+    public boolean release(UUID productId) {
+        var type = new ParameterizedTypeReference<ApiResponse<Boolean>>() {};
+        var resp = client().post()
+                .uri("/api/internal/products/{id}/release", productId)
+                .retrieve().body(type);
+        return resp != null && Boolean.TRUE.equals(resp.data());
+    }
+
+
+    public boolean markSold(UUID productId) {
+        var type = new ParameterizedTypeReference<ApiResponse<Boolean>>() {};
+        var resp = client().post()
+                .uri("/api/internal/products/{id}/sold", productId)
+                .retrieve().body(type);
+        return resp != null && Boolean.TRUE.equals(resp.data());
     }
 
     /** 只取下单所需字段（保持与 product-service 的 ProductRes 字段名一致） */
