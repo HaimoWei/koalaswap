@@ -4,7 +4,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { useAuth } from "../../context/AuthContext";
 import { ProductService } from "../../services/products";
 
-type Params = { id: string | null };
+type Params = { id?: string; relist?: boolean };
 
 export default function ProductEditScreen() {
     const nav = useNavigation<any>();
@@ -29,7 +29,7 @@ export default function ProductEditScreen() {
         if (!isCreate && id) {
             ProductService.getById(id).then(p => {
                 setTitle(p.title); setPrice(String(p.price)); setDesc(p.description || "");
-                setCondition(p.condition); setCategoryId(p.categoryId ?? null); setFreeShipping(!!p.freeShipping);
+                setCondition(p.condition); setCategoryId(p.categoryId ?? null); setFreeShipping(Boolean((p as any).freeShipping));
                 setImageUrl(p.images?.[0]?.imageUrl || "");
             });
         }
@@ -41,8 +41,11 @@ export default function ProductEditScreen() {
             images: imageUrl ? [{ id:"tmp", imageUrl, sortOrder:0 }] : undefined
         };
         try {
-            if (isCreate) await ProductService.create(token!, payload);
-            else await ProductService.update(token!, id!, payload);
+            if (isCreate) await ProductService.create(payload);
+            else await ProductService.update(id!, payload);
+            if (params.relist) {
+                await ProductService.relist(params.id!);
+            }
             nav.goBack();
         } catch (e: any) {
             Alert.alert("失败", e?.message || "请稍后再试");

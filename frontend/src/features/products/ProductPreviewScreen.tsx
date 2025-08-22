@@ -1,4 +1,3 @@
-// src/features/products/ProductPreviewScreen.tsx
 import React from "react";
 import { View, Text, Image, ScrollView, Pressable, Alert } from "react-native";
 import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
@@ -47,10 +46,11 @@ export default function ProductPreviewScreen() {
         );
     }
 
-    const firstImage =
-        Array.isArray(item.images)
-            ? (typeof item.images[0] === "string" ? item.images[0] : item.images[0]?.imageUrl)
-            : undefined;
+    const firstImage = Array.isArray(item.images)
+        ? typeof item.images[0] === "string"
+            ? item.images[0]
+            : item.images[0]?.imageUrl
+        : undefined;
 
     return (
         <View style={{ flex: 1 }}>
@@ -63,9 +63,9 @@ export default function ProductPreviewScreen() {
                 </View>
             </ScrollView>
 
-            {/* 底部操作区：上/下架 + 编辑（移除“删除”，后端暂未提供硬删除） */}
+            {/* 底部操作区：上/下架 + 编辑 */}
             <View style={{ flexDirection: "row", justifyContent: "space-around", padding: 12, borderTopWidth: 1, borderColor: "#eee" }}>
-                {item.isActive !== false ? (
+                {item.status === "ACTIVE" ? (
                     <Pressable onPress={doUnlist}><Text style={{ color: "#a00" }}>下架</Text></Pressable>
                 ) : (
                     <Pressable onPress={doRelist}><Text style={{ color: "#0a7" }}>上架</Text></Pressable>
