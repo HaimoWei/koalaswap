@@ -18,7 +18,7 @@ export default function MeScreen() {
         }
         try {
             // 兼容不同实现：分页对象 / 直接数组
-            const page: any = await ProductService.listMine(0, 1, "createdAt,desc");
+            const page: any = await ProductService.listMine("onsale", 0, 1, "createdAt,desc");
             const total =
                 (page && typeof page.totalElements === "number" && page.totalElements) ??
                 (Array.isArray(page?.content) ? page.content.length : 0) ??

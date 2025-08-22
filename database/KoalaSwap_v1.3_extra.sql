@@ -34,3 +34,12 @@ DO $$
 
 -- 5) （可选）为状态检索加索引
 CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);
+
+
+
+-- 删掉旧的 is_active 索引（若存在）
+DROP INDEX IF EXISTS public.idx_products_active_created_at;
+DROP INDEX IF EXISTS public.idx_products_active_price;
+
+-- 然后移除旧列（会自动连带删除依赖索引；双保险）
+ALTER TABLE public.products DROP COLUMN IF EXISTS is_active;

@@ -6,6 +6,7 @@ package com.koalaswap.product.dto;
 
 import com.koalaswap.product.model.Condition;
 import jakarta.validation.constraints.*;
+import com.koalaswap.product.model.ProductStatus;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,5 +24,5 @@ public record ProductUpdateReq(
         Integer categoryId,
         Condition condition,
         @Size(max = 10) List<@NotBlank String> images,
-        Boolean active  // 可选：上下架（软删请用 DELETE 接口）
+        ProductStatus status
 ) {}

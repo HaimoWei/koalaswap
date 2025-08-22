@@ -1,5 +1,5 @@
 // src/lib/api.ts
-// 功能：针对 user-service / product-service 各建一个 axios 实例；
+// 功能：针对 user-service / product-service / order-service 各建一个 axios 实例；
 // 每次请求自动带上 Authorization；401 时清登录态（后续跳登录）。
 
 import axios from "axios";
@@ -18,8 +18,10 @@ export async function clearToken() {
 
 export const userApi = axios.create({ baseURL: ENV.USER_API_BASE_URL });
 export const productApi = axios.create({ baseURL: ENV.PRODUCT_API_BASE_URL });
+export const orderApi = axios.create({ baseURL: ENV.ORDER_API_BASE_URL });
 
-[userApi, productApi].forEach((inst) => {
+// ✅ 关键修复：把 orderApi 也放进拦截器数组里
+[userApi, productApi, orderApi].forEach((inst) => {
     inst.interceptors.request.use(async (config) => {
         const token = await getToken();
         if (token) config.headers.Authorization = `Bearer ${token}`;

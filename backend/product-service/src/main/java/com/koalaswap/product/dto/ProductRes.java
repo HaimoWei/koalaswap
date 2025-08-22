@@ -5,6 +5,7 @@
 package com.koalaswap.product.dto;
 
 import com.koalaswap.product.model.Condition;
+import com.koalaswap.product.model.ProductStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -21,7 +22,7 @@ public record ProductRes(
         String currency,
         Integer categoryId,
         Condition condition,
-        boolean active,
+        ProductStatus status,
         Instant createdAt,
         Instant updatedAt,
         List<String> images

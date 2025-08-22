@@ -63,14 +63,6 @@ public class Product {
     @Column(nullable = false, columnDefinition = "product_status")
     private ProductStatus status = ProductStatus.ACTIVE;
 
-    // === 兼容：保留同名方法 isActive()/setActive(Boolean) 给现有 Service/DTO 用 ===
-    public boolean isActive() {
-        return this.status == ProductStatus.ACTIVE;
-    }
-
-    public void setActive(boolean active) {
-        this.status = active ? ProductStatus.ACTIVE : ProductStatus.HIDDEN;
-    }
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
