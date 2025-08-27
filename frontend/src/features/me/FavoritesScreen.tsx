@@ -4,6 +4,7 @@ import { View, FlatList, Pressable, Text, Alert, RefreshControl } from "react-na
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../../context/AuthContext";
 import { FavoriteService } from "../../services/favorites";
+import { ProductService } from "../../services/products";
 import ProductCard from "../home/ProductCard";
 
 export default function FavoritesScreen() {
@@ -19,57 +20,74 @@ export default function FavoritesScreen() {
         }
         setLoading(true);
         try {
-            const data = await FavoriteService.listMine(token);
-            setList(data || []);
+            const raw = await FavoriteService.listMine(token, 0, 100);
+            // 补齐必要字段（images/status）以便 ProductCard 完整展示
+            const filled = await Promise.all(
+                raw.map(async (p: any) => {
+                    if (Array.isArray(p?.images) && p.images.length > 0 && p?.status) return p;
+                    try {
+                        const full = await ProductService.getById(p.id);
+                        return { ...p, ...full };
+                    } catch {
+                        return p;
+                    }
+                })
+            );
+            setList(filled);
         } catch (e: any) {
-            Alert.alert("错误", e?.message || "加载收藏失败");
+            Alert.alert("加载失败", e?.message ?? "未知错误");
         } finally {
             setLoading(false);
         }
     }, [token]);
 
-    useFocusEffect(
-        React.useCallback(() => {
-            load();
-        }, [load])
-    );
+    useFocusEffect(React.useCallback(() => { load(); }, [load]));
 
-    const handleUnfav = async (id: string) => {
+    const goDetail = (id: string) => nav.navigate("ProductDetail", { id });
+
+    const removeFav = async (id: string) => {
         if (!token) return;
         try {
-            const r = await FavoriteService.toggle(token, id);
-            if (!r.fav) setList((prev) => prev.filter((p) => p.id !== id));
+            await FavoriteService.remove(token, id);
+            setList((prev) => prev.filter((x) => x.id !== id));
         } catch (e: any) {
-            Alert.alert("错误", e?.message || "取消收藏失败");
+            Alert.alert("删除失败", e?.message ?? "未知错误");
         }
     };
 
-    const renderItem = ({ item }: { item: any }) => (
-        <View style={{ marginBottom: 12, backgroundColor: "#fff", borderRadius: 12, overflow: "hidden" }}>
-            <ProductCard
-                item={item}
-                onPress={() => {
-                    if (item.status !== "ACTIVE") {
-                        const label = item.status === "SOLD" ? "已售出" : "已下架";
-                        Alert.alert("提示", `该商品${label}`);
-                        return;
+    const renderItem = ({ item }: { item: any }) => {
+        const invalid = String(item?.status || "") !== "ACTIVE";
+        return (
+            <View style={{ marginBottom: 12 }}>
+                {/* 点击拦截：失效的不允许跳详情 */}
+                <ProductCard
+                    item={item}
+                    onPress={() =>
+                        (String(item?.status || "") !== "ACTIVE"
+                            ? Alert.alert("温馨提示", "该商品已失效或已下架，无法查看详情。")
+                            : goDetail(item.id))
                     }
-                    nav.navigate("ProductDetail", { id: item.id });
-                }}
-            />
-            <View style={{ flexDirection: "row", justifyContent: "flex-end", paddingHorizontal: 12, paddingBottom: 10 }}>
-                <Pressable onPress={() => handleUnfav(item.id)}>
-                    <Text style={{ color: "#d11" }}>取消收藏</Text>
-                </Pressable>
+                />
+                <View style={{ flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 8, marginTop: 6 }}>
+                    <Text style={{ color: invalid ? "#d00" : "#888" }}>
+                        {invalid ? "已失效" : " "}
+                    </Text>
+                    <Pressable
+                        onPress={() => removeFav(item.id)}
+                        style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: "#f2f2f2", borderRadius: 8 }}
+                    >
+                        <Text>删除</Text>
+                    </Pressable>
+                </View>
             </View>
-        </View>
-    );
+        );
+    };
 
     return (
         <View style={{ flex: 1, padding: 12 }}>
             <FlatList
                 data={list}
-                keyExtractor={(i) => i.id}
+                keyExtractor={(i) => String(i.id)}
                 renderItem={renderItem}
                 refreshControl={<RefreshControl refreshing={loading} onRefresh={load} />}
                 ListEmptyComponent={

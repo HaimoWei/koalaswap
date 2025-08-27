@@ -13,6 +13,7 @@ const config: ExpoConfig = {
         USER_API_BASE_URL: "http://10.0.2.2:12649",
         PRODUCT_API_BASE_URL: "http://10.0.2.2:12648",
         ORDER_API_BASE_URL: "http://10.0.2.2:12650",
+        REVIEW_API_BASE_URL: "http://10.0.2.2:12651",
         // 👇 新增：离线开发开关
         USE_MOCKS: false,
     },
