@@ -15,7 +15,7 @@ export default function ProductDetailScreen() {
     const route = useRoute<any>();
     const { user, token } = useAuth();
     const { id } = (route.params as Params) || ({} as Params);
-
+    const [isFav, setIsFav] = React.useState(false);
     const [p, setP] = React.useState<any | null>(null);
     const [seller, setSeller] = React.useState<UserBrief | null>(null);
 
@@ -35,7 +35,15 @@ export default function ProductDetailScreen() {
             const brief = await UsersService.getBrief(item.sellerId);
             setSeller(brief);
         }
-    }, [id]);
+        try {
+            if (token) {
+                const fav = await FavoriteService.isFav(token, id);
+                setIsFav(!!fav);
+            } else {
+                setIsFav(false);
+            }
+        } catch {}
+    }, [id, token]);
 
     React.useEffect(() => {
         load();
@@ -46,12 +54,20 @@ export default function ProductDetailScreen() {
     }
 
     const firstImage = Array.isArray(p.images) ? (typeof p.images[0] === "string" ? p.images[0] : p.images[0]?.imageUrl) : undefined;
-    const isMine = user?.id === p.sellerId;
+    const isMine = user?.id && p?.sellerId && String(user.id) === String(p.sellerId);
 
     const doFav = async () => {
         if (!token) return Alert.alert("请先登录");
-        await FavoriteService.toggle(token, id);
-        Alert.alert("已收藏/取消收藏");
+        try {
+            const res = await FavoriteService.toggle(token, id);
+            const next = (res && typeof (res as any).fav === "boolean")
+                ? (res as any).fav
+                : await FavoriteService.isFav(token, id);
+            setIsFav(!!next);
+            Alert.alert(next ? "已加入收藏" : "已取消收藏");
+        } catch (e: any) {
+            Alert.alert("操作失败", e?.message || String(e));
+        }
     };
 
     const contact = () => Alert.alert("联系卖家", "这里接入聊天/拨号等功能");
@@ -150,7 +166,8 @@ export default function ProductDetailScreen() {
             </ScrollView>
 
             <View style={{ flexDirection: "row", justifyContent: "space-around", padding: 12, borderTopWidth: 1, borderColor: "#eee" }}>
-                <Button title="收藏" onPress={doFav} />
+                <Button title={isFav ? "取消收藏" : "收藏"} // [FIX] 收藏按钮根据状态切换
+                        onPress={doFav} />
                 {!isMine && <Button title="联系卖家" onPress={contact} />}
                 {!isMine && <Button title="立即购买" onPress={openConfirm} />}
                 <Button title="评论" onPress={comment} />

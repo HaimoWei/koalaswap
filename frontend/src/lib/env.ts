@@ -9,5 +9,6 @@ export const ENV = {
     USER_API_BASE_URL: String(extra.USER_API_BASE_URL || ""),
     PRODUCT_API_BASE_URL: String(extra.PRODUCT_API_BASE_URL || ""),
     ORDER_API_BASE_URL: String(extra.ORDER_API_BASE_URL || ""),
+    REVIEW_API_BASE_URL: String(extra.REVIEW_API_BASE_URL || ""),
     USE_MOCKS: !!extra.USE_MOCKS,
 };
