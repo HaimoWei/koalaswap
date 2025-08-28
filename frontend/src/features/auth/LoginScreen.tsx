@@ -14,8 +14,8 @@ export default function LoginScreen() {
     const afterLogin: AfterLogin = route.params?.afterLogin;
     const { login, runPendingAction } = useAuth();
 
-    const [email, setEmail] = useState("demo@koala.au");
-    const [password, setPassword] = useState("123456");
+    const [email, setEmail] = useState("weihaimoau@gmail.com");
+    const [password, setPassword] = useState("weihaimo");
     const [loading, setLoading] = useState(false);
 
     const onSubmit = async () => {

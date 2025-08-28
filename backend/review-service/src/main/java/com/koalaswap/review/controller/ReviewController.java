@@ -62,9 +62,10 @@ public class ReviewController {
             @PathVariable UUID userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "all") String role
+            @RequestParam(defaultValue = "all") String role,
+            @RequestParam(name = "withAppends", defaultValue = "false") boolean withAppends // [ADDED]
     ){
-        return ApiResponse.ok(svc.listForUser(userId, page, size, role));
+        return ApiResponse.ok(svc.listForUser(userId, page, size, role, withAppends)); // [CHANGED]
     }
 
     /** 某订单的双方评价（买卖双方或管理员可在网关层控制；此处简单返回） */

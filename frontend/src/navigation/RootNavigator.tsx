@@ -11,6 +11,7 @@ import MeScreen from "../features/me/MeScreen";
 import ProductDetailScreen from "../features/products/ProductDetailScreen";
 import ProductEditScreen from "../features/products/ProductEditScreen";
 import ProductPreviewScreen from "../features/products/ProductPreviewScreen";
+import SellerProfileScreen from "../features/users/SellerProfileScreen";
 
 import LoginScreen from "../features/auth/LoginScreen";
 import RegisterScreen from "../features/auth/RegisterScreen";
@@ -27,6 +28,7 @@ import MyOrdersScreen from "../features/me/MyOrdersScreen";
 import SoldScreen from "../features/me/SoldScreen";
 import PendingReviewsScreen from "../features/me/PendingReviewsScreen";
 import SettingsScreen from "../features/settings/SettingsScreen";
+
 
 const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
@@ -117,7 +119,7 @@ function AppTabs() {
             }}
             tabBar={(p) => <KoalaTabBar {...p} />}
         >
-            <Tabs.Screen name="Home" component={ProductListScreen} options={{ title: "闲鱼" }} />
+            <Tabs.Screen name="Home" component={ProductListScreen} options={{ title: "首页" }} />
             <Tabs.Screen name="Sell" component={Empty} options={{ title: "" }} />
             <Tabs.Screen name="Me" component={MeScreen} options={{ title: "我的" }} />
         </Tabs.Navigator>
@@ -172,6 +174,7 @@ export default function RootNavigator() {
             <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ title: "忘记密码", presentation: "modal" }} />
             <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ title: "重设密码", presentation: "modal" }} />
             <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} options={{ title: "邮箱验证", presentation: "modal" }} />
+            <Stack.Screen name="SellerProfile" component={SellerProfileScreen} options={{ title: "卖家主页", presentation: "modal"  }} />
         </Stack.Navigator>
     );
 }
