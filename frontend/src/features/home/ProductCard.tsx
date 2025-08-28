@@ -10,7 +10,7 @@ export default function ProductCard({
                                     }: {
     item: any;
     onPress: () => void;
-    seller?: { displayName?: string; avatarUrl?: string } | null;
+    seller?: { displayName?: string; avatarUrl?: string | null } | null;
 }) {
     const firstImage = Array.isArray(item.images)
         ? typeof item.images[0] === "string"

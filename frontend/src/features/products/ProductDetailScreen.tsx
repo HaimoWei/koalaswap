@@ -152,16 +152,18 @@ export default function ProductDetailScreen() {
                 <Text style={{ color: "#666" }}>{p.description}</Text>
 
                 {seller && (
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginTop: 6 }}>
-                        {seller.avatarUrl ? (
-                            <Image source={{ uri: seller.avatarUrl }} style={{ width: 32, height: 32, borderRadius: 16 }} />
-                        ) : (
-                            <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: "#ddd", alignItems: "center", justifyContent: "center" }}>
-                                <Text style={{ fontSize: 14, color: "#666" }}>{seller.displayName?.slice(0, 1) ?? "?"}</Text>
-                            </View>
-                        )}
-                        <Text style={{ fontSize: 16 }}>{seller.displayName}</Text>
-                    </View>
+                    <Pressable onPress={() => nav.navigate("SellerProfile", { id: String(p.sellerId) })}>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginTop: 6 }}>
+                            {seller.avatarUrl ? (
+                                <Image source={{ uri: seller.avatarUrl }} style={{ width: 32, height: 32, borderRadius: 16 }} />
+                            ) : (
+                                <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: "#ddd", alignItems: "center", justifyContent: "center" }}>
+                                    <Text style={{ fontSize: 14, color: "#666" }}>{seller.displayName?.slice(0, 1) ?? "?"}</Text>
+                                </View>
+                            )}
+                            <Text style={{ fontSize: 16 }}>{seller.displayName}</Text>
+                        </View>
+                    </Pressable>
                 )}
             </ScrollView>
 

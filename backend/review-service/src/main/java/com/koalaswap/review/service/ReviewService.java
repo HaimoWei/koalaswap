@@ -101,6 +101,47 @@ public class ReviewService {
         return new PageImpl<>(mapped, pageable, total);
     }
 
+    // [ADDED] 带 withAppends 开关的重载：仅当 withAppends=true 时把追评挂到主评的 appends 上返回
+    public Page<ReviewRes> listForUser(UUID userId, int page, int size, String role, boolean withAppends) {
+        Page<ReviewRes> roots = listForUser(userId, page, size, role);
+        if (!withAppends || roots.isEmpty()) {
+            return roots; // 与原行为完全一致
+        }
+        return roots.map(root -> {
+            // 追评由同一作者撰写；匿名与主评一致
+            var safeReviewer = root.reviewer();
+            boolean isAnon = root.anonymous();
+            var children = appends.findByReview_IdOrderByCreatedAtAsc(root.id());
+            if (children == null || children.isEmpty()) {
+                return root;
+            }
+            var list = new ArrayList<ReviewRes.AppendBrief>(children.size());
+            children.sort((a, b) -> {
+                long ta = a.getCreatedAt() == null ? 0L : a.getCreatedAt().toEpochMilli();
+                long tb = b.getCreatedAt() == null ? 0L : b.getCreatedAt().toEpochMilli();
+                return Long.compare(ta, tb);
+            });
+            for (var c : children) {
+                list.add(new ReviewRes.AppendBrief(
+                        c.getId(),
+                        c.getComment(),
+                        c.getCreatedAt(),
+                        safeReviewer,
+                        isAnon
+                ));
+            }
+            return new ReviewRes(
+                    root.id(), root.orderId(),
+                    root.rating(), root.comment(),
+                    root.reviewerRole(), root.anonymous(),
+                    root.createdAt(),
+                    root.reviewer(), root.reviewee(),
+                    root.product(),
+                    Collections.unmodifiableList(list) // [ADDED]
+            );
+        });
+    }
+
     // 我写过的首评（进入追评用）
     public Page<ReviewRes> mineGiven(UUID me, int page, int size) {
         var pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
@@ -161,7 +202,9 @@ public class ReviewService {
                 r.getReviewerRole(), r.isAnonymous(), r.getCreatedAt(),
                 safeReviewer,
                 revieweeBrief == null ? null : new ReviewRes.UserBrief(revieweeBrief.id(), revieweeBrief.displayName(), revieweeBrief.avatarUrl()),
-                pb);
+                pb,
+                null // [ADDED] 默认不带追评
+        );
     }
 
     private ReviewRes toResWithCachedReviewer(OrderReview r, UUID productId, Map<UUID, UserClient.UserBrief> cache){
@@ -173,7 +216,9 @@ public class ReviewService {
                 r.getReviewerRole(), r.isAnonymous(), r.getCreatedAt(),
                 safeReviewer,
                 revieweeBrief == null ? null : new ReviewRes.UserBrief(revieweeBrief.id(), revieweeBrief.displayName(), revieweeBrief.avatarUrl()),
-                pb);
+                pb,
+                null // [ADDED] 默认不带追评
+        );
     }
 
     private ReviewRes.UserBrief maskReviewerIfAnon(OrderReview r, UserClient.UserBrief brief){
@@ -183,7 +228,6 @@ public class ReviewService {
         String alias = "BUYER".equalsIgnoreCase(r.getReviewerRole()) ? "匿名买家" : "匿名卖家";
         return new ReviewRes.UserBrief(null, alias, null);
     }
-
 
     private UserClient.UserBrief safeBriefOne(UUID id){
         try { return users.briefOne(id); } catch (Exception ignore) { return null; }
