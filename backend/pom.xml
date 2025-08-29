@@ -29,6 +29,7 @@
         <module>product-service</module>
         <module>order-service</module>
         <module>review-service</module>
+        <module>chat-service</module>
         <!-- 以后再加：listing-service / order-service / chat-service -->
     </modules>
 </project>

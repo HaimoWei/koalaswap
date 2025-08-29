@@ -1,0 +1,60 @@
+# 本地开发专用：与其他微服务保持一致
+server:
+  port: 12652
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:15433/koalaswap_dev
+    username: koalaswap
+    password: secret
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate.jdbc.time_zone: UTC
+      hibernate.query.literal_handling_mode: BIND
+  data:
+    redis:
+      host: localhost
+      port: 16379
+
+# === 兼容：当前 chat 代码正在读取的键（保留，不影响运行） ===
+koalaswap:
+  services:
+    user-base-url: http://localhost:12649
+    product-base-url: http://localhost:12648
+    order-base-url: http://localhost:12650
+
+chat:
+  ws:
+    allow-origins: "*"         # 按需收紧到你的前端域名
+  order:
+    redis-channel: orders:status-changed
+
+# === 统一到与其他微服务一致的风格（新增，后续把代码切到这组键） ===
+app:
+  token-freshness:
+    cache-ttl-sec: 8
+    use-redis: true
+    pubsub-channel: auth:pv:changed
+
+  user-service:
+    internal-base-url: http://localhost:12649
+  product-service:
+    internal-base-url: http://localhost:12648
+  order-service:
+    internal-base-url: http://localhost:12650
+  jwt:
+    secret: "p9P2JYpN4mVJXWm7XyQw6kBsF3uCz7rGQh5M8tQ2nA1rS6vY0kL9dH4eT8uZ3xB1"
+    issuer: koalaswap
+    access-token-minutes: 60
+  images:
+    placeholder-product: "https://static.example.com/img/placeholder-product.png"
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: INFO
+    com.koalaswap.common.security: DEBUG

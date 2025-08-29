@@ -12,10 +12,13 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.Optional;
 
 public interface ProductImageRepository extends JpaRepository<ProductImage, UUID> {
 
     List<ProductImage> findByProductIdOrderBySortOrderAsc(UUID productId);
+
+    Optional<ProductImage> findFirstByProductIdOrderBySortOrderAsc(UUID productId);
 
     /** 全量替换前，先删除旧图；放在 Service 的事务中使用 */
     @Modifying
