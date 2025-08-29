@@ -1,0 +1,18 @@
+spring:
+  redis:
+    host: localhost
+    port: 6379
+    # password: yourpass
+    # ssl: false
+
+koalaswap:
+  services:
+    user-base-url: http://user-service.internal
+    product-base-url: http://product-service.internal
+    order-base-url: http://order-service.internal
+
+chat:
+  ws:
+    allow-origins: "*"   # 按需收紧为你的前端域名
+  order:
+    redis-channel: orders:status-changed
