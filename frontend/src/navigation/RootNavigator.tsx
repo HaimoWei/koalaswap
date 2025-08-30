@@ -29,6 +29,15 @@ import SoldScreen from "../features/me/SoldScreen";
 import PendingReviewsScreen from "../features/me/PendingReviewsScreen";
 import SettingsScreen from "../features/settings/SettingsScreen";
 
+// 聊天
+import ChatListScreen from "../features/chat/ChatListScreen";
+import ChatDetailScreen from "../features/chat/ChatDetailScreen";
+
+// 新增：附近页面
+import NearbyScreen from "../features/nearby/NearbyScreen";
+
+// 徽标上下文
+import { ChatBadgeProvider, useChatBadge } from "../context/ChatBadgeContext";
 
 const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
@@ -50,13 +59,8 @@ function SellButton() {
                 rootNav.navigate("ProductEdit", { id: null });
             }}
             style={{
-                width: 64,
-                height: 64,
-                borderRadius: 32,
-                backgroundColor: "#ffd400",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 20,
+                width: 64, height: 64, borderRadius: 32, backgroundColor: "#ffd400",
+                alignItems: "center", justifyContent: "center", marginBottom: 20,
             }}
         >
             <Text style={{ fontWeight: "800" }}>发布</Text>
@@ -64,8 +68,23 @@ function SellButton() {
     );
 }
 
+function TabLabel({ label, badge }: { label: string; badge?: number }) {
+    return (
+        <View style={{ alignItems: "center" }}>
+            <Text style={{ color: "#000" }}>{label}</Text>
+            {badge && badge > 0 ? (
+                <View style={{ position: "absolute", right: -14, top: -6, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: "#ff4d4f", alignItems: "center", justifyContent: "center", paddingHorizontal: 4 }}>
+                    <Text style={{ color: "#fff", fontSize: 11 }}>{badge > 99 ? "99+" : badge}</Text>
+                </View>
+            ) : null}
+        </View>
+    );
+}
+
 function KoalaTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
     const { token } = useAuth();
+    const { totalUnread } = useChatBadge();
+
     return (
         <View
             style={{
@@ -86,13 +105,15 @@ function KoalaTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                     descriptors[route.key].options.tabBarLabel ??
                     route.name;
 
+                const showBadge = route.name === "ChatList" ? totalUnread : 0;
+
                 return (
                     <Pressable
                         key={route.key}
                         onPress={() => {
-                            if (route.name === "Me" && !token) {
+                            if ((route.name === "Me" || route.name === "ChatList") && !token) {
                                 navigation.getParent()?.navigate("Login", {
-                                    afterLogin: { type: "switchTab", tab: "Me" },
+                                    afterLogin: { type: "switchTab", tab: route.name },
                                 });
                                 return;
                             }
@@ -100,7 +121,10 @@ function KoalaTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                         }}
                         style={{ padding: 8 }}
                     >
-                        <Text style={{ color: isFocused ? "#000" : "#666" }}>{String(label)}</Text>
+                        {/* 自定义标签 + 徽标 */}
+                        <View style={{ opacity: isFocused ? 1 : 0.7 }}>
+                            <TabLabel label={String(label)} badge={Number(showBadge) || undefined} />
+                        </View>
                     </Pressable>
                 );
             })}
@@ -112,17 +136,26 @@ function AppTabs() {
     const Empty = () => <View />;
 
     return (
-        <Tabs.Navigator
-            screenOptions={{
-                headerTitleAlign: "center",
-                headerTitle: ({ children }) => <Title>{children}</Title>,
-            }}
-            tabBar={(p) => <KoalaTabBar {...p} />}
-        >
-            <Tabs.Screen name="Home" component={ProductListScreen} options={{ title: "首页" }} />
-            <Tabs.Screen name="Sell" component={Empty} options={{ title: "" }} />
-            <Tabs.Screen name="Me" component={MeScreen} options={{ title: "我的" }} />
-        </Tabs.Navigator>
+        <ChatBadgeProvider>
+            <Tabs.Navigator
+                screenOptions={{
+                    headerTitleAlign: "center",
+                    headerTitle: ({ children }) => <Title>{children}</Title>,
+                }}
+                tabBar={(p) => <KoalaTabBar {...p} />}
+            >
+                {/* 左边两项 */}
+                <Tabs.Screen name="Home" component={ProductListScreen} options={{ title: "首页" }} />
+                <Tabs.Screen name="Nearby" component={NearbyScreen} options={{ title: "附近" }} />
+
+                {/* 中间发布按钮 */}
+                <Tabs.Screen name="Sell" component={Empty} options={{ title: "" }} />
+
+                {/* 右边两项 */}
+                <Tabs.Screen name="ChatList" component={ChatListScreen} options={{ title: "消息" }} />
+                <Tabs.Screen name="Me" component={MeScreen} options={{ title: "我的" }} />
+            </Tabs.Navigator>
+        </ChatBadgeProvider>
     );
 }
 
@@ -175,6 +208,9 @@ export default function RootNavigator() {
             <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ title: "重设密码", presentation: "modal" }} />
             <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} options={{ title: "邮箱验证", presentation: "modal" }} />
             <Stack.Screen name="SellerProfile" component={SellerProfileScreen} options={{ title: "卖家主页", presentation: "modal"  }} />
+
+            {/* 聊天详情 */}
+            <Stack.Screen name="ChatDetail" component={ChatDetailScreen} options={{ title: "聊天", presentation: "modal"   }} />
         </Stack.Navigator>
     );
 }

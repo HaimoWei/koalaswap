@@ -1,3 +1,4 @@
+/// src/features/products/ProductDetailScreen.tsx
 import React from "react";
 import { View, Text, Image, Button, Alert, ScrollView, Modal, Pressable } from "react-native";
 import { useNavigation, useRoute, StackActions } from "@react-navigation/native";
@@ -7,6 +8,7 @@ import { useAuth } from "../../context/AuthContext";
 import { FavoriteService } from "../../services/favorites";
 import { OrderService } from "../../services/orders";
 import { formatAUD } from "../../utils/currency";
+import { ChatService } from "../../services/chat";
 
 type Params = { id: string };
 
@@ -24,7 +26,7 @@ export default function ProductDetailScreen() {
     const [payMethod, setPayMethod] = React.useState<"ALIPAY" | "HUABEI">("ALIPAY");
     const [submitting, setSubmitting] = React.useState(false);
 
-    // 占位的地址与运费（后续接入你的地址模块与运费计算）
+    // 占位的地址与运费
     const [address] = React.useState<string>("默认收货地址（占位，可在个人中心维护）");
     const [shippingFee] = React.useState<number>(0);
 
@@ -50,10 +52,16 @@ export default function ProductDetailScreen() {
     }, [load]);
 
     if (!p) {
-        return <View style={{ flex:1, alignItems:"center", justifyContent:"center" }}><Text>加载中...</Text></View>;
+        return (
+            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+                <Text>加载中...</Text>
+            </View>
+        );
     }
 
-    const firstImage = Array.isArray(p.images) ? (typeof p.images[0] === "string" ? p.images[0] : p.images[0]?.imageUrl) : undefined;
+    const firstImage = Array.isArray(p.images)
+        ? (typeof p.images[0] === "string" ? p.images[0] : p.images[0]?.imageUrl)
+        : undefined;
     const isMine = user?.id && p?.sellerId && String(user.id) === String(p.sellerId);
 
     const doFav = async () => {
@@ -70,36 +78,65 @@ export default function ProductDetailScreen() {
         }
     };
 
-    const contact = () => Alert.alert("联系卖家", "这里接入聊天/拨号等功能");
+    // —— 联系卖家：创建/获取会话并进入 ChatDetail（把对方昵称/头像带过去） —— //
+    const contact = async () => {
+        try {
+            if (!token) {
+                nav.navigate("Login", { afterLogin: { type: "open", name: "ProductDetail", params: { id } } });
+                return;
+            }
+            if (isMine) return Alert.alert("不能与自己聊天");
 
-    // 点击“立即购买” -> 打开确认弹窗
+            const conv = await ChatService.createOrGetConversation({
+                productId: String(id),
+                sellerId: String(p.sellerId || ""),
+            });
+
+            // 优先用已有的 seller，本地没有再兜底拉一次
+            let brief: UserBrief | null = seller;
+            if (!brief && p?.sellerId) {
+                try { brief = await UsersService.getBrief(p.sellerId); } catch {}
+            }
+
+            nav.navigate("ChatDetail", {
+                conversationId: conv.id,
+                seed: {
+                    productFirstImage: conv.productFirstImage,
+                    orderStatus: conv.orderStatus,
+                    peerNickname: brief?.displayName ?? null,
+                    peerAvatar: brief?.avatarUrl ?? null,
+                },
+            });
+        } catch (e: any) {
+            Alert.alert("发起聊天失败", e?.message || String(e));
+        }
+    };
+
+    // 点击“立即购买”
     const openConfirm = () => {
         if (!token) return Alert.alert("请先登录");
         if (isMine) return Alert.alert("不能购买自己发布的商品");
         setConfirmVisible(true);
     };
 
-    // —— 工具：获取进入“详情页”前的上一页（便于返回） —— //
+    // —— 工具：获取进入“详情页”前的上一页 —— //
     const getPrevRoute = () => {
         const state = nav.getState?.();
         const prev = state?.routes?.[state.index - 1];
         return { prevRouteName: prev?.name, prevRouteParams: prev?.params };
     };
 
-    // 确认购买：先创建订单，再尝试支付
+    // 确认购买
     const submitOrder = async () => {
         if (!token) return Alert.alert("请先登录");
         try {
             setSubmitting(true);
-            // 1) 创建订单（后端会返回 PENDING）
             const newOrder = await OrderService.buyNow(token, id);
 
             try {
-                // 2) 发起支付（可能失败）
                 await OrderService.pay(newOrder.id, payMethod);
                 setConfirmVisible(false);
 
-                // ✅ 支付成功：用 replace 将“我买到的”替换当前“详情页”
                 const { prevRouteName, prevRouteParams } = getPrevRoute();
                 nav.dispatch(
                     StackActions.replace("MyOrders", {
@@ -110,7 +147,6 @@ export default function ProductDetailScreen() {
                 );
                 Alert.alert("支付成功");
             } catch (e: any) {
-                // 3) 支付失败：关闭弹窗 -> 用 replace 进入“我买到的”并显示待支付覆盖层
                 setConfirmVisible(false);
 
                 const { prevRouteName, prevRouteParams } = getPrevRoute();
@@ -129,10 +165,7 @@ export default function ProductDetailScreen() {
                     })
                 );
 
-                Alert.alert(
-                    "支付失败",
-                    "订单已为你保存在「我买到的」，请在30分钟内完成付款，否则将自动取消。"
-                );
+                Alert.alert("支付失败", "订单已为你保存在「我买到的」，请在30分钟内完成付款，否则将自动取消。");
             }
         } catch (e: any) {
             Alert.alert("下单失败", e?.message || String(e));
@@ -168,8 +201,7 @@ export default function ProductDetailScreen() {
             </ScrollView>
 
             <View style={{ flexDirection: "row", justifyContent: "space-around", padding: 12, borderTopWidth: 1, borderColor: "#eee" }}>
-                <Button title={isFav ? "取消收藏" : "收藏"} // [FIX] 收藏按钮根据状态切换
-                        onPress={doFav} />
+                <Button title={isFav ? "取消收藏" : "收藏"} onPress={doFav} />
                 {!isMine && <Button title="联系卖家" onPress={contact} />}
                 {!isMine && <Button title="立即购买" onPress={openConfirm} />}
                 <Button title="评论" onPress={comment} />
@@ -177,54 +209,54 @@ export default function ProductDetailScreen() {
 
             {/* —— 下单确认弹窗 —— */}
             <Modal visible={confirmVisible} transparent animationType="slide" onRequestClose={() => setConfirmVisible(false)}>
-                <View style={{ flex:1, backgroundColor:"rgba(0,0,0,0.45)", justifyContent:"flex-end" }}>
-                    <View style={{ backgroundColor:"#fff", borderTopLeftRadius:16, borderTopRightRadius:16, padding:16, gap:12 }}>
+                <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" }}>
+                    <View style={{ backgroundColor: "#fff", borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16, gap: 12 }}>
                         {/* 商品摘要 */}
-                        <View style={{ flexDirection:"row", gap:12, alignItems:"center" }}>
-                            {firstImage && <Image source={{ uri:firstImage }} style={{ width:56, height:56, borderRadius:8 }} />}
-                            <View style={{ flex:1 }}>
-                                <Text numberOfLines={1} style={{ fontSize:16, fontWeight:"600" }}>{p.title}</Text>
-                                <Text style={{ marginTop:4, fontSize:16, color:"#FF5000" }}>{formatAUD(p.price)}</Text>
+                        <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
+                            {firstImage && <Image source={{ uri: firstImage }} style={{ width: 56, height: 56, borderRadius: 8 }} />}
+                            <View style={{ flex: 1 }}>
+                                <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: "600" }}>{p.title}</Text>
+                                <Text style={{ marginTop: 4, fontSize: 16, color: "#FF5000" }}>{formatAUD(p.price)}</Text>
                             </View>
                         </View>
 
                         {/* 地址（占位） */}
-                        <View style={{ paddingVertical:8 }}>
-                            <Text style={{ fontSize:14, color:"#999" }}>收货地址</Text>
-                            <View style={{ marginTop:4, padding:10, borderRadius:10, backgroundColor:"#f7f7f7" }}>
-                                <Text style={{ fontSize:15 }}>{address}</Text>
+                        <View style={{ paddingVertical: 8 }}>
+                            <Text style={{ fontSize: 14, color: "#999" }}>收货地址</Text>
+                            <View style={{ marginTop: 4, padding: 10, borderRadius: 10, backgroundColor: "#f7f7f7" }}>
+                                <Text style={{ fontSize: 15 }}>{address}</Text>
                             </View>
                         </View>
 
                         {/* 运费 */}
-                        <View style={{ flexDirection:"row", justifyContent:"space-between", paddingVertical:2 }}>
-                            <Text style={{ fontSize:15, color:"#444" }}>运费</Text>
-                            <Text style={{ fontSize:15 }}>{shippingFee > 0 ? formatAUD(shippingFee) : "包邮"}</Text>
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 2 }}>
+                            <Text style={{ fontSize: 15, color: "#444" }}>运费</Text>
+                            <Text style={{ fontSize: 15 }}>{shippingFee > 0 ? formatAUD(shippingFee) : "包邮"}</Text>
                         </View>
 
                         {/* 支付方式 */}
-                        <View style={{ marginTop:8 }}>
-                            <Text style={{ fontSize:14, color:"#999" }}>支付方式</Text>
-                            <Pressable onPress={() => setPayMethod("ALIPAY")} style={{ flexDirection:"row", alignItems:"center", justifyContent:"space-between", paddingVertical:10 }}>
-                                <Text style={{ fontSize:16 }}>支付宝支付</Text>
-                                <View style={{ width:20, height:20, borderRadius:10, borderWidth:2, borderColor: payMethod==="ALIPAY" ? "#FFCC00" : "#ccc", alignItems:"center", justifyContent:"center" }}>
-                                    {payMethod==="ALIPAY" && <View style={{ width:10, height:10, borderRadius:5, backgroundColor:"#FFCC00" }}/>}
+                        <View style={{ marginTop: 8 }}>
+                            <Text style={{ fontSize: 14, color: "#999" }}>支付方式</Text>
+                            <Pressable onPress={() => setPayMethod("ALIPAY")} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 10 }}>
+                                <Text style={{ fontSize: 16 }}>支付宝支付</Text>
+                                <View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: payMethod === "ALIPAY" ? "#FFCC00" : "#ccc", alignItems: "center", justifyContent: "center" }}>
+                                    {payMethod === "ALIPAY" && <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#FFCC00" }} />}
                                 </View>
                             </Pressable>
-                            <Pressable onPress={() => setPayMethod("HUABEI")} style={{ flexDirection:"row", alignItems:"center", justifyContent:"space-between", paddingVertical:10 }}>
-                                <Text style={{ fontSize:16 }}>花呗支付</Text>
-                                <View style={{ width:20, height:20, borderRadius:10, borderWidth:2, borderColor: payMethod==="HUABEI" ? "#FFCC00" : "#ccc", alignItems:"center", justifyContent:"center" }}>
-                                    {payMethod==="HUABEI" && <View style={{ width:10, height:10, borderRadius:5, backgroundColor:"#FFCC00" }}/>}
+                            <Pressable onPress={() => setPayMethod("HUABEI")} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 10 }}>
+                                <Text style={{ fontSize: 16 }}>花呗支付</Text>
+                                <View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: payMethod === "HUABEI" ? "#FFCC00" : "#ccc", alignItems: "center", justifyContent: "center" }}>
+                                    {payMethod === "HUABEI" && <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#FFCC00" }} />}
                                 </View>
                             </Pressable>
                         </View>
 
                         {/* 底部操作 */}
-                        <View style={{ flexDirection:"row", gap:12, marginTop:8 }}>
-                            <View style={{ flex:1 }}>
+                        <View style={{ flexDirection: "row", gap: 12, marginTop: 8 }}>
+                            <View style={{ flex: 1 }}>
                                 <Button title="取消" onPress={() => setConfirmVisible(false)} />
                             </View>
-                            <View style={{ flex:2 }}>
+                            <View style={{ flex: 2 }}>
                                 <Button
                                     title={submitting ? "提交中..." : `确认购买 ${formatAUD(p.price + shippingFee)}`}
                                     onPress={submitOrder}

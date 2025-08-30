@@ -1,10 +1,11 @@
-// src/main/java/com/koalaswap/chat/service/ChatDomainService.java
 package com.koalaswap.chat.service;
 
 import com.koalaswap.chat.entity.*;
 import com.koalaswap.chat.model.*;
 import com.koalaswap.chat.repository.*;
 import com.koalaswap.chat.events.OrderStatusEvent;
+import com.koalaswap.chat.dto.MessageResponse;           // ✅ 新增
+import com.koalaswap.chat.ws.WsPublisher;               // ✅ 新增
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Map;                                    // ✅ 新增
 import java.util.UUID;
 
 @Service
@@ -20,9 +22,16 @@ public class ChatDomainService {
     private final ConversationRepository convRepo;
     private final ConversationParticipantRepository partRepo;
     private final MessageRepository msgRepo;
+    private final WsPublisher ws;                        // ✅ 新增
 
-    public ChatDomainService(ConversationRepository c, ConversationParticipantRepository p, MessageRepository m) {
-        this.convRepo = c; this.partRepo = p; this.msgRepo = m;
+    public ChatDomainService(ConversationRepository c,
+                             ConversationParticipantRepository p,
+                             MessageRepository m,
+                             WsPublisher wsPublisher) {  // ✅ 新增
+        this.convRepo = c;
+        this.partRepo = p;
+        this.msgRepo = m;
+        this.ws = wsPublisher;                           // ✅ 新增
     }
 
     @Transactional
@@ -32,17 +41,14 @@ public class ChatDomainService {
             UUID buyerId,
             UUID sellerId,
             UUID startedBy,
-            String productFirstImage // << 新增参数
+            String productFirstImage
     ) {
-
-        // ★ 领域层防呆
         if (buyerId != null && buyerId.equals(sellerId)) {
             throw new IllegalArgumentException("buyerId and sellerId must be different");
         }
 
         return convRepo.findByProductIdAndBuyerIdAndSellerId(productId, buyerId, sellerId)
                 .map(existed -> {
-                    // 首次命中旧数据时如果缺封面，顺带补齐
                     if (existed.getProductFirstImage() == null
                             && productFirstImage != null
                             && !productFirstImage.isBlank()) {
@@ -54,20 +60,16 @@ public class ChatDomainService {
                 .orElseGet(() -> {
                     Conversation conv = new Conversation(productId, orderId, buyerId, sellerId, startedBy);
                     if (productFirstImage != null && !productFirstImage.isBlank()) {
-                        conv.setProductFirstImage(productFirstImage); // 新建时写库
+                        conv.setProductFirstImage(productFirstImage);
                     }
                     Conversation saved = convRepo.save(conv);
-                    // 两端参与者
                     partRepo.save(new ConversationParticipant(saved.getId(), buyerId, ParticipantRole.BUYER));
                     partRepo.save(new ConversationParticipant(saved.getId(), sellerId, ParticipantRole.SELLER));
                     return saved;
                 });
     }
 
-    /**
-     * 发送文本/图片消息；系统消息由 Part C 的订单事件生成。
-     * 维护会话快照；给对方 +1 未读。
-     */
+    /** 发送文本/图片消息；维护快照/未读，并推送会话消息 + 收件箱变化提示 */
     @Transactional
     public Message sendMessage(UUID conversationId, UUID senderId, MessageType type, String body, String imageUrl) {
         Conversation conv = convRepo.findById(conversationId)
@@ -94,8 +96,7 @@ public class ChatDomainService {
         conv.setLastMessagePreview(preview);
         convRepo.save(conv);
 
-        // 给除发送者外的参与者 +1 未读
-        // buyer
+        // 未读
         var buyer = partRepo.findByConversationIdAndUserId(conversationId, conv.getBuyerId()).orElseThrow();
         var seller = partRepo.findByConversationIdAndUserId(conversationId, conv.getSellerId()).orElseThrow();
         if (senderId != null) {
@@ -107,26 +108,34 @@ public class ChatDomainService {
                 partRepo.save(buyer);
             }
         } else {
-            // SYSTEM 消息：两端都 +1，读取时再各自清零（Part C 里会用到）
             buyer.setUnreadCount(buyer.getUnreadCount() + 1);
             seller.setUnreadCount(seller.getUnreadCount() + 1);
             partRepo.save(buyer); partRepo.save(seller);
         }
+
+        // ✅ 推送会话新消息
+        var dto = new MessageResponse(
+                saved.getId(), saved.getType(), saved.getSenderId(), saved.getBody(),
+                saved.getImageUrl(), saved.getSystemEvent(), saved.getMeta(), saved.getCreatedAt()
+        );
+        ws.publishNewMessage(conversationId, dto);
+
+        // ✅ 推送“收件箱变化”到双方个人队列（列表据此刷新）
+        Map<String, Object> hint = Map.of("kind", "CONV_UPDATED", "conversationId", conversationId.toString());
+        ws.publishMyInboxChanged(conv.getBuyerId(), hint);
+        ws.publishMyInboxChanged(conv.getSellerId(), hint);
+
         return saved;
     }
 
     @Transactional(readOnly = true)
     public Page<Message> pageMessages(UUID conversationId, Pageable pageable) {
-        // 默认升序返回，方便前端直接渲染
         return msgRepo.findByConversationIdOrderByCreatedAtAsc(conversationId, pageable);
     }
 
-    /**
-     * 标记已读：把当前用户在该会话的未读清零，并更新 last_read_message_id。
-     * lastMessageId 可为空 -> 自动使用会话 last_message_id。
-     */
+    /** 标记已读：清零未读并更新 last_read_message_id；保持返回 UUID */
     @Transactional
-    public void markRead(UUID conversationId, UUID userId, UUID lastMessageId) {
+    public UUID markRead(UUID conversationId, UUID userId, UUID lastMessageId) {
         Conversation conv = convRepo.findById(conversationId)
                 .orElseThrow(() -> new EntityNotFoundException("Conversation not found"));
         ConversationParticipant me = partRepo.findByConversationIdAndUserId(conversationId, userId)
@@ -135,12 +144,12 @@ public class ChatDomainService {
         me.setLastReadMessageId(lm);
         me.setUnreadCount(0);
         partRepo.save(me);
+        return lm;
     }
 
-    /** [C ADD] 将订单事件落为 SYSTEM 消息；幂等不去重，按时间顺序追加 */
+    /** 订单事件 -> SYSTEM 消息；并推送会话消息 + 收件箱变化提示 */
     @Transactional
     public Message appendSystemMessageForOrderEvent(OrderStatusEvent evt) {
-        // 1) 找到或创建会话（可能用户未先发起对话）
         Conversation conv = convRepo.findByProductIdAndBuyerIdAndSellerId(evt.productId, evt.buyerId, evt.sellerId)
                 .orElseGet(() -> {
                     Conversation c = new Conversation(evt.productId, evt.orderId, evt.buyerId, evt.sellerId, evt.sellerId);
@@ -148,39 +157,82 @@ public class ChatDomainService {
                     return convRepo.save(c);
                 });
 
-        // 若会话上 orderId 为空则补齐
         if (conv.getOrderId() == null && evt.orderId != null) conv.setOrderId(evt.orderId);
 
-        // 2) 生成 SYSTEM 消息
         Message m = new Message();
         m.setConversationId(conv.getId());
         m.setType(MessageType.SYSTEM);
-        m.setSenderId(null); // SYSTEM
+        m.setSenderId(null);
         m.setSystemEvent(mapSystemEvent(evt.newStatus));
         m.setBody(systemBodyFor(evt.newStatus));
         m.setMeta("{\"orderId\":\"" + evt.orderId + "\",\"newStatus\":\"" + evt.newStatus + "\"}");
         m.setCreatedAt(evt.occurredAt != null ? evt.occurredAt : Instant.now());
         Message saved = msgRepo.save(m);
 
-        // 3) 更新会话快照
+        // 会话快照同步订单状态
         conv.setOrderStatusCache(evt.newStatus);
         conv.setLastMessageId(saved.getId());
         conv.setLastMessageAt(saved.getCreatedAt());
         conv.setLastMessagePreview("[系统] " + saved.getSystemEvent());
         convRepo.save(conv);
 
-        // 4) 两端 +1 未读
+        // 未读（无则建）
         var buyer = partRepo.findByConversationIdAndUserId(conv.getId(), conv.getBuyerId())
                 .orElseGet(() -> partRepo.save(new ConversationParticipant(conv.getId(), conv.getBuyerId(), ParticipantRole.BUYER)));
         var seller = partRepo.findByConversationIdAndUserId(conv.getId(), conv.getSellerId())
                 .orElseGet(() -> partRepo.save(new ConversationParticipant(conv.getId(), conv.getSellerId(), ParticipantRole.SELLER)));
-
         buyer.setUnreadCount(buyer.getUnreadCount() + 1);
         seller.setUnreadCount(seller.getUnreadCount() + 1);
         partRepo.save(buyer); partRepo.save(seller);
 
+        // ✅ 推送会话新消息（SYSTEM）
+        var dto = new MessageResponse(
+                saved.getId(), saved.getType(), saved.getSenderId(), saved.getBody(),
+                saved.getImageUrl(), saved.getSystemEvent(), saved.getMeta(), saved.getCreatedAt()
+        );
+        ws.publishNewMessage(conv.getId(), dto);
+
+        // ✅ 推送“收件箱变化”到双方个人队列（驱动列表状态徽标立即刷新）
+        Map<String, Object> hint = Map.of("kind", "CONV_UPDATED", "conversationId", conv.getId().toString());
+        ws.publishMyInboxChanged(conv.getBuyerId(), hint);
+        ws.publishMyInboxChanged(conv.getSellerId(), hint);
+
         return saved;
     }
+
+    // === 详情聚合（你已有） ===
+    @Transactional(readOnly = true)
+    public Detail getDetailFor(UUID conversationId, UUID currentUserId) {
+        Conversation conv = convRepo.findById(conversationId)
+                .orElseThrow(() -> new EntityNotFoundException("Conversation not found"));
+        ConversationParticipant me = partRepo.findByConversationIdAndUserId(conversationId, currentUserId)
+                .orElseThrow(() -> new EntityNotFoundException("Participant not found for current user"));
+        UUID peerUserId = currentUserId.equals(conv.getBuyerId()) ? conv.getSellerId() : conv.getBuyerId();
+        ConversationParticipant peer = partRepo.findByConversationIdAndUserId(conversationId, peerUserId)
+                .orElseThrow(() -> new EntityNotFoundException("Peer participant not found"));
+
+        return new Detail(
+                conv.getId(),
+                conv.getProductId(),
+                conv.getBuyerId(),
+                conv.getSellerId(),
+                conv.getOrderStatusCache(),
+                conv.getProductFirstImage(),
+                me.getLastReadMessageId(),
+                peer.getLastReadMessageId()
+        );
+    }
+
+    public record Detail(
+            UUID id,
+            UUID productId,
+            UUID buyerId,
+            UUID sellerId,
+            com.koalaswap.chat.model.OrderStatus orderStatus,
+            String productFirstImage,
+            UUID myReadTo,
+            UUID peerReadTo
+    ) {}
 
     private static SystemEvent mapSystemEvent(OrderStatus s) {
         return switch (s) {
