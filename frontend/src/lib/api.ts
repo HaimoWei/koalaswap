@@ -47,3 +47,6 @@ export const orderApi = wireAuth(
 export const reviewApi = wireAuth(
     axios.create({ baseURL: ENV.REVIEW_API_BASE_URL })
 );
+export const chatApi = wireAuth(
+    axios.create({ baseURL: ENV.CHAT_API_BASE_URL })
+);

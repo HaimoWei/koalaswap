@@ -5,6 +5,7 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 import { OrderService } from "../../services/orders";
 import { useAuth } from "../../context/AuthContext";
 import { formatAUD } from "../../utils/currency";
+import { ChatService } from "../../services/chat"; // ✅ 新增
 
 type PendingParams = {
     pendingOrderId?: string;
@@ -56,9 +57,7 @@ export default function MyOrdersScreen() {
     // —— 覆盖层行为 —— //
     const closePendingAndBack = () => {
         setPendingVisible(false);
-        // 返回到进入商品详情之前的页面（因为详情页已被 pop，不会回到详情）
         if (params.prevRouteName) {
-            // 如果调用处传入了前一个路由名，主动前往，确保刷新
             nav.navigate(params.prevRouteName, params.prevRouteParams);
         } else {
             nav.goBack();
@@ -72,7 +71,6 @@ export default function MyOrdersScreen() {
             await OrderService.pay(orderId, payMethod);
             setPendingVisible(false);
             Alert.alert("支付成功", "", [{ text: "好的" }]);
-            // 支付成功就留在“我的订单”，也可以根据需要跳转别处
             load();
         } catch (e: any) {
             Alert.alert("支付失败", e?.message || String(e));
@@ -93,6 +91,27 @@ export default function MyOrdersScreen() {
         }
     };
 
+    // ✅ 新增：从订单拉起聊天
+    const contactFromOrder = async (order: any) => {
+        try {
+            if (!order?.productId || !order?.sellerId) {
+                Alert.alert("无法发起聊天", "缺少商品或卖家信息");
+                return;
+            }
+            const conv = await ChatService.createOrGetConversation({
+                productId: String(order.productId),
+                orderId: String(order.id),
+                sellerId: String(order.sellerId),
+            });
+            nav.navigate("ChatDetail", {
+                conversationId: conv.id,
+                seed: { productFirstImage: conv.productFirstImage, orderStatus: conv.orderStatus },
+            });
+        } catch (e: any) {
+            Alert.alert("发起聊天失败", e?.message || String(e));
+        }
+    };
+
     return (
         <View style={{ flex: 1, padding: 12 }}>
             <FlatList
@@ -101,6 +120,8 @@ export default function MyOrdersScreen() {
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={load} />}
                 renderItem={({ item }) => {
                     const actions: React.ReactNode[] = [];
+
+                    // 状态相关操作（原样保留）
                     if (item.status === "PENDING") {
                         actions.push(<Button key="pay" title="支付" onPress={() => update(item.id, (id) => OrderService.pay(id))} />);
                         actions.push(<Button key="cancel" title="取消" onPress={() => update(item.id, (id) => OrderService.cancel(id))} />);
@@ -109,12 +130,18 @@ export default function MyOrdersScreen() {
                     } else if (item.status === "SHIPPED") {
                         actions.push(<Button key="confirm" title="确认收货" onPress={() => update(item.id, (id) => OrderService.confirm(id))} />);
                     }
+
+                    // ✅ 新增：联系对方（字段齐全时显示）
+                    if (item.productId && item.sellerId) {
+                        actions.push(<Button key="chat" title="联系对方" onPress={() => contactFromOrder(item)} />);
+                    }
+
                     return (
                         <View style={{ padding: 12, borderWidth: 1, borderRadius: 12, marginBottom: 8, gap: 6 }}>
                             <Text>订单 {item.id}</Text>
                             <Text>金额 {formatAUD(item.priceSnapshot)}</Text>
                             <Text>状态 {item.status}</Text>
-                            <View style={{ flexDirection: "row", gap: 8 }}>{actions}</View>
+                            <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>{actions}</View>
                         </View>
                     );
                 }}
@@ -147,14 +174,8 @@ export default function MyOrdersScreen() {
                         <View style={{ marginTop:8, marginBottom:8 }}>
                             <Text style={{ fontSize:14, color:"#999" }}>支付方式</Text>
                             <View style={{ flexDirection:"row", marginTop:8, gap:12 }}>
-                                <Button
-                                    title={`支付宝${payMethod==="ALIPAY" ? " ✓" : ""}`}
-                                    onPress={() => setPayMethod("ALIPAY")}
-                                />
-                                <Button
-                                    title={`花呗${payMethod==="HUABEI" ? " ✓" : ""}`}
-                                    onPress={() => setPayMethod("HUABEI")}
-                                />
+                                <Button title={`支付宝${payMethod==="ALIPAY" ? " ✓" : ""}`} onPress={() => setPayMethod("ALIPAY")} />
+                                <Button title={`花呗${payMethod==="HUABEI" ? " ✓" : ""}`} onPress={() => setPayMethod("HUABEI")} />
                             </View>
                         </View>
 
