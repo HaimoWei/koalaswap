@@ -24,11 +24,11 @@ import java.util.UUID;
 public class ConversationController {
 
     private final ChatDomainService chat;
-    private final ProductClient productClient;              // [B3 CHANGE]
-    private final RateLimitService rateLimit;               // [B3 CHANGE]
+    private final ProductClient productClient;
+    private final RateLimitService rateLimit;
     private final WsPublisher wsPublisher;
 
-    // 没有配置时，使用这个默认占位图（可改成你自己的）
+    // 没有配置时，使用这个默认占位图
     @Value("${app.images.placeholder-product:https://static.example.com/img/placeholder-product.png}")
     private String placeholderProduct;                   // << 新增
 
