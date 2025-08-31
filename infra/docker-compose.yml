@@ -16,7 +16,7 @@ services:
       - koalaswap-db-data:/var/lib/postgresql/data
       # 只挂这两个文件，按顺序执行
       - ../database/KoalaSwap_Schema_v1.2.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
-      - ../database/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+      - ../database/KoalaSwap_v1_3_extra.sql:/docker-entrypoint-initdb.d/02_extra.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U koalaswap -d koalaswap_dev"]
       interval: 10s
