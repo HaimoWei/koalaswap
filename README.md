@@ -89,7 +89,6 @@ This project is licensed under the MIT License.
 ./mvnw -pl order-service spring-boot:run -Dspring-boot.run.profiles=local
 ./mvnw -pl review-service spring-boot:run -Dspring-boot.run.profiles=local
 ./mvnw -pl chat-service spring-boot:run -Dspring-boot.run.profiles=local
-./mvnw -pl chat-service spring-boot:run -Dspring-boot.run.profiles=local
 ./mvnw -pl gateway-service spring-boot:run -Dspring-boot.run.profiles=local
 
 docker compose down -v

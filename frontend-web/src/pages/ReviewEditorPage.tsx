@@ -1,3 +1,4 @@
+// src/pages/ReviewEditorPage.tsx
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getOrder } from "../api/orders";
@@ -22,7 +23,13 @@ export function ReviewEditorPage() {
     });
 
     const createM = useMutation({
-        mutationFn: () => createReview({ orderId, rating, content: content.trim(), anonymous }),
+        mutationFn: () =>
+            createReview({
+                orderId,
+                rating,
+                comment: content.trim(),     // ← 字段名改为 comment
+                isAnonymous: anonymous,      // ← 字段名改为 isAnonymous
+            }),
         onSuccess: () => {
             alert("评价已提交");
             nav("/me/reviews");

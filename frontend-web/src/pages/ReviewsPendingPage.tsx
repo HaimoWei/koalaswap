@@ -1,15 +1,15 @@
+// src/pages/ReviewsPendingPage.tsx
 import { useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getPendingReviews, type PendingItem, type PendingRes } from "../api/reviews";
 import { getProduct } from "../api/products";
 
-// 把 PendingRes 兼容成简单数组
-function normalizePending(res: PendingRes): PendingItem[] {
+// 直接按 tab 提取列表
+function normalizePending(res: PendingRes | undefined, tab: "buyer" | "seller" | "commented"): PendingItem[] {
     if (!res) return [];
-    // Page<T>
-    if ((res as any).content) return (res as any).content as PendingItem[];
-    // {items:[]}
-    if ((res as any).items) return (res as any).items as PendingItem[];
+    if (tab === "buyer") return res.buyer || [];
+    if (tab === "seller") return res.seller || [];
+    // commented（后端目前 counts 有该字段，若列表不返回，则为空）
     return [];
 }
 
@@ -19,14 +19,13 @@ export function ReviewsPendingPage() {
     const page = parseInt(sp.get("page") || "0", 10);
     const size = parseInt(sp.get("size") || "20", 10);
 
-    // v5：加泛型 PendingRes；用 placeholderData 代替 keepPreviousData
     const q = useQuery<PendingRes>({
         queryKey: ["pendingReviews", tab, page, size],
         queryFn: () => getPendingReviews({ tab, page, size }),
         placeholderData: (prev) => prev as any,
     });
 
-    const list = normalizePending(q.data as PendingRes);
+    const list = normalizePending(q.data, tab);
 
     const onTab = (t: "buyer" | "seller" | "commented") => {
         const next = new URLSearchParams(sp);
@@ -78,7 +77,7 @@ export function ReviewsPendingPage() {
                 </div>
             )}
 
-            {/* 简易分页（如果后端返回了 totalPages，可根据 q.data 判断；此处略） */}
+            {/* 简易分页：如果后端未来返回 totalPages 再补，这里先留空 */}
         </main>
     );
 }
@@ -91,8 +90,8 @@ function PendingRow({ it }: { it: PendingItem }) {
         enabled: !!it.productId,
         staleTime: 60_000,
     });
-    const img = prodQ.data?.images?.[0] || it.image || "https://placehold.co/120x120?text=No+Image";
-    const title = prodQ.data?.title || it.title || `订单 ${it.orderId}`;
+    const img = prodQ.data?.images?.[0] || "https://placehold.co/120x120?text=No+Image";
+    const title = prodQ.data?.title || `订单 ${it.orderId}`;
 
     return (
         <div className="p-3 border rounded-lg bg-white flex items-center gap-3">
@@ -101,7 +100,7 @@ function PendingRow({ it }: { it: PendingItem }) {
                 <div className="font-medium truncate">{title}</div>
                 <div className="text-xs text-gray-500 mt-1">订单：{it.orderId}</div>
             </div>
-            {/* 已评价 tab 只展示查看按钮 */}
+            {/* commented 页签如果只允许查看，可在此判断 tab 决定按钮文案 */}
             <Link to={`/reviews/new/${it.orderId}`} className="px-3 py-1 rounded text-sm bg-black text-white hover:opacity-90">
                 去评价
             </Link>

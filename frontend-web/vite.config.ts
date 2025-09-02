@@ -9,4 +9,9 @@ export default defineConfig({
     react(),       // React + SWC
     tailwindcss(), // 启用 Tailwind v4
   ],
+  server: {
+    host: true,
+    port: 4200,
+    strictPort: true
+  },
 });

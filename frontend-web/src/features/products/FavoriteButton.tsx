@@ -13,25 +13,23 @@ export function FavoriteButton({ productId }: { productId: string }) {
         let mounted = true;
         async function run() {
             try {
+                if (!token) { setFav(false); return; } // ★ 未登录默认未收藏
                 const ok = await checkFavorite(productId);
-                if (mounted) setFav(ok);
+                if (mounted) setFav(!!ok);
             } catch {
-                // 未登录或接口异常都不崩
+                if (mounted) setFav(false);           // ★ 异常按未收藏
             } finally {
                 if (mounted) setLoading(false);
             }
         }
         run();
         return () => { mounted = false; };
-    }, [productId]);
+    }, [productId, token]); // ★ 对登录态敏感
 
     async function toggle() {
-        if (!token) {
-            openAuth(); // 未登录直接拉登录弹窗
-            return;
-        }
+        if (!token) return openAuth();
+        setLoading(true);
         try {
-            setLoading(true);
             if (!fav) {
                 await addFavorite(productId);
                 setFav(true);
@@ -39,6 +37,8 @@ export function FavoriteButton({ productId }: { productId: string }) {
                 await removeFavorite(productId);
                 setFav(false);
             }
+        } catch (e: any) {
+            alert(e?.message || "收藏操作失败");
         } finally {
             setLoading(false);
         }

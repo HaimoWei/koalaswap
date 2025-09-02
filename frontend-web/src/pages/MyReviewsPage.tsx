@@ -1,20 +1,22 @@
+// src/pages/MyReviewsPage.tsx
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getMyReviews, appendReview, type ReviewRes } from "../api/reviews";
+import { getMyReviews, appendReview, type SellerReview as ReviewRes } from "../api/reviews";
 import { getProduct } from "../api/products";
 import { RatingStars } from "../features/reviews/RatingStars";
 import { useState } from "react";
 import { AppendReviewDialog } from "../features/reviews/AppendReviewDialog";
-import type { Page } from "../api/types"; // ★ 明确 Page<T> 类型
+import type { Page } from "../api/types";
 
 function ReviewItem({ r, onAppend }: { r: ReviewRes; onAppend: (r: ReviewRes) => void }) {
     const prodQ = useQuery({
-        queryKey: ["product", r.productId],
-        queryFn: () => getProduct(r.productId),
+        queryKey: ["product", r.product?.id],
+        queryFn: () => getProduct(r.product!.id),
+        enabled: !!r.product?.id,
         staleTime: 60_000,
     });
     const img = prodQ.data?.images?.[0] || "https://placehold.co/120x120";
-    const title = prodQ.data?.title || `商品 ${r.productId}`;
+    const title = prodQ.data?.title || `商品 ${r.product?.id ?? "-"}`;
 
     return (
         <div className="p-3 border rounded-lg bg-white">
@@ -25,19 +27,22 @@ function ReviewItem({ r, onAppend }: { r: ReviewRes; onAppend: (r: ReviewRes) =>
                     <div className="text-xs text-gray-500 mt-0.5">订单：{r.orderId}</div>
                     <div className="flex items-center gap-2 mt-2">
                         <RatingStars value={r.rating} readOnly size={16} />
-                        <span className="text-xs text-gray-600">{new Date(r.createdAt).toLocaleString()}</span>
+                        {r.createdAt && <span className="text-xs text-gray-600">{new Date(r.createdAt).toLocaleString()}</span>}
                     </div>
-                    <div className="text-sm mt-2 whitespace-pre-wrap">{r.content}</div>
+
+                    {!!r.comment && <div className="text-sm mt-2 whitespace-pre-wrap">{r.comment}</div>}
 
                     {/* 追评列表 */}
                     {r.appends?.length ? (
                         <div className="mt-3 space-y-2">
                             {r.appends.map((a) => (
                                 <div key={a.id} className="text-sm bg-gray-50 border rounded p-2">
-                                    <div className="text-xs text-gray-500 mb-1">
-                                        {new Date(a.createdAt).toLocaleString()} 的追评
-                                    </div>
-                                    <div className="whitespace-pre-wrap">{a.content}</div>
+                                    {a.createdAt && (
+                                        <div className="text-xs text-gray-500 mb-1">
+                                            {new Date(a.createdAt).toLocaleString()} 的追评
+                                        </div>
+                                    )}
+                                    <div className="whitespace-pre-wrap">{a.comment}</div>
                                 </div>
                             ))}
                         </div>
@@ -64,7 +69,6 @@ export function MyReviewsPage() {
 
     const qc = useQueryClient();
 
-    // ★ v5：加上泛型 Page<ReviewRes>；去掉 keepPreviousData，改用 placeholderData
     const q = useQuery<Page<ReviewRes>>({
         queryKey: ["myReviews", page, size],
         queryFn: () => getMyReviews({ page, size }),
@@ -75,8 +79,8 @@ export function MyReviewsPage() {
     const [open, setOpen] = useState(false);
     const [target, setTarget] = useState<ReviewRes | null>(null);
 
-    // ★ v5：给 useMutation 明确泛型；状态用 isPending（不是 isLoading）
-    const appendM = useMutation<ReviewRes, Error, string>({
+    // 追评：参数是字符串，返回 void
+    const appendM = useMutation<void, Error, string>({
         mutationFn: (content) => appendReview(target!.id, content),
         onSuccess: () => {
             setOpen(false);
@@ -153,11 +157,10 @@ export function MyReviewsPage() {
                     setOpen(false);
                     setTarget(null);
                 }}
-                // ★ v5：mutateAsync 仍可用；也可用 mutate(c, { onSuccess })，这里保留 async 用法
                 onSubmit={async (c) => {
-                    await appendM.mutateAsync(c); // 这里不返回结果，函数返回 Promise<void>
+                    await appendM.mutateAsync(c); // c 是字符串
                 }}
-                loading={appendM.isPending} // ★ v5 用 isPending
+                loading={appendM.isPending}
             />
         </main>
     );

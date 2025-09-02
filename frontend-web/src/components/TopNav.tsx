@@ -19,6 +19,7 @@ export function TopNav() {
     async function onLogout() {
         try { await logout(); } catch {}
         clear();
+        nav("/"); // ★ 退出后回首页，触发首页数据重拉
     }
 
     function onSubmitSearch() {

@@ -1,8 +1,10 @@
+// src/pages/MyProductsPage.tsx
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchMyProducts } from "../api/products";
 import { ProductCard } from "../components/ProductCard";
 import { Paginator } from "../components/Paginator";
+import type { Page, ProductRes } from "../api/types";
 
 export function MyProductsPage() {
     const [sp, setSp] = useSearchParams();
@@ -10,10 +12,11 @@ export function MyProductsPage() {
     const page = parseInt(sp.get("page") || "0", 10);
     const size = parseInt(sp.get("size") || "20", 10);
 
-    const { data, isLoading, isError, error } = useQuery({
+    const { data, isLoading, isError, error } = useQuery<Page<ProductRes>>({
         queryKey: ["mine", tab, page, size],
         queryFn: () => fetchMyProducts({ tab, page, size, sort: "updatedAt,desc" }),
-        keepPreviousData: true,
+        // v5: 用 placeholderData 复刻 keepPreviousData 行为
+        placeholderData: (prev) => prev,
     });
 
     const setTab = (t: "onsale" | "hidden") => {
@@ -57,12 +60,14 @@ export function MyProductsPage() {
             ) : (
                 <>
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                        {data?.content.map((p) => <ProductCard key={p.id} p={p} />)}
+                        {(data?.content ?? []).map((p: ProductRes) => (
+                            <ProductCard key={p.id} p={p} />
+                        ))}
                     </div>
 
                     <Paginator
-                        page={data?.number || 0}
-                        totalPages={data?.totalPages || 1}
+                        page={data?.number ?? 0}
+                        totalPages={data?.totalPages ?? 1}
                         onPageChange={onPageChange}
                     />
                 </>

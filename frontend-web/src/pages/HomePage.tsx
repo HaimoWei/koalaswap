@@ -3,14 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchHomeProducts } from "../api/products";
 import { ProductCard } from "../components/ProductCard";
 import { Paginator } from "../components/Paginator";
+import { useAuthStore } from "../store/auth";
 
 export function HomePage() {
     // 简单分页：本地 state（首页不走 URL）
     const [page, setPage] = useState(0);
     const size = 20;
+    const token = useAuthStore((s) => s.token); // ★ 让首页数据对登录态敏感
 
     const { data, isLoading, isError, error } = useQuery({
-        queryKey: ["home", page, size],
+        queryKey: ["home", page, size, token ? "auth" : "guest"], // ★ 加入影子键
         queryFn: () => fetchHomeProducts({ page, size, sort: "createdAt,desc" }),
         staleTime: 30_000,
         placeholderData: (prev) => prev as any,

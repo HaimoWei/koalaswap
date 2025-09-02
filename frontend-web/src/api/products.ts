@@ -3,10 +3,6 @@ import { productApi } from "./http";
 import type { Page, ProductRes, ApiResponse } from "./types";
 import { DEBUG, dlog } from "../debug";
 
-/**
- * 有些后端返回 { ok, data, message }（包一层）
- * 有些直接返回 Page 或对象本身。我们统一在这里兼容。
- */
 type MaybeWrapped<T> = ApiResponse<T> | T;
 
 function unwrap<T>(payload: MaybeWrapped<T>): T {
@@ -18,7 +14,6 @@ function unwrap<T>(payload: MaybeWrapped<T>): T {
         }
         return p.data as T;
     }
-    // 直返模式（没有 ok/data）
     return payload as T;
 }
 
@@ -35,13 +30,13 @@ export async function fetchHomeProducts(
 
 /** 搜索 + 筛选 */
 export type SearchParams = {
-    page?: number;           // 0-based
-    size?: number;           // page size
+    page?: number;
+    size?: number;
     keyword?: string;
     catId?: string;
     minPrice?: number;
     maxPrice?: number;
-    sort?: string;           // e.g. "createdAt,desc" / "price,asc"
+    sort?: string;
 };
 
 export async function searchProducts(params: SearchParams) {
@@ -74,20 +69,25 @@ export async function getProduct(id: string) {
     return unwrap<ProductRes>(data);
 }
 
-/** 收藏状态查询 */
+/** 收藏状态查询（404/401 → 未收藏，不打断渲染） */
 export async function checkFavorite(productId: string) {
-    const { data } = await productApi.get<MaybeWrapped<{ favorited: boolean }>>(
-        `/api/favorites/check`,
-        { params: { productId } }
-    );
-    const res = unwrap<{ favorited: boolean }>(data);
-    return !!res.favorited;
+    try {
+        const { data } = await productApi.get<MaybeWrapped<{ favorited: boolean } | boolean>>(
+            `/api/favorites/check`,
+            { params: { productId } }
+        );
+        const res: any = unwrap<any>(data);
+        if (typeof res === "boolean") return res;
+        return !!res?.favorited;
+    } catch (e: any) {
+        if (e?.response?.status === 401 || e?.response?.status === 404) return false;
+        return false;
+    }
 }
 
 /** 添加收藏 */
 export async function addFavorite(productId: string) {
     const { data } = await productApi.post<MaybeWrapped<boolean>>(`/api/favorites/${productId}`);
-    // 有的后端返回 {ok:true} 或 {ok:true,data:true} 或 直接 true
     const val = unwrap<boolean | undefined>(data);
     return val === undefined ? true : !!val;
 }
@@ -97,4 +97,16 @@ export async function removeFavorite(productId: string) {
     const { data } = await productApi.delete<MaybeWrapped<boolean>>(`/api/favorites/${productId}`);
     const val = unwrap<boolean | undefined>(data);
     return val === undefined ? true : !!val;
+}
+
+/** 按卖家列出在售（真实接口） */
+export async function listSellerActive(
+    sellerId: string,
+    { page = 0, size = 12, sort = "createdAt,desc" }: { page?: number; size?: number; sort?: string } = {}
+): Promise<Page<ProductRes>> {
+    const { data } = await productApi.get<ApiResponse<Page<ProductRes>>>(`/api/products`, {
+        params: { sellerId, status: "ACTIVE", page, size, sort },
+    });
+    if (!data.ok || !data.data) throw new Error(data.message || "List products failed");
+    return data.data;
 }
