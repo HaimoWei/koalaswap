@@ -1,7 +1,8 @@
+// src/pages/ProductDetailPage.tsx
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { getProduct } from "../api/products";
+import { getProduct, hideProduct, relistProduct, deleteProduct } from "../api/products";
 import { getUserBrief } from "../api/users";
 import { useAuthStore } from "../store/auth";
 import { useUiStore } from "../store/ui";
@@ -11,8 +12,10 @@ import { FavoriteButton } from "../features/products/FavoriteButton";
 export function ProductDetailPage() {
     const { id = "" } = useParams<{ id: string }>();
     const nav = useNavigate();
+    const qc = useQueryClient();
     const { profile, token } = useAuthStore();
     const openAuth = useUiStore((s) => s.openAuth);
+    const [busy, setBusy] = useState(false);
 
     const productQ = useQuery({
         queryKey: ["product", id],
@@ -30,20 +33,23 @@ export function ProductDetailPage() {
         return <main className="max-w-6xl mx-auto p-6">加载中...</main>;
     }
     if (productQ.isError || !productQ.data) {
-        return (
-            <main className="max-w-6xl mx-auto p-6 text-red-600">商品不存在或已下架</main>
-        );
+        return <main className="max-w-6xl mx-auto p-6 text-red-600">商品不存在或已下架</main>;
     }
 
     const p = productQ.data;
     const isMine = profile?.id === p.sellerId;
-    const isReserved = p.status === "RESERVED";
-    const disabledBuy =
-        isMine || isReserved || p.status === "SOLD" || p.status === "HIDDEN";
-    const disabledChat = isMine || isReserved || p.status === "HIDDEN";
+
+    // ✅ 统一规则：只有 ACTIVE 才能聊/买；其他状态一律禁用
+    const notActive = p.status !== "ACTIVE";
+    const disabledChat = isMine || notActive;
+    const disabledBuy = isMine || notActive;
 
     async function onChat() {
         if (!token) return openAuth();
+        if (disabledChat) {
+            alert("该商品当前不可聊天。");
+            return;
+        }
         try {
             const conv = await createConversation({ productId: p.id, sellerId: p.sellerId });
             nav(`/chat/${conv.id}`);
@@ -54,8 +60,68 @@ export function ProductDetailPage() {
 
     function onOrder() {
         if (!token) return openAuth();
-        // 跳到创建订单确认页
+        if (disabledBuy) {
+            alert("该商品当前不可购买。");
+            return;
+        }
         nav(`/checkout/${p.id}`);
+    }
+
+    async function onHide() {
+        if (!token) return openAuth();
+        if (!confirm("确定要下架该商品吗？")) return;
+        try {
+            setBusy(true);
+            await hideProduct(p.id);
+            await qc.invalidateQueries({ queryKey: ["product", id] });
+        } catch (e: any) {
+            alert(e?.message || "下架失败，请稍后再试");
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    async function onRelist() {
+        if (!token) return openAuth();
+        try {
+            setBusy(true);
+            await relistProduct(p.id);
+            await qc.invalidateQueries({ queryKey: ["product", id] });
+        } catch (e: any) {
+            alert(e?.message || "操作失败，请稍后再试");
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    async function onDelete() {
+        if (!token) return openAuth();
+
+        const ok = confirm("删除后不可恢复。若当前在售，将先下架再彻底删除。确认删除吗？");
+        if (!ok) return;
+
+        try {
+            setBusy(true);
+            if (p.status !== "HIDDEN") {
+                await hideProduct(p.id);
+            }
+            await deleteProduct(p.id, true);
+            nav("/me/listings");
+        } catch (e: any) {
+            const msg =
+                e?.response?.data?.message ||
+                e?.message ||
+                "删除失败，请稍后再试";
+
+            if (/订单|无法删除|foreign|constraint/i.test(msg)) {
+                alert("该商品存在订单记录，无法彻底删除；已为你下架。");
+                await qc.invalidateQueries({ queryKey: ["product", id] });
+                return;
+            }
+            alert(msg);
+        } finally {
+            setBusy(false);
+        }
     }
 
     return (
@@ -81,31 +147,67 @@ export function ProductDetailPage() {
                     )}
                 </div>
 
-                {/* 操作区：RESERVED 时全部禁用/隐藏 */}
-                <div className="mt-4 flex gap-3">
-                    <button
-                        onClick={onChat}
-                        disabled={disabledChat}
-                        className="px-4 py-2 rounded bg-black text-white text-sm disabled:opacity-50"
-                    >
-                        聊一聊
-                    </button>
+                {/* 操作区 */}
+                {isMine ? (
+                    <div className="mt-4 flex gap-3">
+                        {p.status !== "HIDDEN" ? (
+                            <button
+                                onClick={onHide}
+                                disabled={busy}
+                                className="px-6 py-2 rounded-xl border hover:bg-gray-50 disabled:opacity-50"
+                            >
+                                下架
+                            </button>
+                        ) : (
+                            <button
+                                onClick={onRelist}
+                                disabled={busy}
+                                className="px-6 py-2 rounded-xl border hover:bg-gray-50 disabled:opacity-50"
+                            >
+                                重新上架
+                            </button>
+                        )}
 
-                    <button
-                        onClick={onOrder}
-                        disabled={disabledBuy}
-                        className="px-4 py-2 rounded bg-orange-500 text-white text-sm disabled:opacity-50"
-                    >
-                        立即购买
-                    </button>
+                        <button
+                            onClick={onDelete}
+                            disabled={busy}
+                            className="px-6 py-2 rounded-xl border text-red-600 hover:bg-red-50 disabled:opacity-50"
+                        >
+                            删除
+                        </button>
+                    </div>
+                ) : (
+                    <div className="mt-4 flex gap-3">
+                        <button
+                            onClick={onChat}
+                            disabled={disabledChat}
+                            className="px-4 py-2 rounded bg-black text-white text-sm disabled:opacity-50"
+                        >
+                            聊一聊
+                        </button>
 
-                    {/* 已预定/自己发布则不显示收藏按钮 */}
-                    {!isReserved && !isMine && <FavoriteButton productId={p.id} />}
-                </div>
+                        <button
+                            onClick={onOrder}
+                            disabled={disabledBuy}
+                            className="px-4 py-2 rounded bg-orange-500 text-white text-sm disabled:opacity-50"
+                        >
+                            立即购买
+                        </button>
 
-                {isReserved && (
+                        {/* ✅ 收藏按钮仅在 ACTIVE 且非卖家时展示 */}
+                        {!isMine && p.status === "ACTIVE" && <FavoriteButton productId={p.id} />}
+                    </div>
+                )}
+
+                {/* ✅ 非 ACTIVE 提示（保留更具体的“已预定”文案） */}
+                {!isMine && p.status === "RESERVED" && (
                     <div className="mt-2 text-xs text-orange-600">
-                        该商品已被预定，暂不可聊天、收藏或购买
+                        该商品已被预定，暂不可聊天或购买
+                    </div>
+                )}
+                {!isMine && p.status && p.status !== "ACTIVE" && p.status !== "RESERVED" && (
+                    <div className="mt-2 text-xs text-orange-600">
+                        该商品已失效，暂不可聊天或购买
                     </div>
                 )}
 
@@ -122,7 +224,10 @@ export function ProductDetailPage() {
                         >
                             <img
                                 src={sellerQ.data.avatarUrl || "https://placehold.co/40x40"}
+                                alt={`${sellerQ.data.displayName || "卖家"}的头像`}
                                 className="w-10 h-10 rounded-full border"
+                                loading="lazy"
+                                decoding="async"
                             />
                             <div className="text-sm">{sellerQ.data.displayName}</div>
                         </div>
@@ -151,7 +256,10 @@ function Gallery({ images }: { images: string[] }) {
             <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
                 <img
                     src={list[Math.min(idx, list.length - 1)]}
+                    alt="商品图片"
                     className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                 />
             </div>
             <div className="mt-3 grid grid-cols-5 gap-2">
@@ -162,8 +270,9 @@ function Gallery({ images }: { images: string[] }) {
                         className={`aspect-square rounded border overflow-hidden ${
                             i === idx ? "ring-2 ring-black" : ""
                         }`}
+                        aria-label={`预览第 ${i + 1} 张图片`}
                     >
-                        <img src={url} className="w-full h-full object-cover" />
+                        <img src={url} alt="商品图片缩略图" className="w-full h-full object-cover" />
                     </button>
                 ))}
             </div>

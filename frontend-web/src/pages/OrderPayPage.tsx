@@ -14,23 +14,20 @@ export function OrderPayPage() {
 
     async function onSuccess() {
         try {
-            await payOrder(id);
+            await payOrder(id); // 支付成功
+            nav(`/pay/result?orderId=${id}&result=success`);
         } catch (e: any) {
-            alert(e?.message || "模拟支付失败（接口报错）");
-            // 即使失败也跳详情看状态
-        } finally {
-            nav(`/orders/${id}`);
+            // 如果接口报错，也当失败处理
+            nav(`/pay/result?orderId=${id}&result=fail`);
         }
     }
 
     function onFail() {
-        // 不调用支付接口，直接去订单详情，状态保持 CREATED/PENDING
-        nav(`/orders/${id}`);
+        // 不调用支付接口，仍保持 PENDING
+        nav(`/pay/result?orderId=${id}&result=fail`);
     }
 
-    if (q.isLoading) {
-        return <main className="max-w-3xl mx-auto p-6">加载订单信息…</main>;
-    }
+    if (q.isLoading) return <main className="max-w-3xl mx-auto p-6">加载订单信息…</main>;
 
     const o = q.data;
 
@@ -50,18 +47,8 @@ export function OrderPayPage() {
             )}
 
             <div className="flex gap-3">
-                <button
-                    onClick={onSuccess}
-                    className="px-4 py-2 rounded bg-black text-white"
-                >
-                    模拟支付成功
-                </button>
-                <button
-                    onClick={onFail}
-                    className="px-4 py-2 rounded bg-gray-200"
-                >
-                    模拟支付失败
-                </button>
+                <button onClick={onSuccess} className="px-4 py-2 rounded bg-black text-white">模拟支付成功</button>
+                <button onClick={onFail} className="px-4 py-2 rounded bg-gray-200">模拟支付失败</button>
             </div>
         </main>
     );

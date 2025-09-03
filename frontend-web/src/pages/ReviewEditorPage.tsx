@@ -32,7 +32,8 @@ export function ReviewEditorPage() {
             }),
         onSuccess: () => {
             alert("评价已提交");
-            nav("/me/reviews");
+            // 统一回到“待评价”页的“已评价”tab
+            nav("/me/reviews/pending?tab=commented");
         },
     });
 

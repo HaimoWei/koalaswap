@@ -3,6 +3,20 @@ import { productApi } from "./http";
 import type { Page, ProductRes, ApiResponse } from "./types";
 import { DEBUG, dlog } from "../debug";
 
+/** ========== 新增：发布所需类型（与后端枚举保持一致） ========== */
+export type Condition = "NEW" | "LIKE_NEW" | "GOOD" | "FAIR" | "POOR";
+
+export interface ProductCreateReq {
+    title: string;
+    description?: string;
+    price: number;            // BigDecimal -> number
+    currency: string;         // 例：AUD/CNY/USD
+    categoryId?: number | null;
+    condition: Condition;
+    images?: string[];        // 先用URL，后续可接直传
+}
+/** ======================================================== */
+
 type MaybeWrapped<T> = ApiResponse<T> | T;
 
 function unwrap<T>(payload: MaybeWrapped<T>): T {
@@ -32,7 +46,7 @@ export async function fetchHomeProducts(
 export type SearchParams = {
     page?: number;
     size?: number;
-    keyword?: string;
+    keyword?: string;   // 前端用 keyword
     catId?: string;
     minPrice?: number;
     maxPrice?: number;
@@ -44,9 +58,10 @@ export async function searchProducts(params: SearchParams) {
         page = 0, size = 20, keyword, catId, minPrice, maxPrice, sort = "createdAt,desc",
     } = params;
 
+    // 兼容：后端参数名是 kw，这里做一次映射
     const { data } = await productApi.get<MaybeWrapped<Page<ProductRes>>>(
         "/api/products",
-        { params: { page, size, keyword, catId, minPrice, maxPrice, sort } }
+        { params: { page, size, kw: keyword, catId, minPrice, maxPrice, sort } }
     );
     return unwrap<Page<ProductRes>>(data);
 }
@@ -105,8 +120,35 @@ export async function listSellerActive(
     { page = 0, size = 12, sort = "createdAt,desc" }: { page?: number; size?: number; sort?: string } = {}
 ): Promise<Page<ProductRes>> {
     const { data } = await productApi.get<ApiResponse<Page<ProductRes>>>(`/api/products`, {
+        // 如果后端不支持 sellerId，这里可以考虑改为 /api/products/mine 或服务端加筛选
         params: { sellerId, status: "ACTIVE", page, size, sort },
     });
     if (!data.ok || !data.data) throw new Error(data.message || "List products failed");
     return data.data;
+}
+
+/* ========= 发 布 ========= */
+export async function createProduct(payload: ProductCreateReq): Promise<ProductRes> {
+    // 保持与文件中其它函数一致的风格（productApi + ApiResponse 校验）
+    const { data } = await productApi.post<ApiResponse<ProductRes>>("/api/products", payload);
+    if (!data.ok || !data.data) throw new Error(data.message || "Create product failed");
+    return data.data;
+}
+
+/* ========= 卖家操作（与您示例一致） ========= */
+export async function hideProduct(id: string): Promise<void> {
+    const { data } = await productApi.post<ApiResponse<void>>(`/api/products/${id}/hide`);
+    if (data && data.ok === false) throw new Error(data.message || "Hide failed");
+}
+
+export async function relistProduct(id: string): Promise<void> {
+    const { data } = await productApi.post<ApiResponse<void>>(`/api/products/${id}/relist`);
+    if (data && data.ok === false) throw new Error(data.message || "Relist failed");
+}
+
+export async function deleteProduct(id: string, hard = false): Promise<void> {
+    const { data } = await productApi.delete<ApiResponse<void>>(`/api/products/${id}`, {
+        params: { hard },
+    });
+    if (data && data.ok === false) throw new Error(data.message || "Delete failed");
 }

@@ -79,9 +79,12 @@ public class ProductController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size,
             @RequestParam(defaultValue = "createdAt,desc") String sort,
-            @RequestParam(required = false) UUID excludeSellerId
+            @RequestParam(required = false) UUID excludeSellerId,
+            @RequestParam(required = false) UUID sellerId  // ★ 新增
     ) {
-        return ApiResponse.ok(service.search(kw, catId, minPrice, maxPrice, page, size, sort, excludeSellerId));
+        return ApiResponse.ok(
+                service.search(kw, catId, minPrice, maxPrice, page, size, sort, excludeSellerId, sellerId) // ★ 传入
+        );
     }
 
     /** 我的发布（需要登录）：tab=onsale(默认) | hidden */

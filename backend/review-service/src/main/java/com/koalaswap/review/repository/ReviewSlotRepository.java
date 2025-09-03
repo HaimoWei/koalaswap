@@ -35,4 +35,11 @@ public interface ReviewSlotRepository extends JpaRepository<ReviewSlot, UUID> {
     @Modifying
     @Query("update ReviewSlot s set s.status = 'EXPIRED' where s.dueAt < :now and s.status = 'PENDING'")
     int expireSlots(Instant now);
+
+    // 批量：按(我=reviewerId, 多个orderId)拿到对应的slot（从而拿 productId）
+    List<ReviewSlot> findByReviewerIdAndOrderIdIn(UUID reviewerId, Collection<UUID> orderIds);
+
+    // 批量：按多个orderId拿所有slot（买/卖各一条），用于 listForUser
+    List<ReviewSlot> findByOrderIdIn(Collection<UUID> orderIds);
+
 }

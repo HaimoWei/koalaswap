@@ -1,11 +1,9 @@
-import { OrderStatusTag } from "./OrderStatusTag";
-
-// 简单时间线：根据 status 高亮节点（伪造节点时间，仅展示流转步骤）
+// 简单时间线：根据 status 高亮节点
 export function OrderTimeline({ status }: { status: string }) {
     const up = (status || "").toUpperCase();
-    const steps = ["CREATED", "PAID", "SHIPPED", "CONFIRMED"];
+    const steps = ["PENDING", "PAID", "SHIPPED", "CONFIRMED"]; // ← 用 PENDING 起步
     const idx = Math.max(
-        steps.findIndex((s) => s === up || (up === "NEW" && s === "CREATED")),
+        steps.findIndex((s) => s === up || (up === "CREATED" && s === "PENDING") || (up === "NEW" && s === "PENDING")),
         up === "COMPLETED" ? steps.length - 1 : -1
     );
 
@@ -19,14 +17,12 @@ export function OrderTimeline({ status }: { status: string }) {
                 </div>
             ))}
             {(up === "CANCELLED" || up === "CANCELED") && (
-                <div className="ml-2 text-xs text-gray-600 flex items-center gap-2">
-                    <span>→</span><OrderStatusTag status={status} />
-                </div>
+                <div className="ml-2 text-xs text-gray-600">→ 已取消</div>
             )}
         </div>
     );
 }
 function mapText(s: string) {
-    const m: Record<string,string> = { CREATED: "已创建", PAID: "已支付", SHIPPED: "已发货", CONFIRMED: "已收货" };
+    const m: Record<string,string> = { PENDING: "待支付", PAID: "已支付", SHIPPED: "已发货", CONFIRMED: "已收货" };
     return m[s] || s;
 }

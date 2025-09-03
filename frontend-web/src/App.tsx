@@ -5,6 +5,7 @@ import { useUiStore } from "./store/ui";
 
 import { TopNav } from "./components/TopNav";
 import { Protected } from "./components/Protected";
+import FabDock from "./components/FabDock"; // ★ 悬浮窗
 
 import { HomePage } from "./pages/HomePage";
 import { SearchPage } from "./pages/SearchPage";
@@ -18,16 +19,26 @@ import { MyProductsPage } from "./pages/MyProductsPage";
 import { MeHomePage } from "./pages/MeHomePage";
 import { MyFavoritesPage } from "./pages/MyFavoritesPage";
 import { ReviewsPendingPage } from "./pages/ReviewsPendingPage";
-import { MyReviewsPage } from "./pages/MyReviewsPage";
 import { ReviewEditorPage } from "./pages/ReviewEditorPage";
 import { OrderPayPage } from "./pages/OrderPayPage";
 import SellerProfilePage from "./pages/SellerProfilePage";
+import PayResultPage from "./pages/PayResultPage";
 
 import { AuthDialog } from "./features/auth/AuthDialog";
 import { VerifyEmailPage } from "./features/auth/VerifyEmailPage";
 import { ResendVerifyPage } from "./features/auth/ResendVerifyPage";
 import { ForgotPasswordPage } from "./features/auth/ForgotPasswordPage";
 import { ResetPasswordPage } from "./features/auth/ResetPasswordPage";
+import ProductPublishPage from "./pages/ProductPublishPage.tsx";
+
+// 需要隐藏悬浮窗的前缀
+const DEDICATED_AUTH_PREFIXES = [
+    "/auth/verify",
+    "/verified",
+    "/auth/resend",
+    "/auth/forgot",
+    "/auth/reset",
+];
 
 export default function App() {
     const token = useAuthStore((s) => s.token);
@@ -37,21 +48,19 @@ export default function App() {
 
     // 进入独立认证页面时，强制关闭登录弹窗（解决“弹窗遮挡”体验问题）
     useEffect(() => {
-        const dedicatedAuthRoutes = [
-            "/auth/verify",
-            "/verified",
-            "/auth/resend",
-            "/auth/forgot",
-            "/auth/reset",
-        ];
-        if (dedicatedAuthRoutes.some((p) => loc.pathname.startsWith(p))) {
+        if (DEDICATED_AUTH_PREFIXES.some((p) => loc.pathname.startsWith(p))) {
             closeAuth();
         }
     }, [loc.pathname, closeAuth]);
 
+    // 这些页面或状态下隐藏悬浮窗
+    const hideFab =
+        authOpen || DEDICATED_AUTH_PREFIXES.some((p) => loc.pathname.startsWith(p));
+
     return (
         <div className="min-h-screen bg-gray-50 text-gray-900">
             <TopNav />
+
             <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/search" element={<SearchPage />} />
@@ -67,8 +76,17 @@ export default function App() {
                 {/* 兼容老链接 /reset?token=...（可选） */}
                 <Route path="/reset" element={<ResetPasswordPage />} />
 
+                {/* 发布页（主入口 /publish），并兼容 REST 风格别名 */}
+                <Route path="/publish" element={<ProductPublishPage />} />
+                <Route path="/products/new" element={<Navigate to="/publish" replace />} />
+                <Route path="/product/new" element={<Navigate to="/publish" replace />} />
+
+                {/* 商品详情：保留你现有的 /product/:id，并兼容 /products/:id */}
                 <Route path="/product/:id" element={<ProductDetailPage />} />
+                <Route path="/products/:id" element={<ProductDetailPage />} />
+
                 <Route path="/users/:id" element={<SellerProfilePage />} />
+
                 <Route
                     path="/checkout/:id"
                     element={
@@ -103,17 +121,25 @@ export default function App() {
                         </Protected>
                     }
                 />
+                <Route path="/pay/result" element={<PayResultPage />} />
+
                 {/* 聊天 */}
-                <Route path="/chat" element={
-                    <Protected isAuthed={!!token}>
-                        <ChatListPage />
-                    </Protected>
-                }/>
-                <Route path="/chat/:id" element={
-                    <Protected isAuthed={!!token}>
-                        <ChatDetailPage />
-                    </Protected>
-                }/>
+                <Route
+                    path="/chat"
+                    element={
+                        <Protected isAuthed={!!token}>
+                            <ChatListPage />
+                        </Protected>
+                    }
+                />
+                <Route
+                    path="/chat/:id"
+                    element={
+                        <Protected isAuthed={!!token}>
+                            <ChatDetailPage />
+                        </Protected>
+                    }
+                />
 
                 {/* 我的 */}
                 <Route
@@ -150,11 +176,7 @@ export default function App() {
                 />
                 <Route
                     path="/me/reviews"
-                    element={
-                        <Protected isAuthed={!!token}>
-                            <MyReviewsPage />
-                        </Protected>
-                    }
+                    element={<Navigate to="/me/reviews/pending?tab=commented" replace />}
                 />
                 <Route
                     path="/reviews/new/:orderId"
@@ -167,6 +189,9 @@ export default function App() {
 
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+
+            {/* ★ 全站悬浮窗（按需隐藏） */}
+            {!hideFab && <FabDock />}
 
             <AuthDialog open={authOpen} onClose={closeAuth} />
         </div>

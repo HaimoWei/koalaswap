@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,6 +25,38 @@ public class ReviewService {
     private final ReviewSlotRepository slots;
     private final ProductClient products;
     private final UserClient users;
+
+    // ====================== 工具方法 ======================
+
+    /** 批量把 productId -> ProductBrief 映射成 Map */
+    private Map<UUID, ProductClient.ProductBrief> loadProductBriefMap(Collection<UUID> productIds) {
+        if (productIds == null || productIds.isEmpty()) return Map.of();
+        var list = products.batchBrief(productIds);
+        return list.stream().collect(Collectors.toMap(ProductClient.ProductBrief::id, Function.identity()));
+    }
+
+    /** 根据 slot 批量建立 (orderId, reviewerId) -> productId 的映射 */
+    private Map<String, UUID> mapOrderReviewerToProduct(List<ReviewSlot> slotsList) {
+        Map<String, UUID> m = new HashMap<>();
+        for (var s : slotsList) {
+            String key = s.getOrderId() + "_" + s.getReviewerId();
+            m.put(key, s.getProductId());
+        }
+        return m;
+    }
+
+    private String keyOf(UUID orderId, UUID reviewerId) {
+        return orderId + "_" + reviewerId;
+    }
+
+    private ReviewSlot slotExample(UUID orderId, UUID me){
+        var s = new ReviewSlot();
+        s.setOrderId(orderId);
+        s.setReviewerId(me);
+        return s;
+    }
+
+    // ====================== 业务方法 ======================
 
     // 创建首评
     @Transactional
@@ -53,14 +86,13 @@ public class ReviewService {
         // 将槽位置为 REVIEWED
         slots.updateStatus(req.orderId(), me, ReviewSlotStatus.REVIEWED);
 
-        return toRes(r, slot.getProductId());
-    }
+        // 只此一条，直接取一次 brief（含标题与首图）
+        ProductClient.ProductBrief pb = null;
+        try { pb = products.oneBrief(slot.getProductId()); } catch (Exception ignore) {}
+        String title = pb == null ? null : pb.title();
+        String img   = pb == null ? null : pb.firstImageUrl();
 
-    private ReviewSlot slotExample(UUID orderId, UUID me){
-        var s = new ReviewSlot();
-        s.setOrderId(orderId);
-        s.setReviewerId(me);
-        return s;
+        return toRes(r, slot.getProductId(), title, img);
     }
 
     // 追评
@@ -76,7 +108,7 @@ public class ReviewService {
         reviews.save(r);
     }
 
-    // 用户主页评价列表（公开）
+    // 用户主页评价列表（公开）——批量补齐 product brief
     public Page<ReviewRes> listForUser(UUID userId, int page, int size, String role) {
         var pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
         Page<OrderReview> origin = reviews.findByRevieweeId(userId, pageable);
@@ -93,22 +125,34 @@ public class ReviewService {
         var reviewerBriefMap = users.briefBatch(reviewerIds).stream()
                 .collect(Collectors.toMap(UserClient.UserBrief::id, b -> b));
 
-        List<ReviewRes> mapped = filtered.stream()
-                .map(r -> toResWithCachedReviewer(r, null, reviewerBriefMap))
-                .toList();
+        // 1) 批量查所有 order 的 slot（两条/单），构造 (orderId, reviewerId)->productId
+        var orderIds = filtered.stream().map(OrderReview::getOrderId).distinct().toList();
+        var slotList = slots.findByOrderIdIn(orderIds);
+        var kmap = mapOrderReviewerToProduct(slotList);
 
-        long total = "all".equalsIgnoreCase(String.valueOf(role)) || role == null ? origin.getTotalElements() : mapped.size();
+        // 2) 批量查 product brief
+        var productIds = slotList.stream().map(ReviewSlot::getProductId).filter(Objects::nonNull).distinct().toList();
+        var pmap = loadProductBriefMap(productIds);
+
+        List<ReviewRes> mapped = filtered.stream().map(r -> {
+            UUID pid = kmap.get(keyOf(r.getOrderId(), r.getReviewerId()));
+            var pb = pid == null ? null : pmap.get(pid);
+            String title = pb == null ? null : pb.title();
+            String img   = pb == null ? null : pb.firstImageUrl();
+            return toResWithCachedReviewer(r, pid, reviewerBriefMap, title, img);
+        }).toList();
+
+        long total = ("all".equalsIgnoreCase(String.valueOf(role)) || role == null) ? origin.getTotalElements() : mapped.size();
         return new PageImpl<>(mapped, pageable, total);
     }
 
-    // [ADDED] 带 withAppends 开关的重载：仅当 withAppends=true 时把追评挂到主评的 appends 上返回
+    // 带 withAppends 开关：仅当 withAppends=true 时把追评挂到主评上
     public Page<ReviewRes> listForUser(UUID userId, int page, int size, String role, boolean withAppends) {
         Page<ReviewRes> roots = listForUser(userId, page, size, role);
         if (!withAppends || roots.isEmpty()) {
             return roots; // 与原行为完全一致
         }
         return roots.map(root -> {
-            // 追评由同一作者撰写；匿名与主评一致
             var safeReviewer = root.reviewer();
             boolean isAnon = root.anonymous();
             var children = appends.findByReview_IdOrderByCreatedAtAsc(root.id());
@@ -137,19 +181,35 @@ public class ReviewService {
                     root.createdAt(),
                     root.reviewer(), root.reviewee(),
                     root.product(),
-                    Collections.unmodifiableList(list) // [ADDED]
+                    Collections.unmodifiableList(list)
             );
         });
     }
 
-    // 我写过的首评（进入追评用）
+    // 我写过的首评（进入追评用）——批量补齐 product brief
     public Page<ReviewRes> mineGiven(UUID me, int page, int size) {
         var pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
         var p = reviews.findByReviewerId(me, pageable);
-        return p.map(r -> toRes(r, null));
+
+        // 1) 当页所有 orderId
+        var orderIds = p.getContent().stream().map(OrderReview::getOrderId).distinct().toList();
+        // 2) 批量查 slot（以我为 reviewer），得到 orderId -> productId
+        var mySlots = slots.findByReviewerIdAndOrderIdIn(me, orderIds);
+        var orderToProduct = mySlots.stream()
+                .collect(Collectors.toMap(ReviewSlot::getOrderId, ReviewSlot::getProductId, (a,b)->a));
+        // 3) 批量查 product brief
+        var productMap = loadProductBriefMap(orderToProduct.values());
+
+        return p.map(r -> {
+            UUID pid = orderToProduct.get(r.getOrderId());
+            ProductClient.ProductBrief pb = pid == null ? null : productMap.get(pid);
+            String title = pb == null ? null : pb.title();
+            String img   = pb == null ? null : pb.firstImageUrl();
+            return toRes(r, pid, title, img);
+        });
     }
 
-    // 待评价（三分页）
+    // 待评价（三分页）——为 buyer/seller 两个页签批量补齐 product brief
     public PendingRes pending(UUID me, String tab, int page, int size) {
         var pageable = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
         var buyerPage  = slots.findByReviewerIdAndReviewerRoleAndStatus(me, "BUYER",  ReviewSlotStatus.PENDING, pageable);
@@ -164,21 +224,31 @@ public class ReviewService {
         var briefMap = users.briefBatch(uids.stream().toList()).stream()
                 .collect(Collectors.toMap(UserClient.UserBrief::id, b -> b));
 
-        List<PendingRes.Item> buyerItems = buyerPage.stream().map(s ->
-                new PendingRes.Item("buyer", s.getOrderId(), s.getProductId(), null,
-                        toBrief(briefMap.get(s.getRevieweeId())), new PendingRes.ProductBrief(s.getProductId(), null))
-        ).toList();
+        // 批量补齐 product brief
+        var allProductIds = new HashSet<UUID>();
+        buyerPage.forEach(s -> allProductIds.add(s.getProductId()));
+        sellerPage.forEach(s -> allProductIds.add(s.getProductId()));
+        var pmap = loadProductBriefMap(allProductIds);
 
-        List<PendingRes.Item> sellerItems = sellerPage.stream().map(s ->
-                new PendingRes.Item("seller", s.getOrderId(), s.getProductId(), null,
-                        toBrief(briefMap.get(s.getRevieweeId())), new PendingRes.ProductBrief(s.getProductId(), null))
-        ).toList();
+        List<PendingRes.Item> buyerItems = buyerPage.stream().map(s -> {
+            var pb = pmap.get(s.getProductId());
+            return new PendingRes.Item("buyer", s.getOrderId(), s.getProductId(), null,
+                    toBrief(briefMap.get(s.getRevieweeId())),
+                    new PendingRes.ProductBrief(s.getProductId(),
+                            pb == null ? null : pb.title(),
+                            pb == null ? null : pb.firstImageUrl()));
+        }).toList();
 
-        List<PendingRes.Item> commentedItems = commented.stream().map(r ->
-                new PendingRes.Item("commented", r.getOrderId(), null, r.getCreatedAt(),
-                        toBrief(briefMap.get(r.getRevieweeId())), null)
-        ).toList();
+        List<PendingRes.Item> sellerItems = sellerPage.stream().map(s -> {
+            var pb = pmap.get(s.getProductId());
+            return new PendingRes.Item("seller", s.getOrderId(), s.getProductId(), null,
+                    toBrief(briefMap.get(s.getRevieweeId())),
+                    new PendingRes.ProductBrief(s.getProductId(),
+                            pb == null ? null : pb.title(),
+                            pb == null ? null : pb.firstImageUrl()));
+        }).toList();
 
+        // commented 保持与你现在的“已评价 tab 走 /me/given”策略一致，这里不回 product
         return new PendingRes(buyerItems, sellerItems,
                 new PendingRes.Counts(buyerPage.getNumberOfElements(), sellerPage.getNumberOfElements(), commented.getNumberOfElements()));
     }
@@ -189,36 +259,49 @@ public class ReviewService {
         return list.stream().map(r -> toRes(r, null)).toList();
     }
 
+    // ====================== 构造/遮罩辅助 ======================
+
     private PendingRes.Brief toBrief(UserClient.UserBrief b){
         return b == null ? null : new PendingRes.Brief(b.id(), b.displayName(), b.avatarUrl());
     }
 
-    private ReviewRes toRes(OrderReview r, UUID productId){
+    // 新版：带 title/firstImageUrl
+    private ReviewRes toRes(OrderReview r, UUID productId, String title, String firstImageUrl){
         var reviewerBrief = safeBriefOne(r.getReviewerId());
         var revieweeBrief = safeBriefOne(r.getRevieweeId());
         var safeReviewer  = maskReviewerIfAnon(r, reviewerBrief);
-        ReviewRes.ProductBrief pb = productId == null ? null : new ReviewRes.ProductBrief(productId, null);
+        ReviewRes.ProductBrief pb = productId == null ? null : new ReviewRes.ProductBrief(productId, title, firstImageUrl);
         return new ReviewRes(r.getId(), r.getOrderId(), r.getRating(), r.getComment(),
                 r.getReviewerRole(), r.isAnonymous(), r.getCreatedAt(),
                 safeReviewer,
                 revieweeBrief == null ? null : new ReviewRes.UserBrief(revieweeBrief.id(), revieweeBrief.displayName(), revieweeBrief.avatarUrl()),
                 pb,
-                null // [ADDED] 默认不带追评
+                null
         );
     }
 
-    private ReviewRes toResWithCachedReviewer(OrderReview r, UUID productId, Map<UUID, UserClient.UserBrief> cache){
+    private ReviewRes toResWithCachedReviewer(OrderReview r, UUID productId,
+                                              Map<UUID, UserClient.UserBrief> cache,
+                                              String title, String firstImageUrl){
         var reviewerBrief = cache.get(r.getReviewerId());
         var revieweeBrief = safeBriefOne(r.getRevieweeId());
         var safeReviewer  = maskReviewerIfAnon(r, reviewerBrief);
-        ReviewRes.ProductBrief pb = productId == null ? null : new ReviewRes.ProductBrief(productId, null);
+        ReviewRes.ProductBrief pb = productId == null ? null : new ReviewRes.ProductBrief(productId, title, firstImageUrl);
         return new ReviewRes(r.getId(), r.getOrderId(), r.getRating(), r.getComment(),
                 r.getReviewerRole(), r.isAnonymous(), r.getCreatedAt(),
                 safeReviewer,
                 revieweeBrief == null ? null : new ReviewRes.UserBrief(revieweeBrief.id(), revieweeBrief.displayName(), revieweeBrief.avatarUrl()),
                 pb,
-                null // [ADDED] 默认不带追评
+                null
         );
+    }
+
+    // 兼容旧调用：不传 title/img 时走空
+    private ReviewRes toRes(OrderReview r, UUID productId){
+        return toRes(r, productId, null, null);
+    }
+    private ReviewRes toResWithCachedReviewer(OrderReview r, UUID productId, Map<UUID, UserClient.UserBrief> cache){
+        return toResWithCachedReviewer(r, productId, cache, null, null);
     }
 
     private ReviewRes.UserBrief maskReviewerIfAnon(OrderReview r, UserClient.UserBrief brief){

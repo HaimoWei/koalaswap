@@ -1,7 +1,7 @@
 package com.koalaswap.review.dto;
 
 import java.time.Instant;
-import java.util.List; // [ADDED]
+import java.util.List;
 import java.util.UUID;
 
 public record ReviewRes(
@@ -11,11 +11,12 @@ public record ReviewRes(
         Instant createdAt,
         UserBrief reviewer, UserBrief reviewee,
         ProductBrief product,
-        List<AppendBrief> appends // [ADDED]
+        List<AppendBrief> appends
 ) {
     public record UserBrief(UUID id, String displayName, String avatarUrl){}
-    public record ProductBrief(UUID id, String title){}
 
-    // [ADDED] 追评精简结构（复用主评的 reviewer/anonymous 规则）
+    // ✅ 增加 firstImageUrl
+    public record ProductBrief(UUID id, String title, String firstImageUrl){}
+
     public record AppendBrief(UUID id, String comment, Instant createdAt, UserBrief reviewer, boolean anonymous){}
 }

@@ -4,7 +4,7 @@ export function OrderStatusTag({ status }: { status: string }) {
     const cls =
         statusIn(status, ["CANCELLED", "CANCELED"])
             ? "bg-gray-100 text-gray-600"
-            : statusIn(status, ["CREATED","NEW"])
+            : statusIn(status, ["PENDING", "CREATED", "NEW"])   // ← 加上 PENDING
                 ? "bg-yellow-50 text-yellow-700"
                 : statusIn(status, ["PAID"])
                     ? "bg-blue-50 text-blue-700"
@@ -23,6 +23,7 @@ function statusIn(s: string, arr: string[]) {
 function mapStatus(s: string) {
     const up = (s || "").toUpperCase();
     const m: Record<string,string> = {
+        PENDING: "待支付",          // ← 新增
         CREATED: "待支付",
         NEW: "待支付",
         PAID: "已支付",

@@ -1,3 +1,4 @@
+// backend/product-service/src/main/java/com/koalaswap/product/controller/FavoriteController.java
 package com.koalaswap.product.controller;
 
 import com.koalaswap.common.dto.ApiResponse;
@@ -39,13 +40,13 @@ public class FavoriteController {
 
     /**
      * 我收藏的商品（需要登录） - 分页
-     * 直接返回商品卡片（包含 Product 明细 + favoritedAt）
+     * 返回商品卡片（包含 Product 明细 + favoritedAt + firstImageUrl）
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse<Page<FavoriteProductCard>> myFavoriteCards(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "createdAt,DESC") String sort // createdAt,DESC / createdAt,ASC
+            @RequestParam(defaultValue = "createdAt,DESC") String sort
     ) {
         Sort sortSpec = parseSort(sort);
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100), sortSpec);
@@ -61,11 +62,11 @@ public class FavoriteController {
         return ApiResponse.ok(new FavoriteCheckRes(productId, fav));
     }
 
-    /** 某商品收藏数（可匿名或保留登录；此处不强制改动你的安全策略） */
+    /** 收藏总数（需要登录）：统计当前用户收藏了多少个商品 */
     @GetMapping(value = "/count", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResponse<Long> count(@RequestParam UUID productId) {
-        var n = favoriteService.countForProduct(productId);
-        return ApiResponse.ok(n);
+    public ApiResponse<Long> countMine() {
+        var userId = currentUserId();
+        return ApiResponse.ok(favoriteService.countMine(userId));
     }
 
     // -------------------- helpers --------------------
@@ -76,16 +77,14 @@ public class FavoriteController {
         if (auth != null && auth.getName() != null) {
             try {
                 return UUID.fromString(auth.getName());
-            } catch (IllegalArgumentException ignored) {
-            }
+            } catch (IllegalArgumentException ignored) {}
         }
         // 2) 兜底：从上游传入的 X-User-Id 读取
         String uidHeader = request.getHeader("X-User-Id");
         if (uidHeader != null && !uidHeader.isBlank()) {
             try {
                 return UUID.fromString(uidHeader.trim());
-            } catch (IllegalArgumentException ignored) {
-            }
+            } catch (IllegalArgumentException ignored) {}
         }
         throw new IllegalStateException("Cannot resolve current user id");
     }

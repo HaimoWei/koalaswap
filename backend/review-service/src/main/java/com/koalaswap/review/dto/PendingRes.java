@@ -15,6 +15,9 @@ public record PendingRes(
             Brief counterpart, ProductBrief product
     ) {}
     public record Brief(java.util.UUID id, String displayName, String avatarUrl){}
-    public record ProductBrief(java.util.UUID id, String title){}
+
+    // ✅ 增加 firstImageUrl
+    public record ProductBrief(java.util.UUID id, String title, String firstImageUrl){}
+
     public record Counts(int buyer, int seller, int commented){}
 }
