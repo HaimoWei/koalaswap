@@ -25,11 +25,32 @@ export function getStomp(): Client {
         // 关键：在连接前，把最新 token 写入 connectHeaders（而不是把 connectHeaders 写成函数）
         beforeConnect: () => {
             const token = useAuthStore.getState().token;
+            console.log('[WebSocket] 准备连接，token:', token ? '已设置' : '未设置');
             client!.connectHeaders = token ? { Authorization: `Bearer ${token}` } : {};
         },
 
-        // 可选调试
-        // debug: (str) => console.log("[STOMP]", str),
+        // 连接成功回调
+        onConnect: (frame) => {
+            console.log('[WebSocket] 连接成功:', frame);
+        },
+
+        // 连接失败回调
+        onStompError: (frame) => {
+            console.error('[WebSocket] STOMP错误:', frame);
+        },
+
+        // WebSocket错误回调
+        onWebSocketError: (event) => {
+            console.error('[WebSocket] WebSocket错误:', event);
+        },
+
+        // 断开连接回调
+        onDisconnect: (frame) => {
+            console.log('[WebSocket] 连接断开:', frame);
+        },
+
+        // 启用调试
+        debug: (str) => console.log("[STOMP]", str),
     });
 
     client.activate();
@@ -46,16 +67,30 @@ function ensureSubscription(
     onMessage: (msg: IMessage) => void
 ): StompSubscription | null {
     const c = getStomp();
+    console.log(`[WebSocket] 尝试订阅 ${topic}, 连接状态:`, c.connected);
+    
     if (c.connected) {
-        return c.subscribe(topic, onMessage);
+        console.log(`[WebSocket] 立即订阅 ${topic}`);
+        return c.subscribe(topic, (msg) => {
+            console.log(`[WebSocket] 收到订阅消息 ${topic}:`, msg);
+            onMessage(msg);
+        });
     }
+    
     // 等连接完再订阅
+    console.log(`[WebSocket] 延迟订阅 ${topic}，等待连接`);
     const handler = () => {
-        c.subscribe(topic, onMessage);
+        console.log(`[WebSocket] 连接完成，开始订阅 ${topic}`);
+        c.subscribe(topic, (msg) => {
+            console.log(`[WebSocket] 收到订阅消息 ${topic}:`, msg);
+            onMessage(msg);
+        });
     };
+    
     // 只监听一次
     const prevOnConnect = c.onConnect;
     c.onConnect = (frame) => {
+        console.log('[WebSocket] 连接成功:', frame);
         prevOnConnect?.(frame);
         handler();
         // 订阅完即可恢复原来的 onConnect，避免重复订阅

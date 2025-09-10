@@ -1,49 +1,58 @@
 import { chatApi } from "./http";
 import type { ApiResponse, Page } from "./types";
 
-// 仅列出会用到的字段，后续阶段 5 再细化
+// 按后端 chat-service 对齐的最小字段集合
 export type ConversationResponse = {
     id: string;
     productId?: string | null;
-    // ... 其它字段等你后续聊天页需要时再完善
+    orderId?: string | null;
+    buyerId?: string;
+    sellerId?: string;
+    orderStatus?: string | null;
+    productFirstImage?: string | null;
+    lastMessageAt?: string | null;
+    lastMessagePreview?: string | null;
 };
 
-
-// ====== 类型（按你的描述建模，字段尽量宽松以兼容后端） ======
+// ====== DTO（与后端枚举/字段对齐，必要字段最小化） ======
 export type MessageResponse = {
     id: string;
     type: "TEXT" | "IMAGE" | "SYSTEM";
-    senderId: string;
+    senderId: string | null; // SYSTEM 为 null
     body?: string | null;
     imageUrl?: string | null;
+    systemEvent?: "ORDER_PLACED" | "PAID" | "SHIPPED" | "COMPLETED" | "CANCELLED" | null;
+    meta?: string | null;
     createdAt: string;
-    // 可扩展：systemEvent/meta...
-};
-
-export type ConversationParticipant = {
-    userId: string;
-    // 服务端用于“已读指针”的字段名称可能不同：readTo / lastReadId ...
-    readTo?: string | null;  // 最后已读消息ID
 };
 
 export type ConversationListItem = {
     id: string;
     productId?: string | null;
     orderId?: string | null;
-    lastMessage?: MessageResponse | null;
-    unreadCount?: number;
-    pinned?: boolean;
-    archived?: boolean;
-    updatedAt?: string;
-    participants?: ConversationParticipant[];
+    buyerId?: string;
+    sellerId?: string;
+    peerUserId?: string;
+    unread: number;
+    archived: boolean;
+    pinnedAt?: string | null;
+    orderStatus?: string | null;
+    productFirstImage?: string | null;
+    lastMessageAt?: string | null;
+    lastMessagePreview?: string | null;
+    peerNickname?: string | null;
+    peerAvatar?: string | null;
 };
 
 export type ConversationDetailResponse = {
     id: string;
-    productId?: string | null;
-    orderId?: string | null;
-    participants: ConversationParticipant[]; // 双方
-    // 可扩展：conversation title、对端用户简要、商品摘要等
+    productId: string;
+    buyerId: string;
+    sellerId: string;
+    orderStatus?: string | null;
+    productFirstImage?: string | null;
+    myReadToMessageId?: string | null;
+    peerReadToMessageId?: string | null;
 };
 
 
