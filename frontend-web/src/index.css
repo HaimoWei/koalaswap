@@ -1,0 +1,21 @@
+/* src/index.css */
+/* v4 的核心就是这一句： */
+@import "tailwindcss";
+
+/* 你自己的全局样式可以继续写在下面（可选） */
+:root {
+  /* 你可以在这里定义一些“品牌变量”，给后面组件用（可选） */
+  --brand-radius: 16px;
+}
+
+/* 为了对齐我们的设计风格，来点基础样式（可删） */
+html, body, #root { height: 100%; }
+body { background: #f8fafc; color: #0f172a; }
+
+/* Demo：卡片的基础阴影（可删） */
+.card {
+  border-radius: var(--brand-radius);
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  box-shadow: 0 1px 0 rgba(2,6,23,0.04), 0 1px 2px rgba(2,6,23,0.06);
+}

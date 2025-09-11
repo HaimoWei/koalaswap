@@ -153,13 +153,17 @@ public class ProductService {
 
     /** 搜索分页（仅 ACTIVE） */
     public Page<ProductRes> search(String kw, Integer catId, BigDecimal minPrice, BigDecimal maxPrice,
-                                   int page, int size, String sort, UUID excludeSellerId) {
+                                   int page, int size, String sort, UUID excludeSellerId, UUID sellerId) { // ★ 新增 sellerId
         int page0 = Math.max(0, page);
         int sizeClamped = Math.min(Math.max(size, 1), 50);
         var pageable = PageRequest.of(page0, sizeClamped, safeSort(sort));
         var normalizedKw = normalizeKeyword(kw);
         String kwLike = (normalizedKw == null) ? null : "%" + normalizedKw + "%";
-        var pageData = products.searchByLike(kwLike, catId, minPrice, maxPrice, excludeSellerId, pageable);
+
+        // ★ 传入 sellerId（null 时不生效）
+        var pageData = products.searchByLike(
+                kwLike, catId, minPrice, maxPrice, excludeSellerId, sellerId, pageable
+        );
         return pageData.map(pp -> toRes(pp, imageUrlsOf(pp.getId())));
     }
 
