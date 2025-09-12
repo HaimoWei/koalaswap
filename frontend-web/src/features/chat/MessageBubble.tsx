@@ -29,7 +29,7 @@ export function MessageBubble({ m, isRead }: { m: MessageResponse; isRead?: bool
 
     return (
         <div className={`flex ${mine ? "justify-end" : "justify-start"} my-1`}>
-            <div className={`max-w-[70%] rounded-2xl px-3 py-2 border ${mine ? "bg-black text-white border-black" : "bg-white border-gray-200"}`}>
+            <div className={`max-w-[70%] rounded-2xl px-3 py-2 border ${mine ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]" : "bg-[var(--color-surface)] border-[var(--color-border)] shadow-[var(--shadow-1)]"}`}>
                 {m.type === "TEXT" && (
                     <div className="text-sm whitespace-pre-wrap break-words">
                         {m.body || "[空消息]"}
@@ -40,7 +40,7 @@ export function MessageBubble({ m, isRead }: { m: MessageResponse; isRead?: bool
                 )}
                 {/* “已读”标记：仅对自己发的最后一条显示 */}
                 {mine && isRead && (
-                    <div className={`text-[10px] mt-1 ${mine ? "text-gray-300" : "text-gray-500"}`}>已读</div>
+                    <div className={`text-[10px] mt-1 ${mine ? "text-gray-200" : "text-gray-500"}`}>已读</div>
                 )}
             </div>
         </div>

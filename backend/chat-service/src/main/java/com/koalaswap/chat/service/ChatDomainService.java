@@ -5,6 +5,10 @@ import com.koalaswap.chat.model.*;
 import com.koalaswap.chat.repository.*;
 import com.koalaswap.chat.events.OrderStatusEvent;
 import com.koalaswap.chat.dto.MessageResponse;           // ✅ 新增
+import com.koalaswap.chat.dto.ConversationDetailResponse; // ✅ 新增
+import com.koalaswap.chat.client.ProductClient;         // ✅ 新增
+import com.koalaswap.chat.client.OrderClient;           // ✅ 新增
+import com.koalaswap.chat.client.UserClient;            // ✅ 新增
 import com.koalaswap.chat.ws.WsPublisher;               // ✅ 新增
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
@@ -23,15 +27,24 @@ public class ChatDomainService {
     private final ConversationParticipantRepository partRepo;
     private final MessageRepository msgRepo;
     private final WsPublisher ws;                        // ✅ 新增
+    private final ProductClient productClient;          // ✅ 新增
+    private final OrderClient orderClient;              // ✅ 新增
+    private final UserClient userClient;                // ✅ 新增
 
     public ChatDomainService(ConversationRepository c,
                              ConversationParticipantRepository p,
                              MessageRepository m,
-                             WsPublisher wsPublisher) {  // ✅ 新增
+                             WsPublisher wsPublisher,    // ✅ 新增
+                             ProductClient productClient, // ✅ 新增
+                             OrderClient orderClient,    // ✅ 新增
+                             UserClient userClient) {    // ✅ 新增
         this.convRepo = c;
         this.partRepo = p;
         this.msgRepo = m;
         this.ws = wsPublisher;                           // ✅ 新增
+        this.productClient = productClient;              // ✅ 新增
+        this.orderClient = orderClient;                  // ✅ 新增
+        this.userClient = userClient;                    // ✅ 新增
     }
 
     @Transactional
@@ -233,6 +246,72 @@ public class ChatDomainService {
             UUID myReadTo,
             UUID peerReadTo
     ) {}
+
+    /** 获取聚合详情（含商品、订单、用户信息） */
+    @Transactional(readOnly = true)
+    public ConversationDetailResponse getDetailAggregated(UUID conversationId, UUID currentUserId) {
+        Detail detail = getDetailFor(conversationId, currentUserId);
+        
+        // 获取商品信息（带降级策略）
+        String productTitle = null;
+        java.math.BigDecimal productPrice = null;
+        try {
+            var productOpt = productClient.getBrief(detail.productId());
+            productTitle = productOpt.map(ProductClient.ProductBrief::title).orElse("商品详情");
+            productPrice = productOpt.map(ProductClient.ProductBrief::price).orElse(java.math.BigDecimal.ZERO);
+        } catch (Exception e) {
+            productTitle = "商品详情"; // 降级默认值
+            productPrice = java.math.BigDecimal.ZERO;
+        }
+        
+        // 获取对方用户信息（带降级策略）
+        UUID peerUserId = currentUserId.equals(detail.buyerId()) ? detail.sellerId() : detail.buyerId();
+        String peerNickname = null;
+        String peerAvatar = null;
+        try {
+            var peerOpt = userClient.getBrief(peerUserId);
+            peerNickname = peerOpt.map(UserClient.UserBrief::displayName).orElse("用户" + peerUserId.toString().substring(0, 8));
+            peerAvatar = peerOpt.map(UserClient.UserBrief::avatarUrl).orElse(null);
+        } catch (Exception e) {
+            peerNickname = "用户" + peerUserId.toString().substring(0, 8); // 降级默认值
+        }
+        
+        // 获取订单详情
+        ConversationDetailResponse.OrderDetail orderDetail = null;
+        if (detail.id() != null) {
+            Conversation conv = convRepo.findById(detail.id()).orElse(null);
+            if (conv != null && conv.getOrderId() != null) {
+                var orderOpt = orderClient.getBrief(conv.getOrderId());
+                if (orderOpt.isPresent()) {
+                    var order = orderOpt.get();
+                    orderDetail = new ConversationDetailResponse.OrderDetail(
+                            order.id(),
+                            order.priceSnapshot(),
+                            order.status(),
+                            order.createdAt(),
+                            order.trackingNo(),
+                            order.carrier()
+                    );
+                }
+            }
+        }
+        
+        return new ConversationDetailResponse(
+                detail.id(),
+                detail.productId(),
+                detail.buyerId(),
+                detail.sellerId(),
+                detail.orderStatus(),
+                detail.productFirstImage(),
+                detail.myReadTo(),
+                detail.peerReadTo(),
+                productTitle,
+                productPrice,
+                peerNickname,
+                peerAvatar,
+                orderDetail
+        );
+    }
 
     private static SystemEvent mapSystemEvent(OrderStatus s) {
         return switch (s) {

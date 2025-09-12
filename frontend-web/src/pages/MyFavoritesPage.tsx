@@ -38,13 +38,13 @@ export function MyFavoritesPage() {
     const totalPages = q.data?.totalPages ?? 1;
 
     return (
-        <main className="max-w-6xl mx-auto p-6 space-y-4">
+        <main className="page py-6 space-y-4">
             <h1 className="text-xl font-semibold">我的收藏</h1>
 
             {q.isLoading ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
                     {Array.from({ length: size }).map((_, i) => (
-                        <div key={i} className="h-64 bg-white border rounded animate-pulse" />
+                        <div key={i} className="h-64 card animate-pulse" />
                     ))}
                 </div>
             ) : q.isError ? (
@@ -53,7 +53,7 @@ export function MyFavoritesPage() {
                 <div className="text-sm text-gray-600">暂无收藏</div>
             ) : (
                 <>
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
                         {list.map((item, idx) => {
                             const p = pickProduct(item);
 
@@ -98,23 +98,9 @@ export function MyFavoritesPage() {
 
                     {totalPages > 1 && (
                         <div className="flex items-center justify-center gap-2">
-                            <button
-                                className="px-3 py-1 rounded bg-gray-100 disabled:opacity-50"
-                                disabled={page <= 0}
-                                onClick={() => onPage(page - 1)}
-                            >
-                                上一页
-                            </button>
-                            <span className="text-sm text-gray-600">
-                第 {page + 1} / {totalPages} 页
-              </span>
-                            <button
-                                className="px-3 py-1 rounded bg-gray-100 disabled:opacity-50"
-                                disabled={page >= totalPages - 1}
-                                onClick={() => onPage(page + 1)}
-                            >
-                                下一页
-                            </button>
+                            <button className="btn btn-secondary" disabled={page <= 0} onClick={() => onPage(page - 1)}>上一页</button>
+                            <span className="text-sm text-gray-600">第 {page + 1} / {totalPages} 页</span>
+                            <button className="btn btn-secondary" disabled={page >= totalPages - 1} onClick={() => onPage(page + 1)}>下一页</button>
                         </div>
                     )}
                 </>

@@ -19,7 +19,7 @@ public interface ConversationReadRepository extends Repository<com.koalaswap.cha
         case when c.buyerId = :userId then c.sellerId else c.buyerId end,
         cp.unreadCount, cp.archived, cp.pinnedAt,
         c.orderStatusCache, c.productFirstImage, c.lastMessageAt, c.lastMessagePreview,
-        null, null
+        null, null, null, null, null
       )
       from ConversationParticipant cp
       join cp.conversationRef c

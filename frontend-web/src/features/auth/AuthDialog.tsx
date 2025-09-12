@@ -86,7 +86,16 @@ function LoginForm() {
         try {
             const res = await login(values.email, values.password);
             setAuth(res.accessToken, res.profile);
-            window.location.reload(); // 保持你的现有行为
+            // 登录成功：若当前 URL 携带 next，则优先回跳；否则保持现有刷新行为
+            try {
+                const sp = new URLSearchParams(window.location.search);
+                const next = sp.get("next");
+                if (next) {
+                    nav(next, { replace: true });
+                    return;
+                }
+            } catch {}
+            window.location.reload(); // 兜底：兼容原有行为
         } catch (e: any) {
             setServerMsg(e?.message || "登录失败，请重试");
         }

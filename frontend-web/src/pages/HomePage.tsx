@@ -3,6 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchHomeProducts } from "../api/products";
 import { ProductCard } from "../components/ProductCard";
 import { Paginator } from "../components/Paginator";
+import { PromoBanner } from "../components/PromoBanner";
+import { CategoryChips } from "../components/CategoryChips";
+import { TrustBadges } from "../components/TrustBadges";
 import { useAuthStore } from "../store/auth";
 
 export function HomePage() {
@@ -19,31 +22,34 @@ export function HomePage() {
     });
 
     return (
-        <main className="max-w-6xl mx-auto p-6">
-            {/* Banner 占位（对齐闲鱼） */}
-            <div className="h-40 rounded-xl bg-gradient-to-r from-gray-200 to-gray-100 mb-6" />
+        <main className="page py-6">
+            {/* 大广告栏：注册享好礼 */}
+            <PromoBanner />
+            <CategoryChips />
+            <TrustBadges />
 
-            {/* 商品网格 */}
+            {/* 商品区（大组件边框包裹） */}
             {isLoading ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    {Array.from({ length: size }).map((_, i) => (
-                        <div key={i} className="rounded-lg border bg-white p-3 h-64 animate-pulse" />
-                    ))}
-                </div>
+                <section className="card p-4 md:p-6">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+                        {Array.from({ length: size }).map((_, i) => (
+                            <div key={i} className="card p-3 h-64 animate-pulse" />
+                        ))}
+                    </div>
+                </section>
             ) : isError ? (
                 <div className="text-red-600">加载失败：{(error as Error)?.message}</div>
             ) : (
-                <>
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <section className="card p-4 md:p-6">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
                         {data?.content.map((p) => <ProductCard key={p.id} p={p} />)}
                     </div>
-
                     <Paginator
                         page={data?.number || 0}
                         totalPages={data?.totalPages || 1}
                         onPageChange={setPage}
                     />
-                </>
+                </section>
             )}
         </main>
     );

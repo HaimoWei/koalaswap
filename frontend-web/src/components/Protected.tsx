@@ -11,8 +11,9 @@ export function Protected({
 }) {
     const loc = useLocation();
     if (!isAuthed) {
-        // 这里简单返回首页；你也可以在 App 里打开 AuthDialog
-        return <Navigate to="/" state={{ from: loc }} replace />;
+        // 未登录统一跳转到登录页，并携带 next 做回跳
+        const next = encodeURIComponent(`${loc.pathname}${loc.search || ""}`);
+        return <Navigate to={`/login?next=${next}`} replace />;
     }
     return <>{children}</>;
 }

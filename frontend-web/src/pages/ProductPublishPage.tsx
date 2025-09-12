@@ -75,13 +75,13 @@ export default function ProductPublishPage() {
 
             <form className="space-y-6" onSubmit={onSubmit}>
                 {/* 基础信息 */}
-                <section className="bg-white rounded-2xl shadow p-4 sm:p-6 space-y-4">
+                <section className="card p-4 sm:p-6 space-y-4">
                     <h2 className="text-lg font-medium">基础信息</h2>
 
                     <label className="block">
                         <span className="text-sm text-gray-600">标题 *</span>
                         <input
-                            className="mt-1 w-full rounded-xl border px-3 py-2 outline-none focus:ring"
+                            className="mt-1 input"
                             placeholder="写一个清晰的标题，比如：iPhone 12 128G"
                             value={form.title}
                             onChange={(e) => update("title", e.target.value)}
@@ -93,7 +93,7 @@ export default function ProductPublishPage() {
                     <label className="block">
                         <span className="text-sm text-gray-600">描述</span>
                         <textarea
-                            className="mt-1 w-full rounded-xl border px-3 py-2 outline-none focus:ring"
+                            className="mt-1 input"
                             rows={5}
                             placeholder="补充品牌型号、购买时间、成色、是否有发票/包装等"
                             value={form.description}
@@ -110,7 +110,7 @@ export default function ProductPublishPage() {
                                 type="button"
                                 onClick={addImage}
                                 disabled={images.length >= 5}
-                                className="text-sm underline disabled:opacity-40"
+                                className="btn btn-ghost text-sm disabled:opacity-40"
                             >
                                 + 添加一张
                             </button>
@@ -120,14 +120,14 @@ export default function ProductPublishPage() {
                             {images.map((url, i) => (
                                 <div key={i} className="flex gap-2 items-center">
                                     <input
-                                        className="flex-1 rounded-xl border px-3 py-2 outline-none focus:ring"
+                                        className="flex-1 input"
                                         placeholder="https://example.com/your-image.jpg"
                                         value={url}
                                         onChange={(e) => setImage(i, e.target.value)}
                                     />
                                     <button
                                         type="button"
-                                        className="text-xs px-2 py-1 rounded-lg border hover:bg-gray-50"
+                                        className="btn btn-secondary text-xs px-2 py-1"
                                         onClick={() => removeImage(i)}
                                         aria-label={`删除第 ${i + 1} 张图片`}
                                     >
@@ -140,7 +140,7 @@ export default function ProductPublishPage() {
                 </section>
 
                 {/* 价格与属性 */}
-                <section className="bg-white rounded-2xl shadow p-4 sm:p-6 space-y-4">
+                <section className="card p-4 sm:p-6 space-y-4">
                     <h2 className="text-lg font-medium">价格与属性</h2>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -150,7 +150,7 @@ export default function ProductPublishPage() {
                                 type="number"
                                 step="0.01"
                                 min="0.01"
-                                className="mt-1 w-full rounded-xl border px-3 py-2 outline-none focus:ring"
+                                className="mt-1 input"
                                 placeholder="0.00"
                                 value={form.price}
                                 onChange={(e) => update("price", e.target.value)}
@@ -161,7 +161,7 @@ export default function ProductPublishPage() {
                         <label className="block">
                             <span className="text-sm text-gray-600">货币</span>
                             <select
-                                className="mt-1 w-full rounded-xl border px-3 py-2 outline-none focus:ring bg-white"
+                                className="mt-1 input bg-white"
                                 value={form.currency}
                                 onChange={(e) => update("currency", e.target.value)}
                             >
@@ -175,7 +175,7 @@ export default function ProductPublishPage() {
                             <span className="text-sm text-gray-600">分类（可选）</span>
                             <input
                                 type="number"
-                                className="mt-1 w-full rounded-xl border px-3 py-2 outline-none focus:ring"
+                                className="mt-1 input"
                                 placeholder="如：1001"
                                 value={form.categoryId}
                                 onChange={(e) => update("categoryId", e.target.value)}
@@ -185,7 +185,7 @@ export default function ProductPublishPage() {
                         <label className="block">
                             <span className="text-sm text-gray-600">成色 *</span>
                             <select
-                                className="mt-1 w-full rounded-xl border px-3 py-2 outline-none focus:ring bg-white"
+                                className="mt-1 input bg-white"
                                 value={form.condition}
                                 onChange={(e) => update("condition", e.target.value)}
                                 required
@@ -205,7 +205,7 @@ export default function ProductPublishPage() {
                 <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full sm:w-40 py-2 rounded-2xl bg-yellow-400 hover:bg-yellow-300 disabled:opacity-60"
+                    className="w-full sm:w-40 btn btn-primary"
                 >
                     {submitting ? "发布中..." : "发布"}
                 </button>

@@ -50,7 +50,7 @@ export function ReviewEditorPage() {
                 </div>
             </div>
 
-            <div className="bg-white border rounded p-4 space-y-4">
+            <div className="card p-4 space-y-4">
                 <div className="flex items-center gap-3">
                     <span className="text-sm text-gray-600">评分：</span>
                     <RatingStars value={rating} onChange={setRating} />
@@ -73,7 +73,7 @@ export function ReviewEditorPage() {
                 </label>
 
                 <div className="flex gap-2 justify-end">
-                    <Link to="/me/reviews/pending" className="px-3 py-2 rounded bg-gray-100 text-sm">稍后再写</Link>
+                    <Link to="/me/reviews/pending" className="btn btn-secondary text-sm">稍后再写</Link>
                     <button
                         onClick={() => createM.mutate()}
                         disabled={createM.isPending || !content.trim()}

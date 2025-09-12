@@ -72,15 +72,11 @@ public class ConversationController {
         return ResponseEntity.ok(ApiResponse.ok(resp));
     }
 
-    /** ✅ 新增：会话详情（含双方已读游标） */
+    /** ✅ 新增：会话详情（含双方已读游标 + 完整商品订单信息） */
     @GetMapping("/conversations/{id}")
     public ResponseEntity<ApiResponse<ConversationDetailResponse>> get(@PathVariable("id") UUID id) {
         UUID current = CurrentUser.idRequired();
-        var d = chat.getDetailFor(id, current); // 由 Domain 返回双方 readTo
-        var resp = new ConversationDetailResponse(
-                d.id(), d.productId(), d.buyerId(), d.sellerId(),
-                d.orderStatus(), d.productFirstImage(), d.myReadTo(), d.peerReadTo()
-        );
+        var resp = chat.getDetailAggregated(id, current); // 返回聚合的完整详情
         return ResponseEntity.ok(ApiResponse.ok(resp));
     }
 

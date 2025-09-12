@@ -11,9 +11,9 @@ export function OrderTimeline({ status }: { status: string }) {
         <div className="flex items-center gap-3 flex-wrap">
             {steps.map((s, i) => (
                 <div key={s} className="flex items-center gap-2">
-                    <div className={`w-2.5 h-2.5 rounded-full ${i <= idx ? "bg-green-600" : "bg-gray-300"}`}/>
-                    <div className={`text-xs ${i <= idx ? "text-green-700" : "text-gray-500"}`}>{mapText(s)}</div>
-                    {i < steps.length - 1 && <div className="w-8 h-[1px] bg-gray-300 mx-1" />}
+                    <div className={`w-2.5 h-2.5 rounded-full ${i <= idx ? "bg-[var(--success)]" : "bg-gray-300"}`}/>
+                    <div className={`text-xs ${i <= idx ? "text-[var(--success)]" : "text-gray-500"}`}>{mapText(s)}</div>
+                    {i < steps.length - 1 && <div className="w-8 h-[1px] bg-[var(--color-border)] mx-1" />}
                 </div>
             ))}
             {(up === "CANCELLED" || up === "CANCELED") && (

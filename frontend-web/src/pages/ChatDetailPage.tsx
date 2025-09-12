@@ -226,15 +226,15 @@ export function ChatDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* 左：会话侧栏入口 */}
                 <div className="md:col-span-1 space-y-3">
-                    <Link to="/chat" className="block px-3 py-2 rounded bg-white border hover:bg-gray-50 text-sm">
+                    <Link to="/chat" className="block px-3 py-2 rounded card hover:shadow-[var(--shadow-2)] text-sm">
                         ← 返回消息列表
                     </Link>
                     {convQ.isLoading ? (
-                        <div className="h-24 bg-white border rounded animate-pulse" />
+                        <div className="h-24 card animate-pulse" />
                     ) : convQ.isError ? (
                         <div className="text-red-600 text-sm">会话信息加载失败</div>
                     ) : (
-                        <div className="bg-white border rounded p-3">
+                        <div className="card p-3">
                             <div className="text-sm text-gray-600">会话ID</div>
                             <div className="text-sm font-mono">{id}</div>
                         </div>
@@ -242,9 +242,9 @@ export function ChatDetailPage() {
                 </div>
 
                 {/* 右：聊天窗口 */}
-                <div className="md:col-span-2 bg-white border rounded flex flex-col h-[70vh]">
+                <div className="md:col-span-2 card flex flex-col h-[70vh]">
                     {/* 顶部条 */}
-                    <div className="px-4 py-3 border-b text-sm">聊天</div>
+                    <div className="px-4 py-3 border-b border-[var(--color-border)] text-sm">聊天</div>
 
                     {/* 消息区 */}
                     <div className="flex-1 overflow-y-auto px-3 py-2">
@@ -252,7 +252,7 @@ export function ChatDetailPage() {
                         {hasMoreHistory && (
                             <div className="flex justify-center my-2">
                                 <button
-                                    className="text-xs px-3 py-1 rounded bg-gray-100 hover:bg-gray-200"
+                                    className="btn btn-secondary text-xs"
                                     onClick={loadMoreHistory}
                                 >
                                     加载更早消息

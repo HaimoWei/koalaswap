@@ -26,10 +26,10 @@ export function MessageInput({
     }
 
     return (
-        <div className="border-t bg-white p-3">
+        <div className="border-t border-[var(--color-border)] bg-[var(--color-surface)] p-3">
             <div className="flex gap-2">
                 <input
-                    className="flex-1 border rounded px-3 py-2 text-sm"
+                    className="flex-1 input text-sm"
                     placeholder="输入消息，回车发送"
                     value={text}
                     onChange={(e) => setText(e.target.value)}
@@ -39,7 +39,7 @@ export function MessageInput({
                 <button
                     onClick={submitText}
                     disabled={!!sending}
-                    className="px-3 py-2 rounded bg-black text-white text-sm disabled:opacity-50"
+                    className="btn btn-primary disabled:opacity-50"
                 >
                     发送
                 </button>
@@ -47,7 +47,7 @@ export function MessageInput({
             {/* 简易图片消息发送：贴一个图片 URL */}
             <div className="flex gap-2 mt-2">
                 <input
-                    className="flex-1 border rounded px-3 py-2 text-sm"
+                    className="flex-1 input text-sm"
                     placeholder="粘贴图片 URL（可选）"
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
@@ -57,7 +57,7 @@ export function MessageInput({
                 <button
                     onClick={submitImage}
                     disabled={!!sending}
-                    className="px-3 py-2 rounded bg-gray-100 text-sm disabled:opacity-50"
+                    className="btn btn-secondary text-sm disabled:opacity-50"
                 >
                     发送图片
                 </button>

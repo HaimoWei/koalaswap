@@ -33,16 +33,16 @@ export function MyProductsPage() {
     };
 
     return (
-        <main className="max-w-6xl mx-auto p-6">
+        <main className="page py-6">
             <div className="flex gap-2 mb-4">
                 <button
-                    className={`px-3 py-1 rounded text-sm ${tab === "onsale" ? "bg-black text-white" : "bg-gray-100"}`}
+                    className={`btn text-sm ${tab === "onsale" ? "btn-primary" : "btn-secondary"}`}
                     onClick={() => setTab("onsale")}
                 >
                     在售
                 </button>
                 <button
-                    className={`px-3 py-1 rounded text-sm ${tab === "hidden" ? "bg-black text-white" : "bg-gray-100"}`}
+                    className={`btn text-sm ${tab === "hidden" ? "btn-primary" : "btn-secondary"}`}
                     onClick={() => setTab("hidden")}
                 >
                     隐藏
@@ -50,16 +50,16 @@ export function MyProductsPage() {
             </div>
 
             {isLoading ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
                     {Array.from({ length: size }).map((_, i) => (
-                        <div key={i} className="rounded-lg border bg-white p-3 h-64 animate-pulse" />
+                        <div key={i} className="card p-3 h-64 animate-pulse" />
                     ))}
                 </div>
             ) : isError ? (
                 <div className="text-red-600">加载失败：{(error as Error)?.message}</div>
             ) : (
                 <>
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
                         {(data?.content ?? []).map((p: ProductRes) => (
                             <ProductCard key={p.id} p={p} />
                         ))}

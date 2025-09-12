@@ -1,9 +1,8 @@
-import { Route, Routes, Navigate, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { Route, Routes, Navigate, useLocation, useParams } from "react-router-dom";
 import { useAuthStore } from "./store/auth";
-import { useUiStore } from "./store/ui";
 
 import { TopNav } from "./components/TopNav";
+import { ChatTopNav } from "./components/ChatTopNav";
 import { Protected } from "./components/Protected";
 import FabDock from "./components/FabDock"; // ★ 悬浮窗
 
@@ -13,10 +12,14 @@ import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { OrdersListPage } from "./pages/OrdersListPage";
 import { OrderDetailPage } from "./pages/OrderDetailPage";
 import { OrderCreatePage } from "./pages/OrderCreatePage";
-import { ChatListPage } from "./pages/ChatListPage";
-import { ChatDetailPage } from "./pages/ChatDetailPage";
+import { ChatPage } from "./pages/ChatPage";
 import { MyProductsPage } from "./pages/MyProductsPage";
 import { MeHomePage } from "./pages/MeHomePage";
+import MeCenterLayout from "./pages/MeCenterLayout";
+import ProfilePage from "./pages/ProfilePage";
+import SecurityPage from "./pages/SecurityPage";
+import MyProfileCenterPage from "./pages/MyProfileCenterPage";
+import AddressPage from "./pages/AddressPage";
 import { MyFavoritesPage } from "./pages/MyFavoritesPage";
 import { ReviewsPendingPage } from "./pages/ReviewsPendingPage";
 import { ReviewEditorPage } from "./pages/ReviewEditorPage";
@@ -24,12 +27,16 @@ import { OrderPayPage } from "./pages/OrderPayPage";
 import SellerProfilePage from "./pages/SellerProfilePage";
 import PayResultPage from "./pages/PayResultPage";
 
-import { AuthDialog } from "./features/auth/AuthDialog";
 import { VerifyEmailPage } from "./features/auth/VerifyEmailPage";
 import { ResendVerifyPage } from "./features/auth/ResendVerifyPage";
 import { ForgotPasswordPage } from "./features/auth/ForgotPasswordPage";
 import { ResetPasswordPage } from "./features/auth/ResetPasswordPage";
 import ProductPublishPage from "./pages/ProductPublishPage.tsx";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import { ToastContainer } from "./components/ui/ToastContainer";
+import { ConfirmModal } from "./components/ui/ConfirmModal";
+import { Footer } from "./components/Footer";
 
 // 需要隐藏悬浮窗的前缀
 const DEDICATED_AUTH_PREFIXES = [
@@ -38,28 +45,45 @@ const DEDICATED_AUTH_PREFIXES = [
     "/auth/resend",
     "/auth/forgot",
     "/auth/reset",
+    "/login",
+    "/register",
 ];
+
+// 聊天重定向组件
+function ChatRedirect() {
+    const { id } = useParams<{ id: string }>();
+    return <Navigate to={`/chat?conversation=${id}`} replace />;
+}
 
 export default function App() {
     const token = useAuthStore((s) => s.token);
-    const authOpen = useUiStore((s) => s.authOpen);
-    const closeAuth = useUiStore((s) => s.closeAuth);
     const loc = useLocation();
 
-    // 进入独立认证页面时，强制关闭登录弹窗（解决“弹窗遮挡”体验问题）
-    useEffect(() => {
-        if (DEDICATED_AUTH_PREFIXES.some((p) => loc.pathname.startsWith(p))) {
-            closeAuth();
-        }
-    }, [loc.pathname, closeAuth]);
+    // 进入独立认证页面时，无需处理弹窗（已改为专用登录页）
 
+    // 判断是否为聊天页面 / 认证类页面 / 个人中心 / 发布页 / 首页
+    const isChatPage = loc.pathname.startsWith('/chat');
+    const isAuthPage = DEDICATED_AUTH_PREFIXES.some((p) => loc.pathname.startsWith(p));
+    const isCenterPage = loc.pathname.startsWith('/me/center');
+    const isPublishPage = loc.pathname.startsWith('/publish');
+    const isHomePage = loc.pathname === '/';
+    
     // 这些页面或状态下隐藏悬浮窗
-    const hideFab =
-        authOpen || DEDICATED_AUTH_PREFIXES.some((p) => loc.pathname.startsWith(p));
+    const hideFab = DEDICATED_AUTH_PREFIXES.some((p) => loc.pathname.startsWith(p)) || isChatPage || isCenterPage || isPublishPage;
 
     return (
         <div className="min-h-screen bg-gray-50 text-gray-900">
-            <TopNav />
+            {isChatPage ? (
+                <TopNav showSearch={false} showPublish={false} showMessages={false} />
+            ) : isAuthPage ? null : isCenterPage ? (
+                <TopNav showSearch={false} showPublish={false} showMessages={false} />
+            ) : isPublishPage ? (
+                <TopNav showSearch={false} />
+            ) : isHomePage ? (
+                <TopNav showPublish={false} showMessages={false} />
+            ) : (
+                <TopNav />
+            )}
 
             <Routes>
                 <Route path="/" element={<HomePage />} />
@@ -76,8 +100,19 @@ export default function App() {
                 {/* 兼容老链接 /reset?token=...（可选） */}
                 <Route path="/reset" element={<ResetPasswordPage />} />
 
-                {/* 发布页（主入口 /publish），并兼容 REST 风格别名 */}
-                <Route path="/publish" element={<ProductPublishPage />} />
+                {/* 登录页（专用页，便于统一重定向） */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+
+                {/* 发布页（主入口 /publish），并兼容 REST 风格别名；未登录跳转登录 */}
+                <Route
+                    path="/publish"
+                    element={
+                        <Protected isAuthed={!!token}>
+                            <ProductPublishPage />
+                        </Protected>
+                    }
+                />
                 <Route path="/products/new" element={<Navigate to="/publish" replace />} />
                 <Route path="/product/new" element={<Navigate to="/publish" replace />} />
 
@@ -123,23 +158,17 @@ export default function App() {
                 />
                 <Route path="/pay/result" element={<PayResultPage />} />
 
-                {/* 聊天 */}
+                {/* 聊天 - 统一页面 */}
                 <Route
                     path="/chat"
                     element={
                         <Protected isAuthed={!!token}>
-                            <ChatListPage />
+                            <ChatPage />
                         </Protected>
                     }
                 />
-                <Route
-                    path="/chat/:id"
-                    element={
-                        <Protected isAuthed={!!token}>
-                            <ChatDetailPage />
-                        </Protected>
-                    }
-                />
+                {/* 兼容旧的聊天详情路由，重定向到统一页面；未登录仍会被 /chat 的保护拦截 */}
+                <Route path="/chat/:id" element={<ChatRedirect />} />
 
                 {/* 我的 */}
                 <Route
@@ -150,14 +179,28 @@ export default function App() {
                         </Protected>
                     }
                 />
+                {/* 个人中心：左侧导航 + 右侧内容 */}
                 <Route
                     path="/me"
+                    element={<Navigate to="/me/center" replace />}
+                />
+                <Route
+                    path="/me/center"
                     element={
                         <Protected isAuthed={!!token}>
-                            <MeHomePage />
+                            <MeCenterLayout />
                         </Protected>
                     }
-                />
+                >
+                    <Route index element={<MyProfileCenterPage />} />
+                    <Route path="listings" element={<MyProductsPage />} />
+                    <Route path="favorites" element={<MyFavoritesPage />} />
+                    <Route path="orders" element={<OrdersListPage />} />
+                    <Route path="reviews" element={<ReviewsPendingPage />} />
+                    <Route path="profile" element={<ProfilePage />} />
+                    <Route path="security" element={<SecurityPage />} />
+                    <Route path="addresses" element={<AddressPage />} />
+                </Route>
                 <Route
                     path="/me/favorites"
                     element={
@@ -193,7 +236,13 @@ export default function App() {
             {/* ★ 全站悬浮窗（按需隐藏） */}
             {!hideFab && <FabDock />}
 
-            <AuthDialog open={authOpen} onClose={closeAuth} />
+            {/* 全局反馈与确认 */}
+            <ToastContainer />
+            <ConfirmModal />
+
+            {/* 已改为专用登录页，不再渲染全局登录弹窗 */}
+            {/* Footer：公共页面展示，中心/发布/聊天/认证页可不展示 */}
+            {!(isAuthPage || isCenterPage || isPublishPage || isChatPage) && <Footer />}
         </div>
     );
 }

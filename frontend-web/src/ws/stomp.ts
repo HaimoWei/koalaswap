@@ -114,3 +114,10 @@ export function subscribeConversationRead(
 ): StompSubscription | null {
     return ensureSubscription(`/topic/chat/conversations/${conversationId}/read`, onMessage);
 }
+
+// 订阅用户收件箱变化（未读数变化、新会话等）
+export function subscribeUserInbox(
+    onMessage: (msg: IMessage) => void
+): StompSubscription | null {
+    return ensureSubscription('/user/queue/chat', onMessage);
+}

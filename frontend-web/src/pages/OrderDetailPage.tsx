@@ -4,6 +4,7 @@ import { getOrder, shipOrder, confirmOrder, cancelOrder } from "../api/orders";
 import { getProduct } from "../api/products";
 import { getOrderReviews } from "../api/reviews";
 import { OrderStatusTag } from "../components/OrderStatusTag";
+import { confirm, toast } from "../store/overlay";
 import { OrderTimeline } from "../components/OrderTimeline";
 import { useAuthStore } from "../store/auth";
 
@@ -94,7 +95,7 @@ export function OrderDetailPage() {
     return (
         <main className="max-w-6xl mx-auto p-6 space-y-6">
             {/* 顶部：订单号 + 状态 */}
-            <div className="bg-white border rounded-lg p-4 flex items-center justify-between">
+            <div className="card p-4 flex items-center justify-between">
                 <div className="text-sm text-gray-600">
                     订单号：<b>{o.id}</b>
                 </div>
@@ -103,7 +104,7 @@ export function OrderDetailPage() {
 
             {/* PENDING 提示条（仿闲鱼） */}
             {up === "PENDING" && (
-                <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg p-3 text-sm">
+                <div className="tag-warning p-3 rounded-lg border border-[var(--warning)] bg-[var(--warning-bg)] text-[var(--warning)] text-sm">
                     {role === "buyer"
                         ? "订单已为你锁定 30 分钟，请尽快完成支付，否则可能被抢拍。"
                         : "买家正在支付，若异常可取消订单。"}
@@ -111,10 +112,10 @@ export function OrderDetailPage() {
             )}
 
             {/* 商品快照 */}
-            <div className="bg-white border rounded-lg p-4 flex gap-4">
+            <div className="card p-4 flex gap-4">
                 <img
                     src={p?.images?.[0] || "https://placehold.co/120x120"}
-                    className="w-28 h-28 rounded object-cover border"
+                    className="w-28 h-28 rounded object-cover border border-[var(--color-border)]"
                 />
                 <div className="flex-1 min-w-0">
                     <div className="font-medium">{p?.title || `商品 ${o.productId}`}</div>
@@ -130,28 +131,28 @@ export function OrderDetailPage() {
                 </div>
                 <Link
                     to={`/product/${o.productId}`}
-                    className="self-start text-sm px-3 py-1 rounded bg-gray-100 hover:bg-gray-200"
+                    className="self-start btn btn-secondary text-sm"
                 >
                     查看商品
                 </Link>
             </div>
 
             {/* 时间线 */}
-            <div className="bg-white border rounded-lg p-4">
+            <div className="card p-4">
                 <div className="text-sm text-gray-600 mb-2">订单进度</div>
                 <OrderTimeline status={o.status} />
             </div>
 
             {/* 评价 CTA：已完成但我还没评时出现 */}
             {isDone && role !== "guest" && (
-                <div className="bg-white border rounded-lg p-4 flex items-center justify-between">
+                <div className="card p-4 flex items-center justify-between">
                     <div className="text-sm text-gray-600">
                         {myReviewed ? "你已完成该订单的评价。" : "交易已完成，写个评价分享一下体验吧～"}
                     </div>
                     {!myReviewed && (
                         <button
                             onClick={() => nav(`/reviews/new/${o.id}`)}
-                            className="px-4 py-2 rounded text-sm bg-black text-white"
+                            className="btn btn-primary"
                         >
                             去评价
                         </button>
@@ -161,7 +162,7 @@ export function OrderDetailPage() {
 
             {/* 操作条：仅在有可操作项时显示 */}
             {hasAnyAction && (
-                <div className="bg-white border rounded-lg p-4">
+                <div className="card p-4">
                     <div className="text-sm text-gray-600 mb-3">可执行操作</div>
                     <div className="flex flex-wrap gap-3">
                         {/* 去支付入口跳到支付页，这里不直接展示（如需展示可放开）
@@ -175,7 +176,7 @@ export function OrderDetailPage() {
                             <button
                                 onClick={() => shipM.mutate()}
                                 disabled={shipM.isPending}
-                                className="px-4 py-2 rounded text-sm bg-purple-600 text-white disabled:opacity-50"
+                                className="btn btn-secondary disabled:opacity-50"
                             >
                                 {shipM.isPending ? "发货中..." : "发货"}
                             </button>
@@ -185,7 +186,7 @@ export function OrderDetailPage() {
                             <button
                                 onClick={() => confirmM.mutate()}
                                 disabled={confirmM.isPending}
-                                className="px-4 py-2 rounded text-sm bg-green-600 text-white disabled:opacity-50"
+                                className="btn btn-primary disabled:opacity-50"
                             >
                                 {confirmM.isPending ? "确认中..." : "确认收货"}
                             </button>
@@ -193,9 +194,9 @@ export function OrderDetailPage() {
 
                         {canCancel && (
                             <button
-                                onClick={() => window.confirm("确认要取消该订单？") && cancelM.mutate()}
+                                onClick={async () => { if (await confirm("取消订单", "确认要取消该订单？")) cancelM.mutate(); }}
                                 disabled={cancelM.isPending}
-                                className="px-4 py-2 rounded text-sm bg-gray-200 text-gray-800 disabled:opacity-50"
+                                className="btn btn-secondary disabled:opacity-50"
                             >
                                 {cancelM.isPending ? "取消中..." : "取消订单"}
                             </button>

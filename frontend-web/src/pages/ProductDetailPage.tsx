@@ -1,20 +1,20 @@
 // src/pages/ProductDetailPage.tsx
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { getProduct, hideProduct, relistProduct, deleteProduct } from "../api/products";
 import { getUserBrief } from "../api/users";
 import { useAuthStore } from "../store/auth";
-import { useUiStore } from "../store/ui";
+import { toast, confirm } from "../store/overlay";
 import { createConversation } from "../api/chat";
 import { FavoriteButton } from "../features/products/FavoriteButton";
 
 export function ProductDetailPage() {
     const { id = "" } = useParams<{ id: string }>();
     const nav = useNavigate();
+    const loc = useLocation();
     const qc = useQueryClient();
     const { profile, token } = useAuthStore();
-    const openAuth = useUiStore((s) => s.openAuth);
     const [busy, setBusy] = useState(false);
 
     const productQ = useQuery({
@@ -45,59 +45,79 @@ export function ProductDetailPage() {
     const disabledBuy = isMine || notActive;
 
     async function onChat() {
-        if (!token) return openAuth();
+        if (!token) {
+            const next = encodeURIComponent(`${loc.pathname}${loc.search || ""}`);
+            nav(`/login?next=${next}`);
+            return;
+        }
         if (disabledChat) {
-            alert("该商品当前不可聊天。");
+            toast("该商品当前不可聊天", "warning");
             return;
         }
         try {
             const conv = await createConversation({ productId: p.id, sellerId: p.sellerId });
             nav(`/chat/${conv.id}`);
         } catch (e: any) {
-            alert(e?.message || "发起聊天失败");
+            toast(e?.message || "发起聊天失败", "error");
         }
     }
 
     function onOrder() {
-        if (!token) return openAuth();
+        if (!token) {
+            const next = encodeURIComponent(`${loc.pathname}${loc.search || ""}`);
+            nav(`/login?next=${next}`);
+            return;
+        }
         if (disabledBuy) {
-            alert("该商品当前不可购买。");
+            toast("该商品当前不可购买", "warning");
             return;
         }
         nav(`/checkout/${p.id}`);
     }
 
     async function onHide() {
-        if (!token) return openAuth();
-        if (!confirm("确定要下架该商品吗？")) return;
+        if (!token) {
+            const next = encodeURIComponent(`${loc.pathname}${loc.search || ""}`);
+            nav(`/login?next=${next}`);
+            return;
+        }
+        if (!(await confirm("下架商品", "确定要下架该商品吗？"))) return;
         try {
             setBusy(true);
             await hideProduct(p.id);
             await qc.invalidateQueries({ queryKey: ["product", id] });
         } catch (e: any) {
-            alert(e?.message || "下架失败，请稍后再试");
+            toast(e?.message || "下架失败，请稍后再试", "error");
         } finally {
             setBusy(false);
         }
     }
 
     async function onRelist() {
-        if (!token) return openAuth();
+        if (!token) {
+            const next = encodeURIComponent(`${loc.pathname}${loc.search || ""}`);
+            nav(`/login?next=${next}`);
+            return;
+        }
         try {
             setBusy(true);
             await relistProduct(p.id);
             await qc.invalidateQueries({ queryKey: ["product", id] });
         } catch (e: any) {
-            alert(e?.message || "操作失败，请稍后再试");
+            toast(e?.message || "操作失败，请稍后再试", "error");
         } finally {
             setBusy(false);
         }
     }
 
     async function onDelete() {
-        if (!token) return openAuth();
+        if (!token) {
+            const next = encodeURIComponent(`${loc.pathname}${loc.search || ""}`);
+            nav(`/login?next=${next}`);
+            return;
+        }
 
-        const ok = confirm("删除后不可恢复。若当前在售，将先下架再彻底删除。确认删除吗？");
+        const ok = await confirm("删除商品", "删除后不可恢复。若当前在售，将先下架再彻底删除。确认删除吗？");
         if (!ok) return;
 
         try {
@@ -114,11 +134,11 @@ export function ProductDetailPage() {
                 "删除失败，请稍后再试";
 
             if (/订单|无法删除|foreign|constraint/i.test(msg)) {
-                alert("该商品存在订单记录，无法彻底删除；已为你下架。");
+                toast("该商品存在订单记录，无法彻底删除；已为你下架。", "warning");
                 await qc.invalidateQueries({ queryKey: ["product", id] });
                 return;
             }
-            alert(msg);
+            toast(msg, "error");
         } finally {
             setBusy(false);
         }
@@ -136,12 +156,12 @@ export function ProductDetailPage() {
 
                 <div className="mt-2 flex gap-2">
                     {p.condition && (
-                        <span className="text-xs px-2 py-0.5 rounded bg-gray-100">
+                        <span className="chip chip-secondary">
               {mapCondition(p.condition)}
             </span>
                     )}
                     {p.status && p.status !== "ACTIVE" && (
-                        <span className="text-xs px-2 py-0.5 rounded bg-gray-100">
+                        <span className="chip chip-muted">
               {mapStatus(p.status)}
             </span>
                     )}
@@ -154,7 +174,7 @@ export function ProductDetailPage() {
                             <button
                                 onClick={onHide}
                                 disabled={busy}
-                                className="px-6 py-2 rounded-xl border hover:bg-gray-50 disabled:opacity-50"
+                                className="btn btn-secondary disabled:opacity-50"
                             >
                                 下架
                             </button>
@@ -162,7 +182,7 @@ export function ProductDetailPage() {
                             <button
                                 onClick={onRelist}
                                 disabled={busy}
-                                className="px-6 py-2 rounded-xl border hover:bg-gray-50 disabled:opacity-50"
+                                className="btn btn-secondary disabled:opacity-50"
                             >
                                 重新上架
                             </button>
@@ -171,7 +191,7 @@ export function ProductDetailPage() {
                         <button
                             onClick={onDelete}
                             disabled={busy}
-                            className="px-6 py-2 rounded-xl border text-red-600 hover:bg-red-50 disabled:opacity-50"
+                            className="btn btn-danger disabled:opacity-50"
                         >
                             删除
                         </button>
@@ -181,7 +201,7 @@ export function ProductDetailPage() {
                         <button
                             onClick={onChat}
                             disabled={disabledChat}
-                            className="px-4 py-2 rounded bg-black text-white text-sm disabled:opacity-50"
+                            className="btn btn-primary disabled:opacity-50"
                         >
                             聊一聊
                         </button>
@@ -189,7 +209,7 @@ export function ProductDetailPage() {
                         <button
                             onClick={onOrder}
                             disabled={disabledBuy}
-                            className="px-4 py-2 rounded bg-orange-500 text-white text-sm disabled:opacity-50"
+                            className="btn btn-secondary disabled:opacity-50"
                         >
                             立即购买
                         </button>
@@ -201,17 +221,17 @@ export function ProductDetailPage() {
 
                 {/* ✅ 非 ACTIVE 提示（保留更具体的“已预定”文案） */}
                 {!isMine && p.status === "RESERVED" && (
-                    <div className="mt-2 text-xs text-orange-600">
+                    <div className="mt-2 text-xs text-[var(--warning)]">
                         该商品已被预定，暂不可聊天或购买
                     </div>
                 )}
                 {!isMine && p.status && p.status !== "ACTIVE" && p.status !== "RESERVED" && (
-                    <div className="mt-2 text-xs text-orange-600">
+                    <div className="mt-2 text-xs text-[var(--warning)]">
                         该商品已失效，暂不可聊天或购买
                     </div>
                 )}
 
-                <div className="mt-6 border rounded-lg bg-white p-4">
+                <div className="mt-6 card p-4">
                     <div className="text-sm text-gray-500 mb-2">卖家</div>
                     {sellerQ.isLoading ? (
                         <div className="h-12 bg-gray-100 rounded" />
@@ -237,10 +257,10 @@ export function ProductDetailPage() {
                 </div>
 
                 {p.description && (
-                    <div className="mt-6 border rounded-lg bg-white p-4">
-                        <div className="text-sm text-gray-500 mb-2">描述</div>
-                        <p className="text-sm leading-relaxed whitespace-pre-line">{p.description}</p>
-                    </div>
+                <div className="mt-6 card p-4">
+                    <div className="text-sm text-gray-500 mb-2">描述</div>
+                    <p className="text-sm leading-relaxed whitespace-pre-line">{p.description}</p>
+                </div>
                 )}
             </div>
         </main>
@@ -253,7 +273,7 @@ function Gallery({ images }: { images: string[] }) {
 
     return (
         <div>
-            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+            <div className="aspect-square bg-[var(--color-muted)] rounded-[var(--radius-xl)] overflow-hidden">
                 <img
                     src={list[Math.min(idx, list.length - 1)]}
                     alt="商品图片"
@@ -268,7 +288,7 @@ function Gallery({ images }: { images: string[] }) {
                         key={i}
                         onClick={() => setIdx(i)}
                         className={`aspect-square rounded border overflow-hidden ${
-                            i === idx ? "ring-2 ring-black" : ""
+                            i === idx ? "ring-2 ring-[var(--ring)]" : ""
                         }`}
                         aria-label={`预览第 ${i + 1} 张图片`}
                     >

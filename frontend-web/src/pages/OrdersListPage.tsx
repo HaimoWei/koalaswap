@@ -24,8 +24,8 @@ function OrderCard({ o }: { o: OrderRes }) {
     const img = prod?.images?.[0] || "https://placehold.co/120x120?text=No+Image";
 
     return (
-        <div className="p-3 border rounded-lg bg-white flex gap-3">
-            <img src={img} className="w-24 h-24 rounded object-cover border" />
+        <div className="card p-3 flex gap-3">
+            <img src={img} className="w-24 h-24 rounded object-cover border border-[var(--color-border)]" />
             <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                     <Link to={`/orders/${o.id}`} className="font-medium hover:underline">
@@ -37,7 +37,7 @@ function OrderCard({ o }: { o: OrderRes }) {
                 <div className="text-xs text-gray-500 mt-1">创建时间：{new Date(o.createdAt).toLocaleString()}</div>
             </div>
             <div className="flex flex-col items-end justify-between">
-                <Link to={`/orders/${o.id}`} className="px-3 py-1 rounded text-sm bg-gray-100 hover:bg-gray-200">
+                <Link to={`/orders/${o.id}`} className="btn btn-secondary text-sm">
                     查看详情
                 </Link>
             </div>
@@ -68,12 +68,7 @@ export function OrdersListPage() {
     const list: OrderRes[] = query.data?.content ?? [];
     const totalPages = query.data?.totalPages ?? 1;
 
-    const setRole = (r: "buyer" | "seller") => {
-        const next = new URLSearchParams(sp);
-        next.set("role", r);
-        next.set("page", "0");
-        setSp(next);
-    };
+    // 角色切换仅通过左侧导航，不在页面内提供切换按钮
     const setStatus = (s: string) => {
         const next = new URLSearchParams(sp);
         next.set("status", s);
@@ -88,18 +83,11 @@ export function OrdersListPage() {
 
     return (
         <main className="max-w-6xl mx-auto p-6 space-y-4">
-            <div className="flex gap-2">
-                <button className={`px-3 py-1 rounded text-sm ${role === "buyer" ? "bg-black text-white" : "bg-gray-100"}`} onClick={() => setRole("buyer")}>
-                    我买到的
-                </button>
-                <button className={`px-3 py-1 rounded text-sm ${role === "seller" ? "bg-black text-white" : "bg-gray-100"}`} onClick={() => setRole("seller")}>
-                    我卖出的
-                </button>
-            </div>
+            {/* 角色切换已移除：请通过左侧导航进入“我买到的/我卖出的” */}
 
             <div className="flex items-center gap-2 text-sm">
                 <span className="text-gray-600">状态：</span>
-                <select className="border rounded px-2 py-1" value={status} onChange={(e) => setStatus(e.target.value)}>
+                <select className="input w-44 text-sm" value={status} onChange={(e) => setStatus(e.target.value)}>
                     {STATUS_OPTIONS.map(([v, l]) => (
                         <option key={v} value={v}>{l}</option>
                     ))}
@@ -107,7 +95,7 @@ export function OrdersListPage() {
             </div>
 
             {query.isLoading ? (
-                <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-28 bg-white border rounded-lg animate-pulse" />)}</div>
+                <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-28 card animate-pulse" />)}</div>
             ) : query.isError ? (
                 <div className="text-red-600">加载失败：{(query.error as Error)?.message}</div>
             ) : list.length === 0 ? (
@@ -118,9 +106,9 @@ export function OrdersListPage() {
 
             {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2">
-                    <button className="px-3 py-1 rounded bg-gray-100 disabled:opacity-50" disabled={page <= 0} onClick={() => setPage(page - 1)}>上一页</button>
+                    <button className="btn btn-secondary" disabled={page <= 0} onClick={() => setPage(page - 1)}>上一页</button>
                     <span className="text-sm text-gray-600">第 {page + 1} / {totalPages} 页</span>
-                    <button className="px-3 py-1 rounded bg-gray-100 disabled:opacity-50" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>下一页</button>
+                    <button className="btn btn-secondary" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>下一页</button>
                 </div>
             )}
         </main>

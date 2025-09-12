@@ -22,8 +22,8 @@ public class ProductInternalBriefController {
     private final ProductRepository productRepo;
     private final ProductImageRepository imageRepo;
 
-    // 返回字段需与 chat 的 ProductClient.ProductBrief 一致
-    public record ProductBriefRes(UUID id, UUID sellerId, String firstImageUrl, String title) {}
+    // 返回字段需与 chat 的 ProductClient.ProductBrief 一致（包含价格）
+    public record ProductBriefRes(UUID id, UUID sellerId, String firstImageUrl, String title, java.math.BigDecimal price) {}
 
     /** 单个 brief：GET /api/internal/products/brief/{id}  -> ApiResponse<ProductBriefRes> */
     @GetMapping("/{id}")
@@ -33,7 +33,7 @@ public class ProductInternalBriefController {
         String first = imageRepo.findFirstByProductIdOrderBySortOrderAsc(p.getId())
                 .map(ProductImage::getUrl)
                 .orElse(null);
-        return ApiResponse.ok(new ProductBriefRes(p.getId(), p.getSellerId(), first, p.getTitle()));
+        return ApiResponse.ok(new ProductBriefRes(p.getId(), p.getSellerId(), first, p.getTitle(), p.getPrice()));
     }
 
     /** 批量 brief：GET /api/internal/products/brief/batch?ids={id}&ids={id2}...  -> ApiResponse<List<ProductBriefRes>> */
@@ -48,7 +48,7 @@ public class ProductInternalBriefController {
             String first = imageRepo.findFirstByProductIdOrderBySortOrderAsc(p.getId())
                     .map(ProductImage::getUrl)
                     .orElse(null);
-            out.add(new ProductBriefRes(p.getId(), p.getSellerId(), first, p.getTitle()));
+            out.add(new ProductBriefRes(p.getId(), p.getSellerId(), first, p.getTitle(), p.getPrice()));
         }
         return ApiResponse.ok(out);
     }

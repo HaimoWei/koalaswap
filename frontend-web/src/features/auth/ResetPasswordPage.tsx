@@ -68,7 +68,7 @@ export function ResetPasswordPage() {
                 <p className="text-gray-600 mb-4">重置链接无效或已过期，请重新发起找回密码。</p>
                 <button
                     onClick={() => nav("/auth/forgot")}
-                    className="px-4 py-2 rounded bg-black text-white"
+                    className="btn btn-primary"
                 >
                     去找回密码
                 </button>
@@ -79,12 +79,12 @@ export function ResetPasswordPage() {
     return (
         <main className="max-w-md mx-auto p-6">
             <h1 className="text-xl font-semibold mb-4">设置新密码</h1>
-            <form onSubmit={onSubmit} className="space-y-3">
+            <form onSubmit={onSubmit} className="space-y-3 card p-4">
                 <div>
                     <label className="block text-sm mb-1">新密码</label>
                     <input
                         type="password"
-                        className="w-full border rounded px-3 py-2 text-sm"
+                        className="input text-sm"
                         placeholder="至少 6 位"
                         {...register("password")}
                     />
@@ -98,7 +98,7 @@ export function ResetPasswordPage() {
                     <label className="block text-sm mb-1">确认新密码</label>
                     <input
                         type="password"
-                        className="w-full border rounded px-3 py-2 text-sm"
+                        className="input text-sm"
                         placeholder="再次输入"
                         {...register("confirm")}
                     />
@@ -113,15 +113,15 @@ export function ResetPasswordPage() {
 
                 <div className="flex gap-3">
                     <button
-                        className="px-4 py-2 rounded bg-black text-white text-sm"
+                        className="btn btn-primary text-sm"
                         disabled={formState.isSubmitting}
                     >
                         {formState.isSubmitting ? "提交中..." : "确认重置"}
                     </button>
                     <button
                         type="button"
-                        onClick={() => nav("/?login=1")}
-                        className="px-4 py-2 rounded bg-gray-100 text-sm"
+                        onClick={() => nav("/login")}
+                        className="btn btn-secondary text-sm"
                     >
                         去登录
                     </button>

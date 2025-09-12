@@ -9,7 +9,7 @@ export default function PayResultPage() {
 
     return (
         <main className="max-w-4xl mx-auto p-6">
-            <div className="bg-white rounded-xl border p-8 text-center">
+            <div className="card p-8 text-center">
                 <div className="text-2xl font-semibold mb-2">{isSuccess ? "支付成功" : "待支付"}</div>
                 <div className="text-sm text-gray-600 mb-6">
                     {isSuccess
@@ -29,11 +29,11 @@ export default function PayResultPage() {
                         <>
                             <Link
                                 to="/orders?role=buyer&status=PAID"
-                                className="px-4 py-2 rounded bg-black text-white text-sm"
+                                className="btn btn-primary text-sm"
                             >
                                 查看详情
                             </Link>
-                            <Link to="/" className="px-4 py-2 rounded bg-gray-100 text-sm">
+                            <Link to="/" className="btn btn-secondary text-sm">
                                 回首页
                             </Link>
                         </>
@@ -42,12 +42,12 @@ export default function PayResultPage() {
                             {orderId && (
                                 <Link
                                     to={`/pay/${orderId}`}
-                                    className="px-4 py-2 rounded bg-black text-white text-sm"
+                                    className="btn btn-primary text-sm"
                                 >
                                     去支付
                                 </Link>
                             )}
-                            <Link to="/" className="px-4 py-2 rounded bg-gray-100 text-sm">
+                            <Link to="/" className="btn btn-secondary text-sm">
                                 回首页
                             </Link>
                         </>

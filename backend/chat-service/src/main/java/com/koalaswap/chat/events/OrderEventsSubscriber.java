@@ -30,19 +30,9 @@ public class OrderEventsSubscriber implements MessageListener {
             String json = new String(message.getBody());
             OrderStatusEvent evt = om.readValue(json, OrderStatusEvent.class);
 
-            // 将订单事件转为 SYSTEM 消息落库，并刷新会话快照/未读
-            var saved = chatDomain.appendSystemMessageForOrderEvent(evt);
-
-            // 推送到会话 topic
-            var resp = new MessageResponse(
-                    saved.getId(), saved.getType(), saved.getSenderId(),
-                    saved.getBody(), saved.getImageUrl(), saved.getSystemEvent(),
-                    saved.getMeta(), saved.getCreatedAt()
-            );
-            ws.publishNewMessage(saved.getConversationId(), resp);
-
-            // （可选）推送“我的收件箱发生变化”给双方
-            // chatDomain.getConversation(saved.getConversationId()) -> 取 buyer/seller 并各自推送未读变化
+            // 将订单事件转为 SYSTEM 消息落库，并刷新会话快照/未读；
+            // 该方法内部已负责广播 WS（会话消息 + 收件箱变化），此处无需重复推送。
+            chatDomain.appendSystemMessageForOrderEvent(evt);
         } catch (Exception e) {
             // 记录日志即可；为简洁未引入日志框架
             e.printStackTrace();

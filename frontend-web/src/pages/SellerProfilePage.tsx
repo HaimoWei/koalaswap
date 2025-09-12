@@ -103,20 +103,20 @@ export default function SellerProfilePage() {
     return (
         <main className="max-w-6xl mx-auto p-6 space-y-6">
             {/* 顶部卖家信息 + Tabs */}
-            <section className="bg-white border rounded-xl p-4">
+            <section className="card p-4">
                 <div className="flex items-center gap-4">
                     <Avatar url={u.avatarUrl} name={u.displayName} size={64} fallback={AVATAR_FALLBACK_64} />
                     <div className="flex-1">
                         <div className="text-lg font-semibold">{u.displayName}</div>
                         {/* 预留 u.bio / u.stats（后端暂未提供） */}
                     </div>
-                    <button onClick={() => nav(-1)} className="px-3 py-1.5 rounded bg-gray-100 text-sm">
+                    <button onClick={() => nav(-1)} className="btn btn-secondary text-sm">
                         返回
                     </button>
                 </div>
 
                 {/* Tabs */}
-                <div className="mt-4 flex gap-6 border-b">
+                <div className="mt-4 flex gap-6 border-b border-[var(--color-border)]">
                     <TabBtn active={tab === "products"} onClick={() => setTab("products")}>
                         在售商品
                     </TabBtn>
@@ -128,7 +128,7 @@ export default function SellerProfilePage() {
 
             {/* Tab 内容 */}
             {tab === "products" ? (
-                <section className="bg-white border rounded-xl p-4">
+                <section className="card p-4">
                     {productsQ.isLoading ? (
                         <div>加载中…</div>
                     ) : productsQ.isError ? (
@@ -167,7 +167,7 @@ export default function SellerProfilePage() {
                     )}
                 </section>
             ) : (
-                <section className="bg-white border rounded-xl p-4">
+                <section className="card p-4">
                     {reviewsQ.isLoading ? (
                         <div>加载中…</div>
                     ) : grouped.length === 0 ? (
