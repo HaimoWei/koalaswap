@@ -6,17 +6,25 @@ import { useQuery } from "@tanstack/react-query";
 import { listConversations } from "../api/chat";
 import { Icon } from "./Icon";
 
+// TopNav现在保持简洁统一的设计
+
 export function TopNav({
     showSearch = true,
-    showPublish = true,
-    showMessages = true,
-}: { showSearch?: boolean; showPublish?: boolean; showMessages?: boolean }) {
+    showPublish = false,
+    showMessages = false,
+}: {
+    showSearch?: boolean;
+    showPublish?: boolean;
+    showMessages?: boolean;
+}) {
     const { token, profile, clear } = useAuthStore();
     const nav = useNavigate();
     const loc = useLocation();
     const [q, setQ] = useState("");
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+
+    // 移除返回按钮和页面标题逻辑，统一显示KoalaSwap
 
     useEffect(() => {
         const sp = new URLSearchParams(loc.search);
@@ -56,8 +64,10 @@ export function TopNav({
     return (
         <header className="sticky top-0 bg-[var(--color-surface)] border-b border-[var(--color-border)] z-20 shadow-[var(--shadow-1)]">
             <div className="page py-4 flex items-center gap-6">
-                <div className="font-bold text-lg cursor-pointer" onClick={() => nav("/")}>
-                    KoalaSwap
+                <div className="flex items-center gap-4">
+                    <div className="font-bold text-lg cursor-pointer" onClick={() => nav("/")}>
+                        KoalaSwap
+                    </div>
                 </div>
                 {/* 居中搜索框（按需显示） */}
                 <div className="flex-1 flex items-center justify-center">
@@ -105,13 +115,24 @@ export function TopNav({
                         )}
                         {/* 头像 + 菜单 */}
                         <div className="relative" ref={menuRef}>
-                            <button className="flex items-center gap-2" onClick={() => setMenuOpen((v) => !v)}>
+                            <div
+                                className="flex items-center gap-2 hover:bg-gray-50 rounded-lg px-2 py-1 transition-colors cursor-pointer"
+                                onMouseEnter={() => setMenuOpen(true)}
+                                onMouseLeave={() => setMenuOpen(false)}
+                            >
                                 <img src={profile?.avatarUrl || "https://placehold.co/28x28"}
                                      className="w-8 h-8 rounded-full border border-[var(--color-border)]"/>
                                 <span className="text-sm">{profile?.displayName || "我"}</span>
-                            </button>
+                                <svg className={`w-4 h-4 transition-transform ${menuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
                             {menuOpen && (
-                                <div className="absolute right-0 mt-2 w-56 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-[var(--shadow-2)] py-1 z-50">
+                                <div
+                                    className="absolute right-0 top-full w-56 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-[var(--shadow-2)] py-1 z-50"
+                                    onMouseEnter={() => setMenuOpen(true)}
+                                    onMouseLeave={() => setMenuOpen(false)}
+                                >
                                     <button className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-muted)]" onClick={() => { setMenuOpen(false); nav("/me/center/listings"); }}>我发布的</button>
                                     <button className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-muted)]" onClick={() => { setMenuOpen(false); nav("/me/center/orders?role=seller"); }}>我卖出的</button>
                                     <button className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-muted)]" onClick={() => { setMenuOpen(false); nav("/me/center/orders?role=buyer"); }}>我买到的</button>

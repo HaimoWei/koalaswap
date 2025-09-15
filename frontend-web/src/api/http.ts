@@ -62,3 +62,4 @@ export const productApi = createApi(pickBase("VITE_PRODUCT_API_BASE_URL"));
 export const orderApi   = createApi(pickBase("VITE_ORDER_API_BASE_URL"));
 export const reviewApi  = createApi(pickBase("VITE_REVIEW_API_BASE_URL"));
 export const chatApi    = createApi(pickBase("VITE_CHAT_API_BASE_URL"));
+export const fileApi    = createApi(pickBase("VITE_FILE_API_BASE_URL"));

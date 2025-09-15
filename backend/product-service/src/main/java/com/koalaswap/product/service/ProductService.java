@@ -42,6 +42,7 @@ public class ProductService {
         p.setCurrency(req.currency());
         p.setCategoryId(req.categoryId());
         p.setCondition(req.condition());
+        p.setFreeShipping(Boolean.TRUE.equals(req.freeShipping()));
         p.setStatus(ProductStatus.ACTIVE); // create 总是上架
         p = products.save(p);
 
@@ -51,8 +52,12 @@ public class ProductService {
                 var img = new ProductImage();
                 img.setProductId(p.getId());
                 img.setUrl(url);
-                img.setSortOrder(i++);
+                img.setSortOrder(i);  // 兼容旧字段
+                img.setDisplayOrder(i);  // 新字段
+                img.setIsPrimary(i == 0);  // 第一张图片设为主图
+                img.setUploadStatus("COMPLETED");  // 通过CDN URL发布的图片都是已完成状态
                 images.save(img);
+                i++;
             }
         }
         return toRes(p, imageUrlsOf(p.getId()));
@@ -76,6 +81,7 @@ public class ProductService {
         if (req.currency() != null) p.setCurrency(req.currency());
         if (req.categoryId() != null) p.setCategoryId(req.categoryId());
         if (req.condition() != null) p.setCondition(req.condition());
+        if (req.freeShipping() != null) p.setFreeShipping(req.freeShipping());
         if (req.status() != null) p.setStatus(req.status());
 
         if (req.images() != null) {
@@ -89,8 +95,12 @@ public class ProductService {
                 var img = new ProductImage();
                 img.setProductId(id);
                 img.setUrl(url);
-                img.setSortOrder(i++);
+                img.setSortOrder(i);  // 兼容旧字段
+                img.setDisplayOrder(i);  // 新字段
+                img.setIsPrimary(i == 0);  // 第一张图片设为主图
+                img.setUploadStatus("COMPLETED");  // 通过CDN URL发布的图片都是已完成状态
                 images.save(img);
+                i++;
             }
         }
         var saved = products.save(p);
@@ -215,6 +225,7 @@ public class ProductService {
                 p.getCategoryId(),
                 p.getCondition(),
                 p.getStatus(),
+                p.isFreeShipping(),
                 p.getCreatedAt(),
                 p.getUpdatedAt(),
                 imgs

@@ -35,6 +35,10 @@ app:
     from: weihaimoau@gmail.com            # ← 直接写
   urls:
     verify-redirect-base: http://localhost:5173/verified
+  file-service:
+    base-url: http://localhost:12647
+  user:
+    default-avatar-url: https://d3367sa0s3hyt3.cloudfront.net/avatar/default-avatar.v1.svg
 
   # Token 新鲜度配置（user-service 也用，以便自身校验）
   token-freshness:

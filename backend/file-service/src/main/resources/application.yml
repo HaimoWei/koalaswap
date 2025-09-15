@@ -1,0 +1,50 @@
+# 默认配置文件（生产环境）
+server:
+  port: 8080
+
+spring:
+  application:
+    name: file-service
+
+  profiles:
+    active: local  # 默认激活 local 环境
+
+  # Redis 配置
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+
+# 应用配置
+app:
+  jwt:
+    secret: ${JWT_SECRET:p9P2JYpN4mVJXWm7XyQw6kBsF3uCz7rGQh5M8tQ2nA1rS6vY0kL9dH4eT8uZ3xB1}
+
+  # Token 新鲜度配置
+  token-freshness:
+    use-redis: true
+    cache-ttl-sec: 8
+    pubsub-channel: auth:pv:changed
+
+  # 用户服务配置
+  user-service:
+    internal-base-url: ${USER_SERVICE_URL:http://localhost:12649}
+
+  # 文件配置
+  file:
+    region: ${AWS_REGION:ap-southeast-2}
+    bucket-name: ${S3_BUCKET:koalaswap}
+    cdn-base-url: ${CDN_BASE:https://d3367sa0s3hyt3.cloudfront.net}
+    presigned-url-expiration-minutes: ${AWS_PRESIGNED_MINUTES:15}
+
+# 日志配置
+logging:
+  level:
+    com.koalaswap.common.security: INFO
+    com.koalaswap.file: INFO
+    org.springframework.security: WARN

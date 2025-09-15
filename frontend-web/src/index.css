@@ -54,13 +54,21 @@ body { background: var(--color-bg); color: var(--color-text); }
   box-shadow: var(--shadow-1);
 }
 
-/* 页面容器（更宽，接近大站标准） */
+/* 页面容器（参考闲鱼宽度标准） */
 .page {
-  max-width: 90rem; /* 1440px */
+  max-width: 100rem; /* 1600px - 参考闲鱼标准 */
   margin-left: auto;
   margin-right: auto;
   padding-left: 1.5rem; /* px-6 */
   padding-right: 1.5rem;
+}
+
+/* 响应式调整 */
+@media (min-width: 1400px) {
+  .page {
+    padding-left: 3rem; /* 48px - 适中的内边距 */
+    padding-right: 3rem;
+  }
 }
 
 .input {
@@ -111,6 +119,7 @@ body { background: var(--color-bg); color: var(--color-text); }
 .chip { display: inline-block; font-size: .75rem; padding: .125rem .5rem; border-radius: 9999px; }
 .chip-muted { background: var(--color-muted); color: var(--color-text); }
 .chip-secondary { background: var(--color-secondary-50); color: var(--color-secondary-700); }
+.chip-primary { background: var(--color-primary); color: var(--color-text-strong); }
 
 .tag { display: inline-block; font-size: .75rem; padding: .125rem .5rem; border-radius: 9999px; }
 .tag-success { background: var(--success-bg); color: var(--success); }

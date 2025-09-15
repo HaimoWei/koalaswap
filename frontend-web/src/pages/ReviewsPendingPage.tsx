@@ -82,7 +82,7 @@ export function ReviewsPendingPage() {
 
     return (
         <main className="max-w-6xl mx-auto p-6 space-y-4">
-            <h1 className="text-xl font-semibold">待评价</h1>
+            <h1 className="text-xl font-semibold">我的评价</h1>
 
             <div className="flex gap-2">
                 <button className={`btn text-sm ${tab === "buyer" ? "btn-primary" : "btn-secondary"}`} onClick={() => onTab("buyer")}>
@@ -147,9 +147,9 @@ function PendingRow({ it }: { it: PendingItem }) {
         "https://placehold.co/120x120?text=No+Image";
 
     return (
-        <div className="p-3 card flex items-center gap-3">
-            <img src={img} className="w-20 h-20 rounded object-cover border border-[var(--color-border)]" />
-            <div className="flex-1 min-w-0">
+        <div className="p-5 card flex items-center gap-4">
+            <img src={img} className="w-24 h-24 rounded object-cover border border-[var(--color-border)]" />
+            <div className="flex-1 min-w-0 self-start">
                 {/* 第一行：商品名称 */}
                 <div className="font-medium truncate">{title}</div>
                 {/* 第二行：订单编号 */}
@@ -173,9 +173,9 @@ function GivenRow({ r, onAppend }: { r: ReviewRes; onAppend: () => void }) {
         "https://placehold.co/120x120?text=No+Image";
 
     return (
-        <div className="p-3 card flex items-center gap-3">
-            <img src={img} className="w-20 h-20 rounded object-cover border border-[var(--color-border)]" />
-            <div className="flex-1 min-w-0">
+        <div className="p-5 card flex items-center gap-4">
+            <img src={img} className="w-24 h-24 rounded object-cover border border-[var(--color-border)]" />
+            <div className="flex-1 min-w-0 self-start">
                 {/* 第一行：商品名称 */}
                 <div className="font-medium truncate">{title}</div>
                 {/* 第二行：订单编号 */}

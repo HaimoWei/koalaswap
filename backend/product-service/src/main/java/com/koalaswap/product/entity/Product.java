@@ -63,6 +63,9 @@ public class Product {
     @Column(nullable = false, columnDefinition = "product_status")
     private ProductStatus status = ProductStatus.ACTIVE;
 
+    @Column(name = "free_shipping", nullable = false)
+    private boolean freeShipping = false; // 是否包邮（卖家承担运费）
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;

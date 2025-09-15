@@ -217,7 +217,7 @@ export function OrderDetailPage() {
             {/* 返回 */}
             <div className="flex gap-3">
                 <Link
-                    to={`/orders?role=${role === "seller" ? "seller" : "buyer"}`}
+                    to={`/me/center/orders?role=${role === "seller" ? "seller" : "buyer"}`}
                     className="text-blue-600 underline"
                 >
                     返回订单列表

@@ -14,6 +14,7 @@ export interface ProductCreateReq {
     categoryId?: number | null;
     condition: Condition;
     images?: string[];        // 先用URL，后续可接直传
+    freeShipping?: boolean;   // 是否包邮（可选）
 }
 /** ======================================================== */
 
@@ -132,6 +133,13 @@ export async function createProduct(payload: ProductCreateReq): Promise<ProductR
     // 保持与文件中其它函数一致的风格（productApi + ApiResponse 校验）
     const { data } = await productApi.post<ApiResponse<ProductRes>>("/api/products", payload);
     if (!data.ok || !data.data) throw new Error(data.message || "Create product failed");
+    return data.data;
+}
+
+/* ========= 编 辑 ========= */
+export async function updateProduct(id: string, payload: ProductCreateReq): Promise<ProductRes> {
+    const { data } = await productApi.patch<ApiResponse<ProductRes>>(`/api/products/${id}`, payload);
+    if (!data.ok || !data.data) throw new Error(data.message || "Update product failed");
     return data.data;
 }
 

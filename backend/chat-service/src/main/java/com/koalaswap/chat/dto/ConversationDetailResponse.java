@@ -20,6 +20,8 @@ public record ConversationDetailResponse(
         // 新增对方用户信息
         String peerNickname,
         String peerAvatar,
+        // 新增订单ID（方便前端直接获取，不依赖orderDetail）
+        UUID orderId,
         // 新增完整订单信息
         OrderDetail orderDetail
 ) {

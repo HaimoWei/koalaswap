@@ -1,15 +1,18 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getProduct } from "../api/products";
 import { createOrder } from "../api/orders";
 import { useAuthStore } from "../store/auth";
 import { useLocation } from "react-router-dom";
+import { AddressSelector } from "../components/AddressSelector";
 
 export function OrderCreatePage() {
     const { id = "" } = useParams<{ id: string }>();
     const nav = useNavigate();
     const loc = useLocation();
     const { token } = useAuthStore();
+    const [selectedAddressId, setSelectedAddressId] = useState<string>("");
 
     const q = useQuery({
         queryKey: ["checkout", id],
@@ -25,9 +28,16 @@ export function OrderCreatePage() {
             nav(`/login?next=${next}`);
             return;
         }
+
+        if (!selectedAddressId) {
+            const { toast } = await import("../store/overlay");
+            toast("请选择收货地址", "error");
+            return;
+        }
+
         try {
             // 先创建订单
-            const order = await createOrder(id);
+            const order = await createOrder(id, selectedAddressId);
             // 跳转到模拟支付页
             nav(`/pay/${order.id}`);
         } catch (e: any) {
@@ -49,8 +59,11 @@ export function OrderCreatePage() {
             {/* 左侧：地址（占位） + 订单信息 */}
             <section className="md:col-span-2 space-y-4">
                 <div className="card p-4">
-                    <div className="font-medium mb-2">收货地址</div>
-                    <div className="text-sm text-gray-600">这里接入你的地址列表与选择；当前为占位提示。</div>
+                    <div className="font-medium mb-3">收货地址</div>
+                    <AddressSelector
+                        selectedAddressId={selectedAddressId}
+                        onAddressChange={setSelectedAddressId}
+                    />
                 </div>
 
                 <div className="card p-4">

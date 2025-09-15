@@ -249,6 +249,11 @@ export function ChatDetail({ conversationId }: ChatDetailProps) {
     // 顶部状态：优先订单详情里的状态，其次用会话缓存；不隐藏 PENDING
     const headerStatus = convQ.data ? (convQ.data.orderDetail?.status || convQ.data.orderStatus) : undefined;
     const hasOrderStatus = !!headerStatus;
+
+    // 获取头像信息（在组件顶层获取，避免在循环中使用Hook）
+    const myProfile = useAuthStore((s) => s.profile);
+    const myAvatar = myProfile?.avatarUrl;
+    const peerAvatar = convQ.data?.peerAvatar;
     
     // 临时调试日志
     console.log('[ChatDetail] conversation data:', {
@@ -257,6 +262,10 @@ export function ChatDetail({ conversationId }: ChatDetailProps) {
         productTitle: convQ.data?.productTitle,
         productPrice: convQ.data?.productPrice,
         orderStatus: convQ.data?.orderStatus,
+        orderDetail: convQ.data?.orderDetail,
+        orderDetailStatus: convQ.data?.orderDetail?.status,
+        orderId: convQ.data?.orderDetail?.orderId,
+        fullConversationData: convQ.data,
     });
 
     return (
@@ -338,6 +347,10 @@ export function ChatDetail({ conversationId }: ChatDetailProps) {
                                     m={m}
                                     // 仅在"我最后一条消息"处展示已读
                                     isRead={i === lastMineIdx && lastMineRead}
+                                    // 头像信息
+                                    myAvatar={myAvatar}
+                                    peerAvatar={peerAvatar}
+                                    peerName={peerName}
                                 />
                             );
                         })}
@@ -350,7 +363,12 @@ export function ChatDetail({ conversationId }: ChatDetailProps) {
 
             {/* 输入区 */}
             <div className="border-t border-[var(--color-border)] bg-[var(--color-surface)]">
-                <MessageInput onSendText={doSendText} onSendImage={doSendImage} sending={sending} />
+                <MessageInput
+                    conversationId={conversationId}
+                    onSendText={doSendText}
+                    onSendImage={doSendImage}
+                    sending={sending}
+                />
             </div>
         </div>
     );

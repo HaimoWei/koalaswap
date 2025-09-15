@@ -155,6 +155,9 @@ export function ProductDetailPage() {
                 <div className="mt-2 text-2xl font-bold">{formatPrice(p.price, p.currency)}</div>
 
                 <div className="mt-2 flex gap-2">
+                    {((p as any).freeShipping || (p as any).free_shipping) && (
+                        <span className="chip chip-primary" title="卖家承担运费">包邮</span>
+                    )}
                     {p.condition && (
                         <span className="chip chip-secondary">
               {mapCondition(p.condition)}
@@ -170,6 +173,14 @@ export function ProductDetailPage() {
                 {/* 操作区 */}
                 {isMine ? (
                     <div className="mt-4 flex gap-3">
+                        <button
+                            onClick={() => nav(`/products/${p.id}/edit`)}
+                            disabled={busy}
+                            className="btn btn-primary disabled:opacity-50"
+                        >
+                            编辑商品
+                        </button>
+
                         {p.status !== "HIDDEN" ? (
                             <button
                                 onClick={onHide}

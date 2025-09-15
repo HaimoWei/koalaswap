@@ -39,3 +39,6 @@ app:
     from: ${APP_MAIL_FROM:${APP_MAIL_USERNAME}} # 发件人地址（默认=用户名）
   urls:
     verify-redirect-base: http://localhost:5173/verified
+  user:
+    # Production should set via env: APP_USER_DEFAULT_AVATAR_URL
+    default-avatar-url: ${APP_USER_DEFAULT_AVATAR_URL:/assets/avatars/default-avatar.svg}

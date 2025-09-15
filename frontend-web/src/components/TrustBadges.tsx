@@ -1,22 +1,11 @@
 export function TrustBadges() {
-  const items = [
-    { title: "担保交易", desc: "资金托管更放心", emoji: "🛡️" },
-    { title: "平台客服", desc: "问题快速解决", emoji: "💬" },
-    { title: "售后保障", desc: "支持维权", emoji: "🤝" },
-    { title: "实名认证", desc: "用户更可信", emoji: "✅" },
-  ];
   return (
-    <section className="mb-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {items.map((it, i) => (
-          <div key={i} className="card p-3 flex items-center gap-3">
-            <div className="text-2xl" aria-hidden>{it.emoji}</div>
-            <div>
-              <div className="text-sm font-semibold">{it.title}</div>
-              <div className="text-xs text-gray-600">{it.desc}</div>
-            </div>
-          </div>
-        ))}
+    <section>
+      <div className="card p-8 bg-gradient-to-r from-gray-50 to-gray-100 text-center">
+        <div className="text-gray-400">
+          <div className="text-lg font-medium mb-2">📢 广告招租</div>
+          <div className="text-sm">联系我们投放您的广告内容</div>
+        </div>
       </div>
     </section>
   );

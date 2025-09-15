@@ -296,3 +296,5 @@ COMMIT;
 ALTER TABLE conversations
     ADD CONSTRAINT chk_conversations_buyer_neq_seller
         CHECK (buyer_id IS NULL OR seller_id IS NULL OR buyer_id <> seller_id);
+
+ALTER TABLE product_images ALTER COLUMN sort_order DROP NOT NULL;

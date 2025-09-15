@@ -23,6 +23,7 @@ public record ProductUpdateReq(
         @Size(max = 10) String currency,
         Integer categoryId,
         Condition condition,
+        Boolean freeShipping,
         @Size(max = 10) List<@NotBlank String> images,
         ProductStatus status
 ) {}

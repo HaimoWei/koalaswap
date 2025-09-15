@@ -49,7 +49,7 @@
 
 
 
-        <!-- 依赖 common：拿到统一返回体(ApiResponse)和全局异常处理 -->
+        <!-- 依赖 common-service：拿到统一返回体(ApiResponse)和全局异常处理 -->
         <dependency>
             <groupId>com.koalaswap</groupId>
             <artifactId>common</artifactId>

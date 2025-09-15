@@ -36,7 +36,7 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- 安全：写操作鉴权（复用 common 的 JwtAuthFilter） -->
+        <!-- 安全：写操作鉴权（复用 common-service 的 JwtAuthFilter） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
@@ -86,6 +86,13 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <!-- AWS SDK v2 for S3 (包含 presigner 功能) -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>2.25.11</version>
         </dependency>
     </dependencies>
 </project>

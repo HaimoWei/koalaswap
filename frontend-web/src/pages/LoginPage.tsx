@@ -92,9 +92,6 @@ export default function LoginPage() {
                         <div className="mb-1 text-2xl font-semibold">登录你的账户</div>
                         <div className="text-xs text-gray-500 mb-4">使用邮箱与密码登录</div>
 
-                        {nextHint && (
-                            <div className="mb-4 text-xs text-gray-700 bg-gray-50 border rounded p-2">{nextHint}</div>
-                        )}
 
                         <LoginForm
                             onSuccess={(auth) => {

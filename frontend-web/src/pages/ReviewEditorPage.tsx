@@ -31,9 +31,8 @@ export function ReviewEditorPage() {
                 isAnonymous: anonymous,      // ← 字段名改为 isAnonymous
             }),
         onSuccess: () => {
-            alert("评价已提交");
-            // 统一回到“待评价”页的“已评价”tab
-            nav("/me/reviews/pending?tab=commented");
+            // 跳转到评价成功页面，带上订单ID参数
+            nav(`/reviews/success?orderId=${orderId}`);
         },
     });
 

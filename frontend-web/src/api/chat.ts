@@ -21,7 +21,7 @@ export type MessageResponse = {
     senderId: string | null; // SYSTEM 为 null
     body?: string | null;
     imageUrl?: string | null;
-    systemEvent?: "ORDER_PLACED" | "PAID" | "SHIPPED" | "COMPLETED" | "CANCELLED" | null;
+    systemEvent?: "ORDER_PLACED" | "PAID" | "SHIPPED" | "COMPLETED" | "CANCELLED" | "BUYER_REVIEWED" | "SELLER_REVIEWED" | null;
     meta?: string | null;
     createdAt: string;
 };
@@ -75,6 +75,8 @@ export type ConversationDetailResponse = {
     peerAvatar?: string | null;
     // 新增完整订单信息
     orderDetail?: OrderDetail | null;
+    // 为了兼容，添加可能的 orderId 字段（如果后端直接返回的话）
+    orderId?: string | null;
 };
 
 

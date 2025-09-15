@@ -38,7 +38,7 @@ export default function MeCenterLayout() {
 
         <div className="text-xs text-gray-500 mb-2">评价</div>
         <nav className="space-y-1 mb-4">
-          <NavItem to="/me/center/reviews?tab=commented" label="我写过的评价" active={is('/me/center/reviews') && loc.search.includes('commented')}/>
+          <NavItem to="/me/center/reviews?tab=commented" label="我的评价" active={is('/me/center/reviews') && loc.search.includes('commented')}/>
           {/* <NavItem to="/me/center/reviews?tab=received" label="我收到的评价" active={is('/me/center/reviews') && loc.search.includes('received')}/> */}
         </nav>
 

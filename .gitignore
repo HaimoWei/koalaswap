@@ -24,5 +24,8 @@ npm-debug.log*
 .vscode/
 .env
 
+node_modules
+
+
 # Windows 设备名幽灵文件
 infra/[Nn][Uu][Ll]

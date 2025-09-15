@@ -1,0 +1,25 @@
+### 测试地址管理API
+
+### 1. 获取地址列表 (需要先登录获取token)
+GET http://localhost:18080/api/users/me/addresses
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+### 2. 创建地址
+POST http://localhost:18080/api/users/me/addresses
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "receiverName": "张三",
+  "phone": "13800138000",
+  "province": "上海市",
+  "city": "上海市",
+  "district": "浦东新区",
+  "detailAddress": "张江高科技园区XXX路123号",
+  "postalCode": "200000",
+  "isDefault": true
+}
+
+### 3. 获取用户信息验证token是否有效
+GET http://localhost:18080/api/users/me
+Authorization: Bearer YOUR_JWT_TOKEN_HERE

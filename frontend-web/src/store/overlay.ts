@@ -21,9 +21,15 @@ export const useToastStore = create<ToastState>((set, get) => ({
   remove: (id) => set((s) => ({ items: s.items.filter((x) => x.id !== id) })),
 }));
 
-export function toast(message: string, type: ToastItem["type"] = "info", timeout = 2500) {
+export function toast(message: string, type: ToastItem["type"] = "info", timeout = 3000) {
   return useToastStore.getState().add({ message, type, timeout });
 }
+
+// 便捷方法
+export const toastSuccess = (message: string, timeout = 3000) => toast(message, "success", timeout);
+export const toastError = (message: string, timeout = 4000) => toast(message, "error", timeout);
+export const toastWarning = (message: string, timeout = 3500) => toast(message, "warning", timeout);
+export const toastInfo = (message: string, timeout = 3000) => toast(message, "info", timeout);
 
 type ConfirmState = {
   open: boolean;

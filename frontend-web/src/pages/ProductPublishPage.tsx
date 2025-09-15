@@ -1,7 +1,9 @@
 // src/pages/ProductPublishPage.tsx
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { createProduct, type Condition } from "../api/products";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { createProduct, updateProduct, getProduct, type Condition } from "../api/products";
+import { fetchAllCategories, type CategoryRes } from "../api/categories";
+import SimpleImageUploader from "../components/SimpleImageUploader";
 
 const CONDITIONS: { value: Condition; label: string }[] = [
     { value: "NEW", label: "全新" },
@@ -13,6 +15,9 @@ const CONDITIONS: { value: Condition; label: string }[] = [
 
 export default function ProductPublishPage() {
     const nav = useNavigate();
+    const { id } = useParams<{ id: string }>();
+    const isEditing = !!id;
+
     const [form, setForm] = useState({
         title: "",
         description: "",
@@ -20,23 +25,49 @@ export default function ProductPublishPage() {
         currency: "AUD",      // 中国市场可改 "CNY"
         categoryId: "",
         condition: "GOOD" as Condition,
+        freeShipping: false,
     });
-    const [images, setImages] = useState<string[]>([""]);
+    const [images, setImages] = useState<string[]>([]);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [categories, setCategories] = useState<CategoryRes[]>([]);
+    const [loadingCategories, setLoadingCategories] = useState(true);
+    const [loading, setLoading] = useState(false);
+
+    // 加载分类数据
+    useEffect(() => {
+        fetchAllCategories()
+            .then(setCategories)
+            .catch((err) => console.error("加载分类失败:", err))
+            .finally(() => setLoadingCategories(false));
+    }, []);
+
+    // 编辑模式：加载现有商品数据
+    useEffect(() => {
+        if (isEditing && id) {
+            setLoading(true);
+            getProduct(id)
+                .then((product) => {
+                    setForm({
+                        title: product.title,
+                        description: product.description || "",
+                        price: product.price.toString(),
+                        currency: product.currency,
+                        categoryId: product.categoryId ? product.categoryId.toString() : "",
+                        condition: product.condition,
+                        freeShipping: !!((product as any).freeShipping ?? (product as any).free_shipping),
+                    });
+                    setImages(product.images || []);
+                })
+                .catch((err) => {
+                    console.error("加载商品失败:", err);
+                    setError("加载商品失败，请稍后重试");
+                })
+                .finally(() => setLoading(false));
+        }
+    }, [isEditing, id]);
 
     const update = (k: string, v: string) => setForm((s) => ({ ...s, [k]: v }));
-
-    const addImage = () => {
-        if (images.length >= 5) return;
-        setImages((arr) => [...arr, ""]);
-    };
-    const setImage = (i: number, v: string) => {
-        setImages((arr) => arr.map((it, idx) => (idx === i ? v : it)));
-    };
-    const removeImage = (i: number) => {
-        setImages((arr) => arr.filter((_, idx) => idx !== i));
-    };
 
     const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -44,6 +75,7 @@ export default function ProductPublishPage() {
 
         // 前端校验
         if (!form.title.trim()) return setError("请填写标题");
+        if (images.length === 0) return setError("请至少上传一张商品图片");
         const priceNum = Number(form.price);
         if (!priceNum || priceNum <= 0) return setError("价格必须大于 0");
 
@@ -54,24 +86,40 @@ export default function ProductPublishPage() {
             currency: form.currency.trim() || "AUD",
             categoryId: form.categoryId ? Number(form.categoryId) : undefined,
             condition: form.condition,
-            images: images.map((s) => s.trim()).filter(Boolean),
+            images: images.filter(Boolean), // 发送图片URL列表
+            freeShipping: !!form.freeShipping,
         };
 
         try {
             setSubmitting(true);
-            const created = await createProduct(payload);
-            // 发布成功 → 跳转商品详情
-            nav(`/products/${created.id}`);
+            let result;
+
+            if (isEditing && id) {
+                result = await updateProduct(id, payload);
+            } else {
+                result = await createProduct(payload);
+            }
+
+            // 成功后跳转商品详情
+            nav(`/products/${result.id}`);
         } catch (err: any) {
-            setError(err?.response?.data?.message || "发布失败，请稍后重试");
+            setError(err?.response?.data?.message || (isEditing ? "更新失败，请稍后重试" : "发布失败，请稍后重试"));
         } finally {
             setSubmitting(false);
         }
     };
 
+    if (loading) {
+        return (
+            <div className="mx-auto max-w-4xl p-4 sm:p-6">
+                <div className="text-center py-8">加载中...</div>
+            </div>
+        );
+    }
+
     return (
         <div className="mx-auto max-w-4xl p-4 sm:p-6">
-            <h1 className="text-2xl font-semibold mb-4">发布闲置</h1>
+            <h1 className="text-2xl font-semibold mb-4">{isEditing ? "编辑商品" : "发布闲置"}</h1>
 
             <form className="space-y-6" onSubmit={onSubmit}>
                 {/* 基础信息 */}
@@ -102,40 +150,17 @@ export default function ProductPublishPage() {
                         />
                     </label>
 
-                    {/* 图片（URL 模式，最多 5 张） */}
+                    {/* 图片上传 */}
                     <div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">图片（最多 5 张，填图片 URL）</span>
-                            <button
-                                type="button"
-                                onClick={addImage}
-                                disabled={images.length >= 5}
-                                className="btn btn-ghost text-sm disabled:opacity-40"
-                            >
-                                + 添加一张
-                            </button>
-                        </div>
-
-                        <div className="mt-2 space-y-2">
-                            {images.map((url, i) => (
-                                <div key={i} className="flex gap-2 items-center">
-                                    <input
-                                        className="flex-1 input"
-                                        placeholder="https://example.com/your-image.jpg"
-                                        value={url}
-                                        onChange={(e) => setImage(i, e.target.value)}
-                                    />
-                                    <button
-                                        type="button"
-                                        className="btn btn-secondary text-xs px-2 py-1"
-                                        onClick={() => removeImage(i)}
-                                        aria-label={`删除第 ${i + 1} 张图片`}
-                                    >
-                                        删除
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
+                        <label className="block text-sm text-gray-600 mb-3">
+                            商品图片（必填，最多 8 张）
+                        </label>
+                        <SimpleImageUploader
+                            maxImages={8}
+                            onImagesChange={setImages}
+                            initialImages={images}
+                            className="mt-2"
+                        />
                     </div>
                 </section>
 
@@ -173,20 +198,49 @@ export default function ProductPublishPage() {
 
                         <label className="block">
                             <span className="text-sm text-gray-600">分类（可选）</span>
-                            <input
-                                type="number"
-                                className="mt-1 input"
-                                placeholder="如：1001"
-                                value={form.categoryId}
-                                onChange={(e) => update("categoryId", e.target.value)}
-                            />
-                        </label>
+                            {loadingCategories ? (
+                                <div className="mt-1 input bg-gray-50 flex items-center justify-center">
+                                    <span className="text-gray-500">加载分类中...</span>
+                                </div>
+                            ) : (
+                                <select
+                                    className="mt-1 input bg-white"
+                                    value={form.categoryId}
+                                    onChange={(e) => update("categoryId", e.target.value)}
+                                >
+                                    <option value="">请选择分类</option>
+                    {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                            {cat.parentId ? "　　" : ""}{cat.name}
+                            {cat.parentId ? ` (${categories.find(p => p.id === cat.parentId)?.name})` : ""}
+                        </option>
+                    ))}
+                </select>
+            )}
+        </label>
 
-                        <label className="block">
-                            <span className="text-sm text-gray-600">成色 *</span>
-                            <select
-                                className="mt-1 input bg-white"
-                                value={form.condition}
+        {/* 是否包邮 */}
+        <label className="block">
+            <span className="text-sm text-gray-600">包邮</span>
+            <div className="mt-2 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setForm((s) => ({ ...s, freeShipping: !s.freeShipping }))}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.freeShipping ? 'bg-green-500' : 'bg-gray-300'}`}
+                  aria-pressed={form.freeShipping}
+                  aria-label="切换是否包邮"
+                >
+                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${form.freeShipping ? 'translate-x-5' : 'translate-x-1'}`} />
+                </button>
+                <span className="text-sm text-gray-700">{form.freeShipping ? '包邮（卖家承担运费）' : '不包邮（买家自理运费）'}</span>
+            </div>
+        </label>
+
+        <label className="block">
+            <span className="text-sm text-gray-600">成色 *</span>
+            <select
+                className="mt-1 input bg-white"
+                value={form.condition}
                                 onChange={(e) => update("condition", e.target.value)}
                                 required
                             >
@@ -204,10 +258,10 @@ export default function ProductPublishPage() {
                 {error && <p className="text-red-600 text-sm">{error}</p>}
                 <button
                     type="submit"
-                    disabled={submitting}
+                    disabled={submitting || loading}
                     className="w-full sm:w-40 btn btn-primary"
                 >
-                    {submitting ? "发布中..." : "发布"}
+                    {submitting ? (isEditing ? "更新中..." : "发布中...") : (isEditing ? "更新" : "发布")}
                 </button>
             </form>
         </div>

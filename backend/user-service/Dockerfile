@@ -10,7 +10,7 @@ COPY common ./common
 COPY user-service/pom.xml ./user-service/pom.xml
 COPY user-service/src ./user-service/src
 
-# ====== 2) 打包 user-service（会自动编译 common）======
+# ====== 2) 打包 user-service（会自动编译 common-service）======
 RUN mvn -pl user-service -am -B package -DskipTests
 
 ######################## run stage ##########################

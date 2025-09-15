@@ -24,7 +24,7 @@ function OrderCard({ o }: { o: OrderRes }) {
     const img = prod?.images?.[0] || "https://placehold.co/120x120?text=No+Image";
 
     return (
-        <div className="card p-3 flex gap-3">
+        <div className="card p-5 flex gap-4">
             <img src={img} className="w-24 h-24 rounded object-cover border border-[var(--color-border)]" />
             <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
@@ -85,9 +85,9 @@ export function OrdersListPage() {
         <main className="max-w-6xl mx-auto p-6 space-y-4">
             {/* 角色切换已移除：请通过左侧导航进入“我买到的/我卖出的” */}
 
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-sm whitespace-nowrap">
                 <span className="text-gray-600">状态：</span>
-                <select className="input w-44 text-sm" value={status} onChange={(e) => setStatus(e.target.value)}>
+                <select className="input text-sm w-40 sm:w-44 md:w-56" value={status} onChange={(e) => setStatus(e.target.value)}>
                     {STATUS_OPTIONS.map(([v, l]) => (
                         <option key={v} value={v}>{l}</option>
                     ))}
@@ -95,7 +95,7 @@ export function OrdersListPage() {
             </div>
 
             {query.isLoading ? (
-                <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-28 card animate-pulse" />)}</div>
+                <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-32 card animate-pulse" />)}</div>
             ) : query.isError ? (
                 <div className="text-red-600">加载失败：{(query.error as Error)?.message}</div>
             ) : list.length === 0 ? (

@@ -45,7 +45,7 @@ export function ChatTopNav() {
         {
             icon: "📋",
             label: "我的订单",
-            onClick: () => nav("/orders")
+            onClick: () => nav("/me/center/orders")
         },
         {
             icon: "❤️",

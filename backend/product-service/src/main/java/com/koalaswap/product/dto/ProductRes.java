@@ -23,6 +23,7 @@ public record ProductRes(
         Integer categoryId,
         Condition condition,
         ProductStatus status,
+        boolean freeShipping,
         Instant createdAt,
         Instant updatedAt,
         List<String> images

@@ -25,7 +25,7 @@ export function MeHomePage() {
                     待评价
                 </Link>
                 <Link to="/me/center/reviews?tab=commented" className="p-4 card hover:shadow-[var(--shadow-2)]">
-                    我写过的评价
+                    我的评价
                 </Link>
             </div>
         </main>

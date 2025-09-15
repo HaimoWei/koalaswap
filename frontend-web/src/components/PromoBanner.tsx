@@ -29,10 +29,10 @@ export function PromoBanner() {
   function go(i: number) { setIdx((i + total) % total); }
 
   return (
-    <section className="mb-6" onMouseEnter={stop} onMouseLeave={start}>
-      <div className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] shadow-[var(--shadow-1)]">
+    <section className="h-full" onMouseEnter={stop} onMouseLeave={start}>
+      <div className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] shadow-[var(--shadow-1)] h-full">
         {/* Slides */}
-        <div className="relative w-full h-0 pb-[25%] bg-[var(--color-muted)]">
+        <div className="relative w-full h-full min-h-[200px] bg-[var(--color-muted)]">
           {SLIDES.map((src, i) => (
             <img
               key={i}

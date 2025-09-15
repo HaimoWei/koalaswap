@@ -23,9 +23,11 @@ import AddressPage from "./pages/AddressPage";
 import { MyFavoritesPage } from "./pages/MyFavoritesPage";
 import { ReviewsPendingPage } from "./pages/ReviewsPendingPage";
 import { ReviewEditorPage } from "./pages/ReviewEditorPage";
+import { ReviewSuccessPage } from "./pages/ReviewSuccessPage";
 import { OrderPayPage } from "./pages/OrderPayPage";
 import SellerProfilePage from "./pages/SellerProfilePage";
 import PayResultPage from "./pages/PayResultPage";
+import InfoPage from "./pages/InfoPage";
 
 import { VerifyEmailPage } from "./features/auth/VerifyEmailPage";
 import { ResendVerifyPage } from "./features/auth/ResendVerifyPage";
@@ -61,33 +63,41 @@ export default function App() {
 
     // 进入独立认证页面时，无需处理弹窗（已改为专用登录页）
 
-    // 判断是否为聊天页面 / 认证类页面 / 个人中心 / 发布页 / 首页
-    const isChatPage = loc.pathname.startsWith('/chat');
+    // 页面层级分类 - 按照大厂标准统一
     const isAuthPage = DEDICATED_AUTH_PREFIXES.some((p) => loc.pathname.startsWith(p));
-    const isCenterPage = loc.pathname.startsWith('/me/center');
-    const isPublishPage = loc.pathname.startsWith('/publish');
-    const isHomePage = loc.pathname === '/';
+
+    // 一级页面：完整导航（搜索+发布+消息）
+    const isHomePage = loc.pathname === '/' || loc.pathname === '/search';
+
+    // 二级页面：功能导航（标题+返回+消息）
+    const isFunctionPage = loc.pathname.startsWith('/me/center') ||
+                          loc.pathname.startsWith('/publish') ||
+                          loc.pathname.startsWith('/chat');
+
+    // 三级页面：极简导航（标题+返回）
+    const isDetailPage = loc.pathname.match(/^\/(product|products|orders|users)\/[^\/]+$/) ||
+                         loc.pathname.startsWith('/pay/') ||
+                         loc.pathname.startsWith('/checkout/') ||
+                         loc.pathname.startsWith('/reviews/');
     
     // 这些页面或状态下隐藏悬浮窗
-    const hideFab = DEDICATED_AUTH_PREFIXES.some((p) => loc.pathname.startsWith(p)) || isChatPage || isCenterPage || isPublishPage;
+    const hideFab = isAuthPage || isFunctionPage || isDetailPage;
 
     return (
         <div className="min-h-screen bg-gray-50 text-gray-900">
-            {isChatPage ? (
-                <TopNav showSearch={false} showPublish={false} showMessages={false} />
-            ) : isAuthPage ? null : isCenterPage ? (
-                <TopNav showSearch={false} showPublish={false} showMessages={false} />
-            ) : isPublishPage ? (
-                <TopNav showSearch={false} />
-            ) : isHomePage ? (
-                <TopNav showPublish={false} showMessages={false} />
-            ) : (
-                <TopNav />
+            {!isAuthPage && (
+                <TopNav
+                    showSearch={isHomePage}
+                    showPublish={false}
+                    showMessages={false}
+                />
             )}
 
             <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/search" element={<SearchPage />} />
+                {/* 信息页（关于/帮助/政策等，前端静态占位） */}
+                <Route path="/info/:slug" element={<InfoPage />} />
 
                 {/* 邮箱验证 */}
                 <Route path="/auth/verify" element={<VerifyEmailPage />} />
@@ -120,6 +130,16 @@ export default function App() {
                 <Route path="/product/:id" element={<ProductDetailPage />} />
                 <Route path="/products/:id" element={<ProductDetailPage />} />
 
+                {/* 商品编辑页 */}
+                <Route
+                    path="/products/:id/edit"
+                    element={
+                        <Protected isAuthed={!!token}>
+                            <ProductPublishPage />
+                        </Protected>
+                    }
+                />
+
                 <Route path="/users/:id" element={<SellerProfilePage />} />
 
                 <Route
@@ -131,14 +151,8 @@ export default function App() {
                     }
                 />
 
-                <Route
-                    path="/orders"
-                    element={
-                        <Protected isAuthed={!!token}>
-                            <OrdersListPage />
-                        </Protected>
-                    }
-                />
+                {/* 订单列表重定向至个人中心 */}
+                <Route path="/orders" element={<Navigate to="/me/center/orders" replace />} />
                 <Route
                     path="/orders/:id"
                     element={
@@ -229,6 +243,14 @@ export default function App() {
                         </Protected>
                     }
                 />
+                <Route
+                    path="/reviews/success"
+                    element={
+                        <Protected isAuthed={!!token}>
+                            <ReviewSuccessPage />
+                        </Protected>
+                    }
+                />
 
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
@@ -241,8 +263,8 @@ export default function App() {
             <ConfirmModal />
 
             {/* 已改为专用登录页，不再渲染全局登录弹窗 */}
-            {/* Footer：公共页面展示，中心/发布/聊天/认证页可不展示 */}
-            {!(isAuthPage || isCenterPage || isPublishPage || isChatPage) && <Footer />}
+            {/* Footer：公共页面展示，功能页面和详情页面不展示 */}
+            {isHomePage && <Footer />}
         </div>
     );
 }

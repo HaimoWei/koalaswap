@@ -53,6 +53,10 @@ public class OrderService {
         e.setSellerId(p.sellerId());
         e.setPriceSnapshot(p.price());
         e.setStatus(OrderStatus.PENDING);
+        // 设置收货地址
+        if (req.shippingAddressId() != null) {
+            e.setShippingAddressId(req.shippingAddressId());
+        }
         var saved = orders.save(e);
         // 发布 PENDING 事件
         publisher.publishEvent(new com.koalaswap.order.events.OrderStatusChangedEvent(
@@ -216,6 +220,8 @@ public class OrderService {
                 e.getSellerId(),
                 e.getPriceSnapshot(),
                 e.getStatus(),
+                e.getShippingAddressId(),
+                e.getShippingAddressSnapshot(),
                 e.getCreatedAt(),
                 e.getClosedAt()
         );

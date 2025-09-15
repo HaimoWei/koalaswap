@@ -13,6 +13,8 @@ public record OrderRes(
         UUID sellerId,
         BigDecimal priceSnapshot,
         OrderStatus status,
+        UUID shippingAddressId,
+        String shippingAddressSnapshot,
         Instant createdAt,
         Instant closedAt
 ) {}

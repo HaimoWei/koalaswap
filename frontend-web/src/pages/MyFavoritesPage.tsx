@@ -38,11 +38,16 @@ export function MyFavoritesPage() {
     const totalPages = q.data?.totalPages ?? 1;
 
     return (
-        <main className="page py-6 space-y-4">
-            <h1 className="text-xl font-semibold">我的收藏</h1>
+        <main className="page py-6">
+            <div className="flex items-center justify-between mb-6">
+                <h1 className="text-xl font-semibold text-gray-900">我的收藏</h1>
+                <div className="text-sm text-gray-500">
+                    共 {list.length} 件商品
+                </div>
+            </div>
 
             {q.isLoading ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                     {Array.from({ length: size }).map((_, i) => (
                         <div key={i} className="h-64 card animate-pulse" />
                     ))}
@@ -53,7 +58,7 @@ export function MyFavoritesPage() {
                 <div className="text-sm text-gray-600">暂无收藏</div>
             ) : (
                 <>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                         {list.map((item, idx) => {
                             const p = pickProduct(item);
 
@@ -74,20 +79,20 @@ export function MyFavoritesPage() {
 
                             return (
                                 <div key={idx} className="relative">
-                                    {/* 原卡片复用不变 */}
+                                    {/* 正常商品卡片 */}
                                     <ProductCard p={pForCard} />
 
-                                    {/* 只覆盖“图片区域”：卡片顶部的 1:1 区块，大约 65% 高度 */}
+                                    {/* 失效商品的灰色遮罩 */}
                                     {inactive && (
-                                        <div className="pointer-events-none absolute inset-x-0 top-0 h-[65%] rounded-t-lg bg-black/45 text-white flex items-center justify-center text-xs font-medium">
-                                            商品失效
+                                        <div className="absolute inset-0 bg-gray-500/70 rounded-lg flex items-center justify-center">
+                                            <span className="text-white text-lg font-bold">已失效</span>
                                         </div>
                                     )}
 
-                                    {/* 右上角取消收藏 */}
+                                    {/* 取消收藏按钮 - 在最下方 */}
                                     <button
                                         onClick={() => onRemove(p.id)}
-                                        className="absolute top-2 right-2 text-xs px-2 py-1 rounded bg-black/70 text-white"
+                                        className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-10 px-4 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded transition-colors"
                                     >
                                         取消收藏
                                     </button>

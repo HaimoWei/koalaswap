@@ -4,6 +4,7 @@ import com.koalaswap.chat.entity.*;
 import com.koalaswap.chat.model.*;
 import com.koalaswap.chat.repository.*;
 import com.koalaswap.chat.events.OrderStatusEvent;
+import com.koalaswap.chat.events.ReviewEvent;           // ✅ 新增
 import com.koalaswap.chat.dto.MessageResponse;           // ✅ 新增
 import com.koalaswap.chat.dto.ConversationDetailResponse; // ✅ 新增
 import com.koalaswap.chat.client.ProductClient;         // ✅ 新增
@@ -22,6 +23,9 @@ import java.util.UUID;
 
 @Service
 public class ChatDomainService {
+
+    /** 系统用户ID - 用于发送系统消息（订单状态变更等） */
+    private static final UUID SYSTEM_USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     private final ConversationRepository convRepo;
     private final ConversationParticipantRepository partRepo;
@@ -163,19 +167,33 @@ public class ChatDomainService {
     /** 订单事件 -> SYSTEM 消息；并推送会话消息 + 收件箱变化提示 */
     @Transactional
     public Message appendSystemMessageForOrderEvent(OrderStatusEvent evt) {
+        System.out.println("[ChatDomainService] 处理订单事件: orderId=" + evt.orderId +
+                         ", productId=" + evt.productId +
+                         ", buyerId=" + evt.buyerId +
+                         ", sellerId=" + evt.sellerId +
+                         ", status=" + evt.newStatus);
+
         Conversation conv = convRepo.findByProductIdAndBuyerIdAndSellerId(evt.productId, evt.buyerId, evt.sellerId)
                 .orElseGet(() -> {
+                    System.out.println("[ChatDomainService] 会话不存在，创建新会话");
                     Conversation c = new Conversation(evt.productId, evt.orderId, evt.buyerId, evt.sellerId, evt.sellerId);
                     c.setOrderStatusCache(evt.newStatus);
                     return convRepo.save(c);
                 });
 
-        if (conv.getOrderId() == null && evt.orderId != null) conv.setOrderId(evt.orderId);
+        System.out.println("[ChatDomainService] 找到会话: id=" + conv.getId() +
+                         ", orderId=" + conv.getOrderId() +
+                         ", orderStatusCache=" + conv.getOrderStatusCache());
+
+        if (conv.getOrderId() == null && evt.orderId != null) {
+            System.out.println("[ChatDomainService] 设置会话orderId: " + evt.orderId);
+            conv.setOrderId(evt.orderId);
+        }
 
         Message m = new Message();
         m.setConversationId(conv.getId());
         m.setType(MessageType.SYSTEM);
-        m.setSenderId(null);
+        m.setSenderId(SYSTEM_USER_ID); // 使用系统用户ID而不是null
         m.setSystemEvent(mapSystemEvent(evt.newStatus));
         m.setBody(systemBodyFor(evt.newStatus));
         m.setMeta("{\"orderId\":\"" + evt.orderId + "\",\"newStatus\":\"" + evt.newStatus + "\"}");
@@ -187,7 +205,10 @@ public class ChatDomainService {
         conv.setLastMessageId(saved.getId());
         conv.setLastMessageAt(saved.getCreatedAt());
         conv.setLastMessagePreview("[系统] " + saved.getSystemEvent());
-        convRepo.save(conv);
+        Conversation finalConv = convRepo.save(conv);
+        System.out.println("[ChatDomainService] 保存会话: id=" + finalConv.getId() +
+                         ", orderId=" + finalConv.getOrderId() +
+                         ", orderStatusCache=" + finalConv.getOrderStatusCache());
 
         // 未读（无则建）
         var buyer = partRepo.findByConversationIdAndUserId(conv.getId(), conv.getBuyerId())
@@ -276,11 +297,13 @@ public class ChatDomainService {
             peerNickname = "用户" + peerUserId.toString().substring(0, 8); // 降级默认值
         }
         
-        // 获取订单详情
+        // 获取订单ID和订单详情
+        UUID orderId = null;
         ConversationDetailResponse.OrderDetail orderDetail = null;
         if (detail.id() != null) {
             Conversation conv = convRepo.findById(detail.id()).orElse(null);
             if (conv != null && conv.getOrderId() != null) {
+                orderId = conv.getOrderId(); // 直接获取订单ID
                 var orderOpt = orderClient.getBrief(conv.getOrderId());
                 if (orderOpt.isPresent()) {
                     var order = orderOpt.get();
@@ -309,6 +332,7 @@ public class ChatDomainService {
                 productPrice,
                 peerNickname,
                 peerAvatar,
+                orderId,
                 orderDetail
         );
     }
@@ -331,5 +355,71 @@ public class ChatDomainService {
             case COMPLETED  -> "交易完成";
             case CANCELLED  -> "订单已取消";
         };
+    }
+
+    /** 评价事件 -> SYSTEM 消息；并推送会话消息 + 收件箱变化提示 */
+    @Transactional
+    public Message appendSystemMessageForReviewEvent(ReviewEvent evt) {
+        System.out.println("[ChatDomainService] 处理评价事件: orderId=" + evt.orderId() +
+                         ", reviewerId=" + evt.reviewerId() +
+                         ", reviewerRole=" + evt.reviewerRole());
+
+        Conversation conv = convRepo.findByProductIdAndBuyerIdAndSellerId(evt.productId(), evt.buyerId(), evt.sellerId())
+                .orElse(null);
+
+        if (conv == null) {
+            System.out.println("[ChatDomainService] 找不到对应的会话，跳过评价消息");
+            return null;
+        }
+
+        // 确定系统事件类型
+        SystemEvent systemEvent = "BUYER".equals(evt.reviewerRole()) ? SystemEvent.BUYER_REVIEWED : SystemEvent.SELLER_REVIEWED;
+        String bodyText = "BUYER".equals(evt.reviewerRole()) ? "买家已评价" : "卖家已评价";
+
+        Message m = new Message();
+        m.setConversationId(conv.getId());
+        m.setType(MessageType.SYSTEM);
+        m.setSenderId(SYSTEM_USER_ID); // 使用系统用户ID
+        m.setSystemEvent(systemEvent);
+        m.setBody(bodyText);
+        m.setMeta("{\"orderId\":\"" + evt.orderId() + "\",\"reviewerId\":\"" + evt.reviewerId() + "\",\"reviewerRole\":\"" + evt.reviewerRole() + "\"}");
+        m.setCreatedAt(evt.occurredAt() != null ? evt.occurredAt() : Instant.now());
+        Message saved = msgRepo.save(m);
+
+        // 更新会话快照
+        conv.setLastMessageId(saved.getId());
+        conv.setLastMessageAt(saved.getCreatedAt());
+        conv.setLastMessagePreview("[系统] " + bodyText);
+        convRepo.save(conv);
+
+        // 未读
+        var buyer = partRepo.findByConversationIdAndUserId(conv.getId(), conv.getBuyerId()).orElse(null);
+        var seller = partRepo.findByConversationIdAndUserId(conv.getId(), conv.getSellerId()).orElse(null);
+        if (buyer != null) {
+            buyer.setUnreadCount(buyer.getUnreadCount() + 1);
+            partRepo.save(buyer);
+        }
+        if (seller != null) {
+            seller.setUnreadCount(seller.getUnreadCount() + 1);
+            partRepo.save(seller);
+        }
+
+        // ✅ 推送会话新消息（SYSTEM）
+        var dto = new MessageResponse(
+                saved.getId(), saved.getType(), saved.getSenderId(), saved.getBody(),
+                saved.getImageUrl(), saved.getSystemEvent(), saved.getMeta(), saved.getCreatedAt()
+        );
+        System.out.println("[ChatDomainService] 🚀 准备推送评价系统消息到WebSocket: " + dto);
+        ws.publishNewMessage(conv.getId(), dto);
+        System.out.println("[ChatDomainService] ✅ 评价系统消息已发送到WebSocket");
+
+        // ✅ 推送"收件箱变化"到双方个人队列（驱动列表状态徽标立即刷新）
+        Map<String, Object> hint = Map.of("kind", "CONV_UPDATED", "conversationId", conv.getId().toString());
+        System.out.println("[ChatDomainService] 📬 推送收件箱变化给买家: " + conv.getBuyerId());
+        ws.publishMyInboxChanged(conv.getBuyerId(), hint);
+        System.out.println("[ChatDomainService] 📬 推送收件箱变化给卖家: " + conv.getSellerId());
+        ws.publishMyInboxChanged(conv.getSellerId(), hint);
+
+        return saved;
     }
 }
