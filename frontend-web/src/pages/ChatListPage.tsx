@@ -8,9 +8,9 @@ function ConversationItem({ c }: { c: ConversationListItem }) {
     const hasOrderStatus = c.orderStatus && c.orderStatus !== 'PENDING';
     
     return (
-        <Link to={`/chat/${c.id}`} className="p-3 border rounded-lg bg-white flex items-center space-x-3 hover:bg-gray-50">
+        <Link to={`/chat/${c.id}`} className="p-3 card flex items-center space-x-3 hover:shadow-[var(--shadow-2)]">
             {/* 头像区域 */}
-            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[var(--color-muted)] flex items-center justify-center overflow-hidden">
                 {c.peerAvatar ? (
                     <img src={c.peerAvatar} alt={peerName} className="w-full h-full object-cover" />
                 ) : (
@@ -64,7 +64,7 @@ export function ChatListPage() {
 
             {q.isLoading ? (
                 <div className="space-y-2">
-                    {Array.from({ length: 6 }).map((_,i) => <div key={i} className="h-16 bg-white border rounded-lg animate-pulse" />)}
+                    {Array.from({ length: 6 }).map((_,i) => <div key={i} className="h-16 card animate-pulse" />)}
                 </div>
             ) : q.isError ? (
                 <div className="text-red-600">加载失败：{(q.error as Error).message}</div>

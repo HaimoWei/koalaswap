@@ -31,11 +31,11 @@ export function FiltersBar() {
     }
 
     return (
-        <div className="flex flex-col md:flex-row gap-3 md:items-end bg-white border p-3 rounded-lg">
+        <div className="sticky top-[72px] z-10 card p-3 flex flex-col md:flex-row gap-3 md:items-end">
             <div className="flex-1">
                 <label className="block text-xs text-gray-500">关键词</label>
                 <input
-                    className="w-full border rounded px-3 py-2 text-sm"
+                    className="input text-sm"
                     placeholder="手机 / 显卡 / Switch ..."
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
@@ -46,7 +46,7 @@ export function FiltersBar() {
             <div>
                 <label className="block text-xs text-gray-500">最低价</label>
                 <input
-                    className="w-32 border rounded px-3 py-2 text-sm"
+                    className="input w-32 text-sm"
                     placeholder="min"
                     value={minPrice}
                     onChange={(e) => setMinPrice(e.target.value)}
@@ -56,32 +56,27 @@ export function FiltersBar() {
             <div>
                 <label className="block text-xs text-gray-500">最高价</label>
                 <input
-                    className="w-32 border rounded px-3 py-2 text-sm"
+                    className="input w-32 text-sm"
                     placeholder="max"
                     value={maxPrice}
                     onChange={(e) => setMaxPrice(e.target.value)}
                 />
             </div>
 
-            <div>
-                <label className="block text-xs text-gray-500">排序</label>
-                <select
-                    className="w-48 border rounded px-3 py-2 text-sm"
-                    value={sort}
-                    onChange={(e) => setSort(e.target.value)}
-                >
-                    <option value="createdAt,desc">最新发布</option>
-                    <option value="price,asc">价格从低到高</option>
-                    <option value="price,desc">价格从高到低</option>
-                </select>
+            <div className="flex flex-col">
+                <span className="block text-xs text-gray-500">排序</span>
+                <div className="mt-1 inline-flex rounded-[var(--radius-lg)] border border-[var(--color-border)] overflow-hidden">
+                    {[
+                        { key: "createdAt,desc", label: "最新" },
+                        { key: "price,asc", label: "价格↑" },
+                        { key: "price,desc", label: "价格↓" },
+                    ].map((s) => (
+                        <button key={s.key} onClick={() => setSort(s.key)} className={`px-3 py-1 text-sm ${sort === s.key ? 'bg-[var(--color-secondary-50)] text-[var(--color-text-strong)]' : ''}`}>{s.label}</button>
+                    ))}
+                </div>
             </div>
 
-            <button
-                onClick={() => submit(0)}
-                className="md:ml-auto px-4 py-2 rounded bg-black text-white text-sm"
-            >
-                搜索
-            </button>
+            <button onClick={() => submit(0)} className="md:ml-auto btn btn-primary">搜索</button>
         </div>
     );
 }

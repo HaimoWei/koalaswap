@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useAuthStore } from "../../store/auth";
-import { useUiStore } from "../../store/ui";
+import { useNavigate, useLocation } from "react-router-dom";
 import { addFavorite, removeFavorite, checkFavorite } from "../../api/products";
 
 export function FavoriteButton({ productId }: { productId: string }) {
     const token = useAuthStore((s) => s.token);
-    const openAuth = useUiStore((s) => s.openAuth);
+    const nav = useNavigate();
+    const loc = useLocation();
     const [loading, setLoading] = useState(true);
     const [fav, setFav] = useState<boolean>(false);
 
@@ -27,7 +28,11 @@ export function FavoriteButton({ productId }: { productId: string }) {
     }, [productId, token]); // ★ 对登录态敏感
 
     async function toggle() {
-        if (!token) return openAuth();
+        if (!token) {
+            const next = encodeURIComponent(`${loc.pathname}${loc.search || ""}`);
+            nav(`/login?next=${next}`);
+            return;
+        }
         setLoading(true);
         try {
             if (!fav) {
@@ -48,7 +53,7 @@ export function FavoriteButton({ productId }: { productId: string }) {
         <button
             onClick={toggle}
             disabled={loading}
-            className={`px-4 py-2 rounded border text-sm ${fav ? "bg-yellow-50 border-yellow-400 text-yellow-700" : "bg-white border-gray-300"}`}
+            className={`btn text-sm ${fav ? "btn-secondary" : "btn-secondary"}`}
         >
             {loading ? "…" : fav ? "已收藏" : "收藏"}
         </button>

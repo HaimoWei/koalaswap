@@ -76,6 +76,19 @@ public class User {
     @Column(name = "token_version", nullable = false)
     private int tokenVersion = 1;
 
+    // ★ 新增：用户资料扩展字段
+    @Column(name = "location", length = 100)
+    private String location;                                    // 地理位置
+
+    @Column(name = "phone_verified", nullable = false)
+    private boolean phoneVerified = false;                      // 手机验证状态
+
+    @Column(name = "last_active_at")
+    private Instant lastActiveAt;                               // 最后活跃时间
+
+    @Column(name = "member_since")
+    private java.time.LocalDate memberSince;                   // 会员加入日期
+
     /** 确保插入时不触发 NOT NULL 约束（让 DB 默认值或这里的兜底生效） */
     @PrePersist
     void prePersist() {
@@ -84,6 +97,12 @@ public class User {
         }
         if (ratingAvg == null) {
             ratingAvg = BigDecimal.ZERO;
+        }
+        if (lastActiveAt == null) {
+            lastActiveAt = Instant.now(); // 默认为当前时间
+        }
+        if (memberSince == null) {
+            memberSince = java.time.LocalDate.now(); // 默认为今天
         }
     }
 

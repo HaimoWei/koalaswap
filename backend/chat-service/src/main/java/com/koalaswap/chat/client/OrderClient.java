@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,7 +26,11 @@ public class OrderClient {
         this.rt = rt; this.props = props;
     }
 
-    public static record OrderBrief(UUID id, OrderStatus status) {}
+    /** chat-service 内部使用，包含完整订单信息 */
+    public static record OrderBrief(UUID id, OrderStatus status, BigDecimal priceSnapshot, Instant createdAt, String trackingNo, String carrier) {}
+
+    /** 对应 order-service 的返回结构（ApiResponse.data 内部的元素） */
+    private static record OrderBriefRes(UUID id, OrderStatus status, BigDecimal priceSnapshot, Instant createdAt, String trackingNo, String carrier) {}
 
     public Map<UUID, OrderBrief> batchBrief(Collection<UUID> ids) {
         if (ids == null || ids.isEmpty()) return Collections.emptyMap();
@@ -42,20 +48,39 @@ public class OrderClient {
                 return Collections.emptyMap();
             }
 
-            ApiResponse<List<OrderBrief>> wrapped = om.readValue(
-                    resp.getBody(), new TypeReference<ApiResponse<List<OrderBrief>>>() {}
+            ApiResponse<List<OrderBriefRes>> wrapped = om.readValue(
+                    resp.getBody(), new TypeReference<ApiResponse<List<OrderBriefRes>>>() {}
             );
-            List<OrderBrief> list = wrapped.data() == null ? List.of() : wrapped.data();
+            List<OrderBriefRes> list = wrapped.data() == null ? List.of() : wrapped.data();
 
             Map<UUID, OrderBrief> out = new LinkedHashMap<>();
-            for (OrderBrief o : list) {
+            for (OrderBriefRes o : list) {
                 if (o != null && o.id() != null) {
-                    out.putIfAbsent(o.id(), o);
+                    out.putIfAbsent(o.id(), new OrderBrief(o.id(), o.status(), o.priceSnapshot(), o.createdAt(), o.trackingNo(), o.carrier()));
                 }
             }
             return out;
         } catch (Exception e) {
             return Collections.emptyMap(); // 出错降级为空
+        }
+    }
+
+    /** 单查 brief：GET /api/internal/orders/brief/{id}  返回 ApiResponse<OrderBriefRes> */
+    public Optional<OrderBrief> getBrief(UUID orderId) {
+        String url = props.getOrderBaseUrl() + "/api/internal/orders/brief/" + orderId;
+        try {
+            ResponseEntity<String> resp = rt.getForEntity(url, String.class);
+            if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) return Optional.empty();
+
+            ApiResponse<OrderBriefRes> wrapped = om.readValue(
+                    resp.getBody(), new TypeReference<ApiResponse<OrderBriefRes>>() {}
+            );
+            OrderBriefRes o = wrapped.data();
+            if (o == null || o.id() == null) return Optional.empty();
+
+            return Optional.of(new OrderBrief(o.id(), o.status(), o.priceSnapshot(), o.createdAt(), o.trackingNo(), o.carrier()));
+        } catch (Exception e) {
+            return Optional.empty();
         }
     }
 }

@@ -34,11 +34,11 @@ export function ForgotPasswordPage() {
     return (
         <main className="max-w-md mx-auto p-6">
             <h1 className="text-xl font-semibold mb-4">找回密码</h1>
-            <form onSubmit={onSubmit} className="space-y-3">
+            <form onSubmit={onSubmit} className="space-y-3 card p-4">
                 <div>
                     <label className="block text-sm mb-1">注册邮箱</label>
                     <input
-                        className="w-full border rounded px-3 py-2 text-sm"
+                        className="input text-sm"
                         placeholder="you@example.com"
                         {...register("email")}
                     />
@@ -53,7 +53,7 @@ export function ForgotPasswordPage() {
 
                 <div className="flex gap-3">
                     <button
-                        className="px-4 py-2 rounded bg-black text-white text-sm"
+                        className="btn btn-primary text-sm"
                         disabled={formState.isSubmitting}
                     >
                         {formState.isSubmitting ? "发送中..." : "发送重置邮件"}
@@ -61,7 +61,7 @@ export function ForgotPasswordPage() {
                     <button
                         type="button"
                         onClick={() => nav("/")}
-                        className="px-4 py-2 rounded bg-gray-100 text-sm"
+                        className="btn btn-secondary text-sm"
                     >
                         返回首页
                     </button>

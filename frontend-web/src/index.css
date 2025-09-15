@@ -1,21 +1,132 @@
 /* src/index.css */
-/* v4 的核心就是这一句： */
 @import "tailwindcss";
 
-/* 你自己的全局样式可以继续写在下面（可选） */
+/* ===== 主题变量（方案 D1：Terracotta + Sage） ===== */
 :root {
-  /* 你可以在这里定义一些“品牌变量”，给后面组件用（可选） */
-  --brand-radius: 16px;
+  /* 品牌与强调 */
+  /* 更明快的主色（对标闲鱼风格，但更克制） */
+  --color-primary: #FFD400;          /* Koala Yellow */
+  --color-primary-50: #FFFBE6;       /* 浅黄背景 */
+  --color-primary-100: #FFF3B0;      /* 更浅的黄 */
+  --color-primary-300: #FFE066;      /* 提示/高亮 */
+  --color-primary-600: #E6C200;      /* hover/active 深色 */
+  --color-primary-700: #CCAD00;      /* active 更深 */
+
+  /* 辅色：明快蓝，搭配黄色形成对比 */
+  --color-secondary: #2B6CB0;        /* Koala Blue */
+  --color-secondary-50: #E6F0FA;
+  --color-secondary-100: #D6E7F7;
+  --color-secondary-300: #9CC2EA;
+  --color-secondary-700: #1E4E85;
+
+  /* 表面与文本 */
+  --color-bg: #FAFAF9;
+  --color-surface: #FFFFFF;
+  --color-muted: #F5F5F4;
+  --color-border: #E7E5E4;
+  --color-text-strong: #292524;
+  --color-text: #44403C;
+
+  /* 状态色 */
+  --success: #22C55E; --success-bg: #ECFDF5;
+  --warning: #D97706; --warning-bg: #FFFBEB;
+  --error:   #DC2626; --error-bg:   #FEF2F2;
+  --info:    #2563EB; --info-bg:    #EFF6FF;
+
+  /* 焦点与半径/阴影 */
+  --ring: rgba(217, 119, 87, .35);
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --shadow-1: 0 1px 2px rgba(0,0,0,.04), 0 4px 8px rgba(0,0,0,.06);
+  --shadow-2: 0 2px 8px rgba(0,0,0,.06), 0 8px 20px rgba(0,0,0,.08);
 }
 
-/* 为了对齐我们的设计风格，来点基础样式（可删） */
+/* 基础重置与底色 */
 html, body, #root { height: 100%; }
-body { background: #f8fafc; color: #0f172a; }
+body { background: var(--color-bg); color: var(--color-text); }
 
-/* Demo：卡片的基础阴影（可删） */
+/* ===== 通用组件样式（Tailwind 辅以 CSS 变量）===== */
 .card {
-  border-radius: var(--brand-radius);
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  box-shadow: 0 1px 0 rgba(2,6,23,0.04), 0 1px 2px rgba(2,6,23,0.06);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-1);
 }
+
+/* 页面容器（参考闲鱼宽度标准） */
+.page {
+  max-width: 100rem; /* 1600px - 参考闲鱼标准 */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem; /* px-6 */
+  padding-right: 1.5rem;
+}
+
+/* 响应式调整 */
+@media (min-width: 1400px) {
+  .page {
+    padding-left: 3rem; /* 48px - 适中的内边距 */
+    padding-right: 3rem;
+  }
+}
+
+.input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-radius: var(--radius-lg);
+  padding: 0.5rem 0.75rem;
+  box-shadow: var(--shadow-1);
+}
+.input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500;
+  border-radius: var(--radius-lg);
+  padding: 0.5rem 1rem; /* px-4 py-2 */
+  transition: filter .15s ease, opacity .15s ease, transform .15s ease;
+}
+.btn-lg { padding: 0.75rem 1.25rem; font-size: 1rem; }
+.btn:disabled { opacity: .6; cursor: not-allowed; }
+.btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--ring); }
+
+.btn-primary { background: var(--color-primary); color: #fff; }
+.btn-primary:hover { filter: brightness(1.05); }
+.btn-primary:active { filter: brightness(0.95); }
+
+.btn-secondary {
+  background: var(--color-secondary-50);
+  color: var(--color-secondary-700);
+  border: 1px solid var(--color-secondary-300);
+}
+.btn-secondary:hover { background: var(--color-secondary-100); }
+
+.btn-ghost { background: transparent; color: var(--color-primary); }
+.btn-ghost:hover { background: var(--color-primary-50); }
+
+.btn-danger { background: var(--error); color: #fff; }
+.btn-danger:hover { filter: brightness(1.05); }
+
+.chip { display: inline-block; font-size: .75rem; padding: .125rem .5rem; border-radius: 9999px; }
+.chip-muted { background: var(--color-muted); color: var(--color-text); }
+.chip-secondary { background: var(--color-secondary-50); color: var(--color-secondary-700); }
+.chip-primary { background: var(--color-primary); color: var(--color-text-strong); }
+
+.tag { display: inline-block; font-size: .75rem; padding: .125rem .5rem; border-radius: 9999px; }
+.tag-success { background: var(--success-bg); color: var(--success); }
+.tag-warning { background: var(--warning-bg); color: var(--warning); }
+.tag-error   { background: var(--error-bg);   color: var(--error); }
+.tag-info    { background: var(--info-bg);    color: var(--info); }
+.tag-neutral { background: var(--color-muted); color: var(--color-text); }
+
+/* 输入占位符颜色轻一些 */
+input::placeholder, textarea::placeholder { color: #9CA3AF; }

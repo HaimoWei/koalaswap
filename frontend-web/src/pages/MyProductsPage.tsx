@@ -1,5 +1,5 @@
 // src/pages/MyProductsPage.tsx
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchMyProducts } from "../api/products";
 import { ProductCard } from "../components/ProductCard";
@@ -33,33 +33,59 @@ export function MyProductsPage() {
     };
 
     return (
-        <main className="max-w-6xl mx-auto p-6">
-            <div className="flex gap-2 mb-4">
-                <button
-                    className={`px-3 py-1 rounded text-sm ${tab === "onsale" ? "bg-black text-white" : "bg-gray-100"}`}
-                    onClick={() => setTab("onsale")}
+        <main className="page py-6">
+            {/* 顶部：标题 + 右侧发布按钮（圆润样式） */}
+            <div className="flex items-center justify-between mb-2">
+                <h1 className="text-xl font-semibold text-gray-900">我发布的商品</h1>
+                <Link
+                  to="/publish"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-primary)] text-black shadow hover:brightness-105 transition-colors text-sm"
+                  title="发布闲置"
                 >
-                    在售
-                </button>
-                <button
-                    className={`px-3 py-1 rounded text-sm ${tab === "hidden" ? "bg-black text-white" : "bg-gray-100"}`}
-                    onClick={() => setTab("hidden")}
-                >
-                    隐藏
-                </button>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  发布闲置
+                </Link>
+            </div>
+
+            {/* 次级：在售/隐藏 切换（分段控件样式） */}
+            <div className="mb-6">
+                <div className="inline-flex p-1 rounded-full bg-gray-100 border border-gray-200">
+                    <button
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
+                            tab === "onsale"
+                                ? "bg-white text-gray-900 shadow"
+                                : "text-gray-600 hover:text-gray-800"
+                        }`}
+                        onClick={() => setTab("onsale")}
+                    >
+                        在售 {tab === "onsale" && `(${data?.totalElements || 0})`}
+                    </button>
+                    <button
+                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
+                            tab === "hidden"
+                                ? "bg-white text-gray-900 shadow"
+                                : "text-gray-600 hover:text-gray-800"
+                        }`}
+                        onClick={() => setTab("hidden")}
+                    >
+                        隐藏 {tab === "hidden" && `(${data?.totalElements || 0})`}
+                    </button>
+                </div>
             </div>
 
             {isLoading ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                     {Array.from({ length: size }).map((_, i) => (
-                        <div key={i} className="rounded-lg border bg-white p-3 h-64 animate-pulse" />
+                        <div key={i} className="card p-3 h-64 animate-pulse" />
                     ))}
                 </div>
             ) : isError ? (
                 <div className="text-red-600">加载失败：{(error as Error)?.message}</div>
             ) : (
                 <>
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                         {(data?.content ?? []).map((p: ProductRes) => (
                             <ProductCard key={p.id} p={p} />
                         ))}

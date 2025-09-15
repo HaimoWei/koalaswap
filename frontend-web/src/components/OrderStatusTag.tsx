@@ -1,20 +1,13 @@
 // 订单状态显示为中文标签，并兼容不同拼写（如 CANCELED/CANCELLED）
 export function OrderStatusTag({ status }: { status: string }) {
     const label = mapStatus(status);
-    const cls =
-        statusIn(status, ["CANCELLED", "CANCELED"])
-            ? "bg-gray-100 text-gray-600"
-            : statusIn(status, ["PENDING", "CREATED", "NEW"])   // ← 加上 PENDING
-                ? "bg-yellow-50 text-yellow-700"
-                : statusIn(status, ["PAID"])
-                    ? "bg-blue-50 text-blue-700"
-                    : statusIn(status, ["SHIPPED"])
-                        ? "bg-purple-50 text-purple-700"
-                        : statusIn(status, ["CONFIRMED","COMPLETED"])
-                            ? "bg-green-50 text-green-700"
-                            : "bg-gray-100 text-gray-700";
+    const cls = statusIn(status, ["CANCELLED", "CANCELED"]) ? "tag-neutral"
+        : statusIn(status, ["PENDING", "CREATED", "NEW"]) ? "tag-warning"
+        : statusIn(status, ["PAID"]) ? "tag-info"
+        : statusIn(status, ["SHIPPED"]) ? "tag-info"
+        : statusIn(status, ["CONFIRMED","COMPLETED"]) ? "tag-success" : "tag-neutral";
 
-    return <span className={`text-xs px-2 py-0.5 rounded ${cls}`}>{label}</span>;
+    return <span className={`tag ${cls}`}>{label}</span>;
 }
 
 function statusIn(s: string, arr: string[]) {

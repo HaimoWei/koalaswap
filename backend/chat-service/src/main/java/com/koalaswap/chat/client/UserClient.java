@@ -62,4 +62,25 @@ public class UserClient {
             return Collections.emptyMap(); // 出错降级为空
         }
     }
+
+    /** 单查 brief：GET /api/internal/users/{id}/brief  返回 ApiResponse<UserBriefRes>
+     *  注意：此前误写为 /api/internal/users/brief/{id}，在 user-service 中不存在该映射。
+     */
+    public Optional<UserBrief> getBrief(UUID userId) {
+        String url = props.getUserBaseUrl() + "/api/internal/users/" + userId + "/brief";
+        try {
+            ResponseEntity<String> resp = rt.getForEntity(url, String.class);
+            if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) return Optional.empty();
+
+            ApiResponse<UserBriefRes> wrapped = om.readValue(
+                    resp.getBody(), new TypeReference<ApiResponse<UserBriefRes>>() {}
+            );
+            UserBriefRes u = wrapped.data();
+            if (u == null || u.id() == null) return Optional.empty();
+
+            return Optional.of(new UserBrief(u.id(), u.displayName(), u.avatarUrl()));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
 }

@@ -8,12 +8,17 @@ export type OrderRes = {
     sellerId: string;
     priceSnapshot: number;
     status: string;           // PENDING | PAID | SHIPPED | COMPLETED | CANCELLED
+    shippingAddressId?: string | null;
+    shippingAddressSnapshot?: string | null;
     createdAt: string;
     closedAt?: string | null;
 };
 
-export async function createOrder(productId: string) {
-    const { data } = await orderApi.post<ApiResponse<OrderRes>>("/api/orders", { productId });
+export async function createOrder(productId: string, shippingAddressId?: string) {
+    const { data } = await orderApi.post<ApiResponse<OrderRes>>("/api/orders", {
+        productId,
+        shippingAddressId
+    });
     if (!data.ok || !data.data) throw new Error(data.message || "Create order failed");
     return data.data;
 }

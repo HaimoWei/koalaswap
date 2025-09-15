@@ -17,9 +17,18 @@ export type Page<T> = {
 // 鉴权/用户简要类型（与你后端 DTO 对齐，必要时可微调字段名）
 export type MyProfileRes = {
     id: string;
+    email: string;
     displayName: string;
     avatarUrl?: string | null;
-    email?: string | null;
+    bio?: string | null;
+    location?: string | null;
+    phoneVerified?: boolean;
+    emailVerified?: boolean;
+    ratingAvg?: number;
+    ratingCount?: number;
+    memberSince?: string;
+    lastActiveAt?: string;
+    createdAt: string;
 };
 
 export type LoginRes = {
@@ -37,6 +46,7 @@ export type ProductRes = {
     categoryId?: string | null;
     condition?: string | null;      // NEW|LIKE_NEW|GOOD|...
     status?: string | null;         // ACTIVE|RESERVED|SOLD|HIDDEN
+    freeShipping?: boolean;         // 是否包邮
     createdAt: string;
     updatedAt: string;
     images: string[];               // 封面取 images[0]

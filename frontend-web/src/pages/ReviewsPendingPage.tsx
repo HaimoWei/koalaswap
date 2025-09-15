@@ -82,39 +82,22 @@ export function ReviewsPendingPage() {
 
     return (
         <main className="max-w-6xl mx-auto p-6 space-y-4">
-            <h1 className="text-xl font-semibold">待评价</h1>
+            <h1 className="text-xl font-semibold">我的评价</h1>
 
             <div className="flex gap-2">
-                <button
-                    className={`px-3 py-1 rounded text-sm ${
-                        tab === "buyer" ? "bg-black text-white" : "bg-gray-100"
-                    }`}
-                    onClick={() => onTab("buyer")}
-                >
+                <button className={`btn text-sm ${tab === "buyer" ? "btn-primary" : "btn-secondary"}`} onClick={() => onTab("buyer")}>
                     买家待评
                 </button>
-                <button
-                    className={`px-3 py-1 rounded text-sm ${
-                        tab === "seller" ? "bg-black text-white" : "bg-gray-100"
-                    }`}
-                    onClick={() => onTab("seller")}
-                >
+                <button className={`btn text-sm ${tab === "seller" ? "btn-primary" : "btn-secondary"}`} onClick={() => onTab("seller")}>
                     卖家待评
                 </button>
-                <button
-                    className={`px-3 py-1 rounded text-sm ${
-                        tab === "commented" ? "bg-black text-white" : "bg-gray-100"
-                    }`}
-                    onClick={() => onTab("commented")}
-                >
-                    已评价
-                </button>
+                <button className={`btn text-sm ${tab === "commented" ? "btn-primary" : "btn-secondary"}`} onClick={() => onTab("commented")}>已评价</button>
             </div>
 
             {loading ? (
                 <div className="space-y-3">
                     {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="h-20 bg-white border rounded animate-pulse" />
+                        <div key={i} className="h-20 card animate-pulse" />
                     ))}
                 </div>
             ) : error ? (
@@ -164,9 +147,9 @@ function PendingRow({ it }: { it: PendingItem }) {
         "https://placehold.co/120x120?text=No+Image";
 
     return (
-        <div className="p-3 border rounded-lg bg-white flex items-center gap-3">
-            <img src={img} className="w-20 h-20 rounded object-cover border" />
-            <div className="flex-1 min-w-0">
+        <div className="p-5 card flex items-center gap-4">
+            <img src={img} className="w-24 h-24 rounded object-cover border border-[var(--color-border)]" />
+            <div className="flex-1 min-w-0 self-start">
                 {/* 第一行：商品名称 */}
                 <div className="font-medium truncate">{title}</div>
                 {/* 第二行：订单编号 */}
@@ -174,7 +157,7 @@ function PendingRow({ it }: { it: PendingItem }) {
             </div>
             <Link
                 to={`/reviews/new/${it.orderId}`}
-                className="px-3 py-1 rounded text-sm bg-black text-white hover:opacity-90"
+                className="btn btn-primary text-sm"
             >
                 去评价
             </Link>
@@ -190,9 +173,9 @@ function GivenRow({ r, onAppend }: { r: ReviewRes; onAppend: () => void }) {
         "https://placehold.co/120x120?text=No+Image";
 
     return (
-        <div className="p-3 border rounded-lg bg-white flex items-center gap-3">
-            <img src={img} className="w-20 h-20 rounded object-cover border" />
-            <div className="flex-1 min-w-0">
+        <div className="p-5 card flex items-center gap-4">
+            <img src={img} className="w-24 h-24 rounded object-cover border border-[var(--color-border)]" />
+            <div className="flex-1 min-w-0 self-start">
                 {/* 第一行：商品名称 */}
                 <div className="font-medium truncate">{title}</div>
                 {/* 第二行：订单编号 */}
@@ -217,7 +200,7 @@ function GivenRow({ r, onAppend }: { r: ReviewRes; onAppend: () => void }) {
             {/* 只保留【写追评】 */}
             <button
                 onClick={onAppend}
-                className="px-3 py-1 rounded text-sm bg-black text-white hover:opacity-90"
+                className="btn btn-secondary text-sm"
             >
                 写追评
             </button>

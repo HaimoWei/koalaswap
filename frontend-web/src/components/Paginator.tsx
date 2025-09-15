@@ -16,7 +16,7 @@ export function Paginator({ page, totalPages, onPageChange }: Props) {
     return (
         <div className="flex items-center justify-center gap-2 mt-6">
             <button
-                className="px-3 py-1 text-sm rounded bg-gray-100 disabled:opacity-50"
+                className="btn btn-secondary text-sm"
                 disabled={page <= 0}
                 onClick={() => go(page - 1)}
             >
@@ -30,9 +30,7 @@ export function Paginator({ page, totalPages, onPageChange }: Props) {
                     <button
                         key={p}
                         onClick={() => go(p)}
-                        className={`px-3 py-1 text-sm rounded ${
-                            p === page ? "bg-black text-white" : "bg-gray-100"
-                        }`}
+                        className={`btn text-sm ${p === page ? "btn-primary" : "btn-secondary"}`}
                     >
                         {p + 1}
                     </button>
@@ -40,7 +38,7 @@ export function Paginator({ page, totalPages, onPageChange }: Props) {
             )}
 
             <button
-                className="px-3 py-1 text-sm rounded bg-gray-100 disabled:opacity-50"
+                className="btn btn-secondary text-sm"
                 disabled={page >= totalPages - 1}
                 onClick={() => go(page + 1)}
             >

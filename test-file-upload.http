@@ -1,0 +1,36 @@
+# 测试 file-service 图片上传功能
+
+### 1. 测试 file-service 健康检查
+GET http://localhost:12647/health
+
+### 2. 测试获取产品图片上传URL (需要JWT token)
+POST http://localhost:12647/api/files/upload-url
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "fileName": "test-image.jpg",
+  "fileSize": 1024000,
+  "mimeType": "image/jpeg",
+  "category": "product"
+}
+
+### 3. 测试通过 product-service 代理获取上传URL
+POST http://localhost:12648/api/images/upload-url
+Content-Type: application/json
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+{
+  "fileName": "test-image.jpg",
+  "fileSize": 1024000,
+  "mimeType": "image/jpeg"
+}
+
+### 使用说明：
+# 1. 替换 YOUR_JWT_TOKEN_HERE 为有效的JWT token
+# 2. 确保环境变量已设置：
+#    AWS_ACCESS_KEY_ID=AKIASCWGGPSQ5EEMG4EC
+#    AWS_SECRET_ACCESS_KEY=kV07fNWSGyUYiKle/UJAAuHr1ZMK6C0KVoJesdZU
+#    AWS_REGION=ap-southeast-2
+#    S3_BUCKET=koalaswap
+# 3. 确保 file-service 和 product-service 都在运行

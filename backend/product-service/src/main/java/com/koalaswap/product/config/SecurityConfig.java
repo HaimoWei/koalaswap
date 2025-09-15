@@ -43,6 +43,7 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()  // 分类查询公开
                         .requestMatchers("/api/health/**").permitAll()
                         .requestMatchers("/api/internal/**").permitAll()
                         .requestMatchers(HttpMethod.POST,   "/api/products/**").authenticated()

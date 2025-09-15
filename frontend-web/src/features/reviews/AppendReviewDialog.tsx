@@ -28,7 +28,7 @@ export function AppendReviewDialog({
                     onChange={(e) => setContent(e.target.value)}
                 />
                 <div className="mt-3 flex justify-end gap-2">
-                    <button onClick={onClose} className="px-3 py-2 rounded bg-gray-100 text-sm">取消</button>
+                    <button onClick={onClose} className="btn btn-secondary text-sm">取消</button>
                     <button
                         onClick={async () => { await onSubmit(content.trim()); setContent(""); }}
                         disabled={loading || !content.trim()}

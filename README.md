@@ -82,6 +82,7 @@ This project is licensed under the MIT License.
 ./mvnw -pl order-service -DskipTests clean compile
 ./mvnw -pl review-service -DskipTests clean compile
 ./mvnw -pl chat-service -DskipTests clean compile
+./mvnw -pl file-service -DskipTests clean compile
 ./mvnw -pl gateway-service -am -DskipTests clean compile
 
 ./mvnw -pl user-service spring-boot:run -Dspring-boot.run.profiles=local
@@ -89,6 +90,7 @@ This project is licensed under the MIT License.
 ./mvnw -pl order-service spring-boot:run -Dspring-boot.run.profiles=local
 ./mvnw -pl review-service spring-boot:run -Dspring-boot.run.profiles=local
 ./mvnw -pl chat-service spring-boot:run -Dspring-boot.run.profiles=local
+./mvnw -pl file-service spring-boot:run -Dspring-boot.run.profiles=local
 ./mvnw -pl gateway-service spring-boot:run -Dspring-boot.run.profiles=local
 
 docker compose down -v

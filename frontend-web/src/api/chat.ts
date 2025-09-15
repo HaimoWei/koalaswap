@@ -21,7 +21,7 @@ export type MessageResponse = {
     senderId: string | null; // SYSTEM 为 null
     body?: string | null;
     imageUrl?: string | null;
-    systemEvent?: "ORDER_PLACED" | "PAID" | "SHIPPED" | "COMPLETED" | "CANCELLED" | null;
+    systemEvent?: "ORDER_PLACED" | "PAID" | "SHIPPED" | "COMPLETED" | "CANCELLED" | "BUYER_REVIEWED" | "SELLER_REVIEWED" | null;
     meta?: string | null;
     createdAt: string;
 };
@@ -42,6 +42,20 @@ export type ConversationListItem = {
     lastMessagePreview?: string | null;
     peerNickname?: string | null;
     peerAvatar?: string | null;
+    // 新增商品信息字段
+    productTitle?: string | null;
+    productPrice?: number | null;
+    // 新增订单价格快照
+    orderPriceSnapshot?: number | null;
+};
+
+export type OrderDetail = {
+    orderId: string;
+    priceSnapshot?: number | null;
+    status?: string | null;
+    createdAt?: string | null;
+    trackingNo?: string | null;
+    carrier?: string | null;
 };
 
 export type ConversationDetailResponse = {
@@ -53,6 +67,16 @@ export type ConversationDetailResponse = {
     productFirstImage?: string | null;
     myReadToMessageId?: string | null;
     peerReadToMessageId?: string | null;
+    // 新增商品信息
+    productTitle?: string | null;
+    productPrice?: number | null;
+    // 新增对方用户信息
+    peerNickname?: string | null;
+    peerAvatar?: string | null;
+    // 新增完整订单信息
+    orderDetail?: OrderDetail | null;
+    // 为了兼容，添加可能的 orderId 字段（如果后端直接返回的话）
+    orderId?: string | null;
 };
 
 

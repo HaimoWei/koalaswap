@@ -53,7 +53,16 @@ public class OrderService {
         e.setSellerId(p.sellerId());
         e.setPriceSnapshot(p.price());
         e.setStatus(OrderStatus.PENDING);
+        // 设置收货地址
+        if (req.shippingAddressId() != null) {
+            e.setShippingAddressId(req.shippingAddressId());
+        }
         var saved = orders.save(e);
+        // 发布 PENDING 事件
+        publisher.publishEvent(new com.koalaswap.order.events.OrderStatusChangedEvent(
+                saved.getId(), saved.getProductId(), saved.getBuyerId(), saved.getSellerId(),
+                OrderStatus.PENDING, saved.getCreatedAt()
+        ));
         return toRes(saved);
     }
 
@@ -91,6 +100,11 @@ public class OrderService {
         var saved = orders.save(e);
         // 支付后：商品 SOLD（幂等）
         productClient.markSold(e.getProductId());
+        // 发布 PAID 事件
+        publisher.publishEvent(new com.koalaswap.order.events.OrderStatusChangedEvent(
+                saved.getId(), saved.getProductId(), saved.getBuyerId(), saved.getSellerId(),
+                OrderStatus.PAID, java.time.Instant.now()
+        ));
         return toRes(saved);
     }
 
@@ -103,7 +117,13 @@ public class OrderService {
         if (e.getStatus() != OrderStatus.PAID) throw new IllegalArgumentException("当前状态不可发货");
 
         e.setStatus(OrderStatus.SHIPPED);
-        return toRes(orders.save(e));
+        var saved = orders.save(e);
+        // 发布 SHIPPED 事件
+        publisher.publishEvent(new com.koalaswap.order.events.OrderStatusChangedEvent(
+                saved.getId(), saved.getProductId(), saved.getBuyerId(), saved.getSellerId(),
+                OrderStatus.SHIPPED, java.time.Instant.now()
+        ));
+        return toRes(saved);
     }
 
     /** 确认收货：SHIPPED -> COMPLETED，仅买家；保留商品 SOLD */
@@ -120,6 +140,11 @@ public class OrderService {
 
         // 发布订单完成事件（review-service 使用）
         publisher.publishEvent(new OrderCompletedEvent(saved.getId(), saved.getBuyerId(), saved.getSellerId(), saved.getProductId(), saved.getClosedAt()));
+        // 同步发布 COMPLETED 状态变更事件（chat-service 使用）
+        publisher.publishEvent(new com.koalaswap.order.events.OrderStatusChangedEvent(
+                saved.getId(), saved.getProductId(), saved.getBuyerId(), saved.getSellerId(),
+                OrderStatus.COMPLETED, saved.getClosedAt()
+        ));
         return toRes(saved);
     }
 
@@ -141,7 +166,13 @@ public class OrderService {
                 productClient.activate(e.getProductId());
                 e.setStatus(OrderStatus.CANCELLED);
                 e.setClosedAt(Instant.now());
-                return toRes(orders.save(e));
+                var saved = orders.save(e);
+                // 发布 CANCELLED 事件
+                publisher.publishEvent(new com.koalaswap.order.events.OrderStatusChangedEvent(
+                        saved.getId(), saved.getProductId(), saved.getBuyerId(), saved.getSellerId(),
+                        OrderStatus.CANCELLED, saved.getClosedAt()
+                ));
+                return toRes(saved);
             }
             case PAID -> {
                 // 仅买家可取消：恢复商品 ACTIVE（无条件）
@@ -149,7 +180,12 @@ public class OrderService {
                 productClient.activate(e.getProductId());
                 e.setStatus(OrderStatus.CANCELLED);
                 e.setClosedAt(Instant.now());
-                return toRes(orders.save(e));
+                var saved = orders.save(e);
+                publisher.publishEvent(new com.koalaswap.order.events.OrderStatusChangedEvent(
+                        saved.getId(), saved.getProductId(), saved.getBuyerId(), saved.getSellerId(),
+                        OrderStatus.CANCELLED, saved.getClosedAt()
+                ));
+                return toRes(saved);
             }
             case SHIPPED -> throw new AccessDeniedException("订单已发货，无法取消");
             default -> throw new IllegalStateException("未知状态：" + e.getStatus());
@@ -184,6 +220,8 @@ public class OrderService {
                 e.getSellerId(),
                 e.getPriceSnapshot(),
                 e.getStatus(),
+                e.getShippingAddressId(),
+                e.getShippingAddressSnapshot(),
                 e.getCreatedAt(),
                 e.getClosedAt()
         );

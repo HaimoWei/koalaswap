@@ -4,6 +4,8 @@ import com.koalaswap.review.client.ProductClient;
 import com.koalaswap.review.client.UserClient;
 import com.koalaswap.review.dto.*;
 import com.koalaswap.review.entity.*;
+import com.koalaswap.review.events.ReviewEventPublisher;
+import org.springframework.context.ApplicationEventPublisher;
 import com.koalaswap.review.model.ReviewSlotStatus;
 import com.koalaswap.review.repository.*;
 import jakarta.transaction.Transactional;
@@ -25,6 +27,7 @@ public class ReviewService {
     private final ReviewSlotRepository slots;
     private final ProductClient products;
     private final UserClient users;
+    private final ApplicationEventPublisher eventPublisher;
 
     // ====================== 工具方法 ======================
 
@@ -85,6 +88,34 @@ public class ReviewService {
 
         // 将槽位置为 REVIEWED
         slots.updateStatus(req.orderId(), me, ReviewSlotStatus.REVIEWED);
+
+        // 发布评价事件到聊天服务
+        try {
+            // 根据 reviewer role 推导 buyerId 和 sellerId
+            UUID buyerId, sellerId;
+            if ("BUYER".equals(slot.getReviewerRole())) {
+                buyerId = me; // 评价者是买家
+                sellerId = slot.getRevieweeId(); // 被评价者是卖家
+            } else {
+                buyerId = slot.getRevieweeId(); // 被评价者是买家
+                sellerId = me; // 评价者是卖家
+            }
+
+            ReviewEventPublisher.ReviewEvent event = new ReviewEventPublisher.ReviewEvent(
+                    req.orderId(),
+                    slot.getProductId(),
+                    buyerId,
+                    sellerId,
+                    me,
+                    slot.getReviewerRole(),
+                    Instant.now()
+            );
+
+            eventPublisher.publishEvent(event);
+            System.out.println("[ReviewService] 发布Spring事件成功");
+        } catch (Exception e) {
+            System.err.println("[ReviewService] 发布评价事件失败，但不影响评价创建: " + e.getMessage());
+        }
 
         // 只此一条，直接取一次 brief（含标题与首图）
         ProductClient.ProductBrief pb = null;

@@ -36,7 +36,7 @@ export function OrderPayPage() {
             <h1 className="text-xl font-semibold mb-4">模拟支付</h1>
 
             {o ? (
-                <div className="bg-white border rounded-xl p-4 mb-4">
+                <div className="card p-4 mb-4">
                     <div className="text-sm text-gray-600">订单号</div>
                     <div className="mb-2">{o.id}</div>
                     <div className="text-sm text-gray-600">应付金额</div>
@@ -47,8 +47,8 @@ export function OrderPayPage() {
             )}
 
             <div className="flex gap-3">
-                <button onClick={onSuccess} className="px-4 py-2 rounded bg-black text-white">模拟支付成功</button>
-                <button onClick={onFail} className="px-4 py-2 rounded bg-gray-200">模拟支付失败</button>
+                <button onClick={onSuccess} className="btn btn-primary">模拟支付成功</button>
+                <button onClick={onFail} className="btn btn-secondary">模拟支付失败</button>
             </div>
         </main>
     );

@@ -7,6 +7,7 @@ import java.util.UUID;
 /** 创建订单请求 */
 public record OrderCreateReq(
         @NotNull UUID productId,
+        UUID shippingAddressId,    // 可选：收货地址ID
         BigDecimal priceExpected,  // 可选：用于前端提示价格波动
         String note                // 可选：留言
 ) {}

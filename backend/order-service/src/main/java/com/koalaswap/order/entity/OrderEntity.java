@@ -52,6 +52,13 @@ public class OrderEntity {
     @Column(name = "closed_at")
     private Instant closedAt;
 
+    @Column(name = "shipping_address_id")
+    private UUID shippingAddressId;
+
+    @Column(name = "shipping_address_snapshot", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private String shippingAddressSnapshot;
+
     @Version
     private Long version; // 乐观锁，避免并发踩踏
 }

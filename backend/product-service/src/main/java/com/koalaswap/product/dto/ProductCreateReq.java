@@ -22,5 +22,6 @@ public record ProductCreateReq(
         @NotBlank @Size(max = 10) String currency,
         Integer categoryId,
         @NotNull Condition condition,
-        @Size(max = 10) List<@NotBlank String> images
+        @Size(max = 10) List<@NotBlank String> images,
+        Boolean freeShipping
 ) {}

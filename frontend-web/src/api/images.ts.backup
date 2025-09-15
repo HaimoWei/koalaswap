@@ -1,0 +1,105 @@
+// 图片上传 API 封装
+import { productApi } from './http';
+
+export interface ImageUploadRequest {
+  productId: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  isPrimary?: boolean;
+  displayOrder?: number;
+}
+
+export interface ImageUploadResponse {
+  imageId: string;
+  uploadUrl: string;
+  objectKey: string;
+  expiresAt: number;
+  isPrimary: boolean;
+  displayOrder: number;
+}
+
+export interface ImageUploadCompleteRequest {
+  imageId: string;
+  success: boolean;
+  errorMessage?: string;
+}
+
+export interface ProductImage {
+  id: string;
+  productId: string;
+  url: string;
+  objectKey: string;
+  isPrimary: boolean;
+  displayOrder: number;
+  fileSize: number;
+  originalName: string;
+  mimeType: string;
+  uploadStatus: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 请求图片上传预签名 URL
+export const requestImageUpload = async (request: ImageUploadRequest): Promise<ImageUploadResponse> => {
+  const { data } = await productApi.post('/api/products/images/request-upload', request);
+  return data;
+};
+
+// 批量请求图片上传预签名 URL
+export const requestBatchImageUpload = async (requests: ImageUploadRequest[]): Promise<ImageUploadResponse[]> => {
+  const { data } = await productApi.post('/api/products/images/batch-request-upload', requests);
+  return data;
+};
+
+// 上传完成通知
+export const completeImageUpload = async (request: ImageUploadCompleteRequest): Promise<void> => {
+  await productApi.post('/api/products/images/upload-complete', request);
+};
+
+// 获取商品图片列表
+export const getProductImages = async (productId: string): Promise<ProductImage[]> => {
+  const { data } = await productApi.get(`/api/products/images/product/${productId}`);
+  return data;
+};
+
+// 获取商品主图
+export const getProductPrimaryImage = async (productId: string): Promise<ProductImage | null> => {
+  try {
+    const { data } = await productApi.get(`/api/products/images/product/${productId}/primary`);
+    return data;
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      return null;
+    }
+    throw error;
+  }
+};
+
+// 删除图片
+export const deleteImage = async (imageId: string): Promise<void> => {
+  await productApi.delete(`/api/products/images/${imageId}`);
+};
+
+// 设置主图
+export const setPrimaryImage = async (imageId: string): Promise<void> => {
+  await productApi.put(`/api/products/images/${imageId}/set-primary`);
+};
+
+// 更新图片顺序
+export const updateImageOrder = async (imageId: string, displayOrder: number): Promise<void> => {
+  await productApi.put(`/api/products/images/${imageId}/order`, null, {
+    params: { displayOrder }
+  });
+};
+
+// 直接上传文件到 S3
+export const uploadFileToS3 = async (file: File, uploadUrl: string): Promise<void> => {
+  await fetch(uploadUrl, {
+    method: 'PUT',
+    body: file,
+    headers: {
+      'Content-Type': file.type,
+    },
+  });
+};

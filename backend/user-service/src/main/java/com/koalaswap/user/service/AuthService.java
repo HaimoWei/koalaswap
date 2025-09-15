@@ -55,6 +55,8 @@ public class AuthService {
 
     @Value("${app.urls.verify-redirect-base}")
     private String verifyRedirectBase;
+    @Value("${app.user.default-avatar-url:/assets/avatars/default-avatar.svg}")
+    private String defaultAvatarUrl;
     /**
      * 用户注册
      * @param req 前端提交的注册请求（已通过 @Valid 校验基本格式）
@@ -150,22 +152,55 @@ public class AuthService {
         events.publishEvent(new PvBumpedEvent(userId));
     }
 
+    /**
+     * 修改密码（需要登录）
+     * @param userId 当前登录用户ID
+     * @param currentPassword 当前密码
+     * @param newPassword 新密码
+     */
+    @Transactional
+    public void changePassword(UUID userId, String currentPassword, String newPassword) {
+        // 1) 查找用户
+        User user = repo.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+
+        // 2) 验证当前密码
+        if (!encoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new IllegalArgumentException("当前密码错误");
+        }
+
+        // 3) 更新密码
+        user.setPasswordHash(encoder.encode(newPassword));
+        repo.save(user);
+
+        // 4) 可选：修改密码后让所有token失效，强制重新登录
+        repo.bumpTokenVersion(userId);
+        events.publishEvent(new PvBumpedEvent(userId));
+    }
+
 
     // ============ 私有辅助方法：实体 -> 对外视图 DTO 映射 ============
 
-    private static MyProfileRes toMyProfile(User u){
+    private MyProfileRes toMyProfile(User u){
         // ratingAvg 在实体中是 BigDecimal（映射 NUMERIC），给前端用 Double 更友好
+        String avatarResolved = (u.getAvatarUrl() == null || u.getAvatarUrl().isBlank())
+                ? defaultAvatarUrl
+                : u.getAvatarUrl();
         double avg = (u.getRatingAvg() == null) ? 0d : u.getRatingAvg().doubleValue();
         int    cnt = u.getRatingCount();              // 基本类型一定非空
         return new MyProfileRes(
                 u.getId(),
                 u.getEmail(),
                 u.getDisplayName(),
-                u.getAvatarUrl(),
+                avatarResolved,
                 u.getBio(),
+                u.getLocation(),
+                u.isPhoneVerified(),
                 u.isEmailVerified(),
                 avg,
                 cnt,
+                u.getMemberSince(),
+                u.getLastActiveAt(),
                 u.getCreatedAt()
         );
     }

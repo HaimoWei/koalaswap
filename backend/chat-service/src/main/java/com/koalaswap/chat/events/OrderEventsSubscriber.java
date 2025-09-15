@@ -2,6 +2,7 @@
 package com.koalaswap.chat.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.koalaswap.chat.entity.Message;
 import com.koalaswap.chat.model.MessageType;
 import com.koalaswap.chat.model.SystemEvent;
@@ -16,7 +17,7 @@ import java.util.Map;
 @Component
 public class OrderEventsSubscriber implements MessageListener {
 
-    private final ObjectMapper om = new ObjectMapper();
+    private final ObjectMapper om = new ObjectMapper().registerModule(new JavaTimeModule());
     private final ChatDomainService chatDomain;
     private final WsPublisher ws;
 
@@ -28,23 +29,22 @@ public class OrderEventsSubscriber implements MessageListener {
     public void onMessage(org.springframework.data.redis.connection.Message message, byte[] pattern) {
         try {
             String json = new String(message.getBody());
+            System.out.println("[OrderEventsSubscriber] 收到Redis事件: " + json);
+
             OrderStatusEvent evt = om.readValue(json, OrderStatusEvent.class);
+            System.out.println("[OrderEventsSubscriber] 解析事件: orderId=" + evt.orderId +
+                             ", productId=" + evt.productId +
+                             ", buyerId=" + evt.buyerId +
+                             ", sellerId=" + evt.sellerId +
+                             ", status=" + evt.newStatus);
 
-            // 将订单事件转为 SYSTEM 消息落库，并刷新会话快照/未读
-            var saved = chatDomain.appendSystemMessageForOrderEvent(evt);
-
-            // 推送到会话 topic
-            var resp = new MessageResponse(
-                    saved.getId(), saved.getType(), saved.getSenderId(),
-                    saved.getBody(), saved.getImageUrl(), saved.getSystemEvent(),
-                    saved.getMeta(), saved.getCreatedAt()
-            );
-            ws.publishNewMessage(saved.getConversationId(), resp);
-
-            // （可选）推送“我的收件箱发生变化”给双方
-            // chatDomain.getConversation(saved.getConversationId()) -> 取 buyer/seller 并各自推送未读变化
+            // 将订单事件转为 SYSTEM 消息落库，并刷新会话快照/未读；
+            // 该方法内部已负责广播 WS（会话消息 + 收件箱变化），此处无需重复推送。
+            chatDomain.appendSystemMessageForOrderEvent(evt);
+            System.out.println("[OrderEventsSubscriber] 事件处理完成");
         } catch (Exception e) {
             // 记录日志即可；为简洁未引入日志框架
+            System.err.println("[OrderEventsSubscriber] 处理事件失败: " + e.getMessage());
             e.printStackTrace();
         }
     }

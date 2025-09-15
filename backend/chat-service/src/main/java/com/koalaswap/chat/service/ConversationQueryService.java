@@ -67,7 +67,7 @@ public class ConversationQueryService {
         }
         if (!toUpdate.isEmpty()) convRepo.saveAll(toUpdate.values());
 
-        // 生成带 peer 昵称/头像的视图对象
+        // 生成带 peer 昵称/头像和商品信息的视图对象
         return page.map(it -> new ConversationListItem(
                 it.id(), it.productId(), it.orderId(), it.buyerId(), it.sellerId(), it.peerUserId(),
                 it.unread(), it.archived(), it.pinnedAt(),
@@ -75,7 +75,12 @@ public class ConversationQueryService {
                 it.productFirstImage(),
                 it.lastMessageAt(), it.lastMessagePreview(),
                 Optional.ofNullable(users.get(it.peerUserId())).map(UserClient.UserBrief::displayName).orElse(null),
-                Optional.ofNullable(users.get(it.peerUserId())).map(UserClient.UserBrief::avatarUrl).orElse(null)
+                Optional.ofNullable(users.get(it.peerUserId())).map(UserClient.UserBrief::avatarUrl).orElse(null),
+                // 新增商品信息
+                Optional.ofNullable(products.get(it.productId())).map(ProductClient.ProductBrief::title).orElse(null),
+                Optional.ofNullable(products.get(it.productId())).map(ProductClient.ProductBrief::price).orElse(null),
+                // 新增订单价格快照
+                Optional.ofNullable(orders.get(it.orderId())).map(OrderClient.OrderBrief::priceSnapshot).orElse(null)
         ));
     }
 }

@@ -1,0 +1,121 @@
+# 本地开发专用配置
+server:
+  port: 12647  # file-service 端口
+
+spring:
+  # Redis 连接
+  data:
+    redis:
+      host: localhost
+      port: 16379
+
+# 应用配置
+app:
+  jwt:
+    # 与其他服务保持一致的JWT密钥
+    secret: "p9P2JYpN4mVJXWm7XyQw6kBsF3uCz7rGQh5M8tQ2nA1rS6vY0kL9dH4eT8uZ3xB1"
+
+  # Token 新鲜度配置
+  token-freshness:
+    cache-ttl-sec: 8
+    use-redis: true
+    pubsub-channel: auth:pv:changed
+
+  # 用户服务配置
+  user-service:
+    internal-base-url: http://localhost:12649
+
+  # 文件配置（使用环境变量，与product-service保持一致）
+  file:
+    region: ${AWS_REGION:ap-southeast-2}
+    bucket-name: ${S3_BUCKET:koalaswap}
+    cdn-base-url: ${CDN_BASE:https://d3367sa0s3hyt3.cloudfront.net}
+    presigned-url-expiration-minutes: ${AWS_PRESIGNED_MINUTES:15}
+
+    # 各种文件类型的配置
+    categories:
+      avatar:
+        max-file-size: 5242880  # 5MB
+        path-prefix: "images/users"
+        allowed-mime-types:
+          - image/jpeg
+          - image/png
+          - image/webp
+        allowed-extensions:
+          - .jpg
+          - .jpeg
+          - .png
+          - .webp
+        enable-compress: true
+        enable-watermark: false
+
+      product:
+        max-file-size: 10485760  # 10MB
+        path-prefix: "images/users"
+        allowed-mime-types:
+          - image/jpeg
+          - image/png
+          - image/webp
+        allowed-extensions:
+          - .jpg
+          - .jpeg
+          - .png
+          - .webp
+        enable-compress: true
+        enable-watermark: false
+
+      chat:
+        max-file-size: 20971520  # 20MB
+        path-prefix: "files/chats"
+        allowed-mime-types:
+          - image/jpeg
+          - image/png
+          - image/webp
+          - image/gif
+        allowed-extensions:
+          - .jpg
+          - .jpeg
+          - .png
+          - .webp
+          - .gif
+        enable-compress: true
+        enable-watermark: false
+
+      document:
+        max-file-size: 52428800  # 50MB
+        path-prefix: "files/documents"
+        allowed-mime-types:
+          - application/pdf
+          - application/msword
+          - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+        allowed-extensions:
+          - .pdf
+          - .doc
+          - .docx
+        enable-compress: false
+        enable-watermark: false
+
+      # 静态站点素材，如默认头像。允许 SVG
+      assets:
+        max-file-size: 5242880  # 5MB
+        path-prefix: "assets"
+        allowed-mime-types:
+          - image/svg+xml
+          - image/png
+          - image/webp
+          - image/jpeg
+        allowed-extensions:
+          - .svg
+          - .png
+          - .webp
+          - .jpg
+          - .jpeg
+        enable-compress: false
+        enable-watermark: false
+
+# 日志配置
+logging:
+  level:
+    com.koalaswap.common.security: DEBUG
+    com.koalaswap.file: DEBUG
+    org.springframework.security: INFO

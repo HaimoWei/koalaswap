@@ -54,10 +54,10 @@ export function VerifyEmailPage() {
                     <h1 className="text-xl font-semibold mb-2">邮箱验证成功</h1>
                     <p className="text-gray-600">现在可以使用该账号登录。</p>
                     <div className="mt-4 flex justify-center gap-3">
-                        <button onClick={() => nav("/")} className="px-4 py-2 rounded bg-black text-white">
+                        <button onClick={() => nav("/")} className="btn btn-primary">
                             返回首页
                         </button>
-                        <button onClick={() => nav("/?login=1")} className="px-4 py-2 rounded bg-gray-800 text-white">
+                        <button onClick={() => nav("/login")} className="btn btn-secondary">
                             去登录
                         </button>
                     </div>
@@ -70,7 +70,7 @@ export function VerifyEmailPage() {
                     <p className="text-gray-600">{msg || "链接已失效或 token 不正确。"}</p>
                     <button
                         onClick={() => nav("/")}
-                        className="mt-4 px-4 py-2 rounded bg-gray-800 text-white"
+                        className="mt-4 btn btn-secondary"
                     >
                         返回首页
                     </button>

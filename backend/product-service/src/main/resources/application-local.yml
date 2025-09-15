@@ -33,10 +33,30 @@ app:
     max-images: 8
   user-service:
     internal-base-url: http://localhost:12649
+  file-service:
+    base-url: http://localhost:12647
   tokenFreshness:
     cache-ttl-sec: 8   # 建议 5~10；想几乎秒杀可设 0~2（0=禁用缓存）
     use-redis: true   # 使用 RedisProvider
     pubsub-channel: auth:pv:changed
+  # AWS S3 配置（本地开发）
+  aws:
+    region: ${AWS_REGION:ap-southeast-2}
+    bucket-name: ${S3_BUCKET:koalaswap}
+    cdn-base-url: ${CDN_BASE:https://d3367sa0s3hyt3.cloudfront.net}
+    presigned-url-expiration-minutes: ${AWS_PRESIGNED_MINUTES:15}
+    upload:
+      max-file-size: 10485760  # 10MB
+      max-images-per-product: 8
+      allowed-mime-types:
+        - image/jpeg
+        - image/png
+        - image/webp
+      allowed-extensions:
+        - .jpg
+        - .jpeg
+        - .png
+        - .webp
 
 
 logging:

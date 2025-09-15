@@ -34,24 +34,26 @@ export function SearchPage() {
     };
 
     return (
-        <main className="max-w-6xl mx-auto p-6 space-y-4">
+        <main className="page py-6 space-y-4">
             <FiltersBar />
 
             {isLoading ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    {Array.from({ length: params.size || 20 }).map((_, i) => (
-                        <div key={i} className="rounded-lg border bg-white p-3 h-64 animate-pulse" />
-                    ))}
-                </div>
+                <section className="card p-4 md:p-6">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+                        {Array.from({ length: params.size || 20 }).map((_, i) => (
+                            <div key={i} className="card p-3 h-64 animate-pulse" />
+                        ))}
+                    </div>
+                </section>
             ) : isError ? (
                 <div className="text-red-600">搜索失败：{(error as Error)?.message}</div>
             ) : (
-                <>
-                    <div className="text-sm text-gray-600">
+                <section className="card p-4 md:p-6">
+                    <div className="text-sm text-gray-600 mb-3">
                         共 <b>{data?.totalElements ?? 0}</b> 件相关商品
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
                         {data?.content.map((p) => <ProductCard key={p.id} p={p} />)}
                     </div>
 
@@ -60,7 +62,7 @@ export function SearchPage() {
                         totalPages={data?.totalPages || 1}
                         onPageChange={onPageChange}
                     />
-                </>
+                </section>
             )}
         </main>
     );

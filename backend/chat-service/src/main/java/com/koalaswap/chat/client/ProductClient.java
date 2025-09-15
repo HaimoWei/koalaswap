@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 @Component
@@ -23,10 +24,10 @@ public class ProductClient {
     }
 
     /** chat-service 内部使用 */
-    public static record ProductBrief(UUID id, UUID sellerId, String firstImageUrl, String title) {}
+    public static record ProductBrief(UUID id, UUID sellerId, String firstImageUrl, String title, BigDecimal price) {}
 
     /** 对应 product-service 的返回结构（ApiResponse.data 内部的元素） */
-    private static record ProductBriefRes(UUID id, UUID sellerId, String firstImageUrl, String title) {}
+    private static record ProductBriefRes(UUID id, UUID sellerId, String firstImageUrl, String title, BigDecimal price) {}
 
     /** 批量 brief：GET /api/internal/products/brief/batch?ids=...&ids=...  返回 ApiResponse<List<ProductBriefRes>> */
     public Map<UUID, ProductBrief> batchBrief(Collection<UUID> ids) {
@@ -51,7 +52,7 @@ public class ProductClient {
             Map<UUID, ProductBrief> out = new LinkedHashMap<>();
             for (ProductBriefRes p : list) {
                 if (p != null && p.id() != null) {
-                    out.putIfAbsent(p.id(), new ProductBrief(p.id(), p.sellerId(), p.firstImageUrl(), p.title()));
+                    out.putIfAbsent(p.id(), new ProductBrief(p.id(), p.sellerId(), p.firstImageUrl(), p.title(), p.price()));
                 }
             }
             return out;
@@ -73,7 +74,7 @@ public class ProductClient {
             ProductBriefRes p = wrapped.data();
             if (p == null || p.id() == null) return Optional.empty();
 
-            return Optional.of(new ProductBrief(p.id(), p.sellerId(), p.firstImageUrl(), p.title()));
+            return Optional.of(new ProductBrief(p.id(), p.sellerId(), p.firstImageUrl(), p.title(), p.price()));
         } catch (Exception e) {
             return Optional.empty();
         }
