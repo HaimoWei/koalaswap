@@ -41,6 +41,7 @@ jobs:
       - name: Build all services with Maven
         run: |
           cd backend
+          chmod +x mvnw
           ./mvnw clean package -DskipTests
         shell: bash
 
