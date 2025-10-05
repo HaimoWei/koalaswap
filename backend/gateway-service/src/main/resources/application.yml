@@ -1,17 +1,15 @@
 server:
-  port: 18080
+  port: ${SERVER_PORT:18080}
 
 app:
   cors:
-    allowed-origins: "http://localhost:5173,http://localhost:5177,http://localhost:4200"
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:5177,http://localhost:4200}
 
 spring:
   main:
     web-application-type: reactive
-
   cloud:
     gateway:
-      # 全局 CORS（预检请求在网关直接处理）
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
       globalcors:
@@ -22,56 +20,54 @@ spring:
             allowedMethods: "*"
             allowedHeaders: "*"
             allowCredentials: true
-
       routes:
         - id: users-and-auth
-          uri: http://localhost:12649
+          uri: ${USER_SERVICE_URL:http://localhost:12649}
           predicates:
             - Path=/api/users/**, /api/auth/**
 
         - id: products
-          uri: http://localhost:12648
+          uri: ${PRODUCT_SERVICE_URL:http://localhost:12648}
           predicates:
             - Path=/api/products/**
 
         - id: images
-          uri: http://localhost:12648
+          uri: ${PRODUCT_SERVICE_URL:http://localhost:12648}
           predicates:
             - Path=/api/images/**
 
         - id: categories
-          uri: http://localhost:12648
+          uri: ${PRODUCT_SERVICE_URL:http://localhost:12648}
           predicates:
             - Path=/api/categories/**
 
         - id: favorites
-          uri: http://localhost:12648
+          uri: ${PRODUCT_SERVICE_URL:http://localhost:12648}
           predicates:
             - Path=/api/favorites/**
 
         - id: orders
-          uri: http://localhost:12650
+          uri: ${ORDER_SERVICE_URL:http://localhost:12650}
           predicates:
             - Path=/api/orders/**
 
         - id: reviews
-          uri: http://localhost:12651
+          uri: ${REVIEW_SERVICE_URL:http://localhost:12651}
           predicates:
             - Path=/api/reviews/**
 
         - id: chat-http
-          uri: http://localhost:12652
+          uri: ${CHAT_SERVICE_URL:http://localhost:12652}
           predicates:
             - Path=/api/chat/**
 
         - id: files
-          uri: http://localhost:12647
+          uri: ${FILE_SERVICE_URL:http://localhost:12647}
           predicates:
             - Path=/api/files/**
 
-        # WebSocket / SockJS 端点
         - id: chat-ws
-          uri: http://localhost:12652   # 若握手失败可改成 ws://localhost:12652
+          uri: ${CHAT_WS_URL:http://localhost:12652}
           predicates:
             - Path=/ws/chat/**
 

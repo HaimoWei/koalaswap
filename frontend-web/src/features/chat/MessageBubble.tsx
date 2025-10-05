@@ -61,7 +61,7 @@ export function MessageBubble({ m, isRead, myAvatar, peerAvatar, peerName }: Mes
                 </div>
             )}
 
-            <div className={`max-w-[70%] rounded-2xl px-3 py-2 border ${mine ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]" : "bg-[var(--color-surface)] border-[var(--color-border)] shadow-[var(--shadow-1)]"}`}>
+            <div className={`max-w-[70%] rounded-2xl px-3 py-2 border ${mine ? "bg-[var(--color-primary)] text-[var(--color-text-strong)] border-[var(--color-primary)]" : "bg-[var(--color-surface)] border-[var(--color-border)] shadow-[var(--shadow-1)]"}`}>
                 {m.type === "TEXT" && (
                     <div className="text-sm whitespace-pre-wrap break-words">
                         {m.body || "[空消息]"}

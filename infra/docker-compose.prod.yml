@@ -1,0 +1,355 @@
+version: "3.9"
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+networks:
+  backend-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/postgres
+  redis-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/redis
+
+services:
+  db:
+    image: postgres:15
+    container_name: koalaswap-pg-prod
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-koalaswap}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-koalaswap_prod}
+      TZ: "UTC"
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../database/KoalaSwap_Schema_v2.0.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-koalaswap} -d ${POSTGRES_DB:-koalaswap_prod}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+    networks:
+      - backend-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: koalaswap-redis-prod
+    restart: always
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis-data:/data
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    logging: *default-logging
+    networks:
+      - backend-net
+
+  user-service:
+    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:user-prod
+    container_name: koalaswap-user-service-prod
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - /opt/koalaswap/.env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-koalaswap_prod}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-koalaswap}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      SERVER_PORT: 8080
+
+      APP_VERIFY_REDIRECT_BASE: ${APP_VERIFY_REDIRECT_BASE}
+      APP_RESET_FRONTEND_URL: ${APP_RESET_FRONTEND_URL}
+      APP_FILE_SERVICE_BASE_URL: http://file-service:8080
+      APP_TOKEN_FRESHNESS_USE_REDIS: "true"
+      APP_TOKEN_FRESHNESS_TTL_SEC: 8
+      APP_TOKEN_FRESHNESS_CHANNEL: ${APP_TOKEN_FRESHNESS_CHANNEL:-auth:pv:changed}
+      APP_USER_SERVICE_INTERNAL_BASE_URL: http://user-service:8080
+    ports:
+      - "127.0.0.1:12649:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+    networks:
+      - backend-net
+
+  product-service:
+    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:product-prod
+    container_name: koalaswap-product-service-prod
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    env_file:
+      - /opt/koalaswap/.env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-koalaswap_prod}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-koalaswap}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      SERVER_PORT: 8080
+
+      APP_USER_SERVICE_INTERNAL_BASE_URL: http://user-service:8080
+      APP_FILE_SERVICE_BASE_URL: http://file-service:8080
+      APP_TOKEN_FRESHNESS_USE_REDIS: "true"
+      APP_TOKEN_FRESHNESS_TTL_SEC: 8
+      APP_TOKEN_FRESHNESS_CHANNEL: ${APP_TOKEN_FRESHNESS_CHANNEL:-auth:pv:changed}
+    ports:
+      - "127.0.0.1:12648:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+    networks:
+      - backend-net
+
+  order-service:
+    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:order-prod
+    container_name: koalaswap-order-service-prod
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+    env_file:
+      - /opt/koalaswap/.env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-koalaswap_prod}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-koalaswap}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      SERVER_PORT: 8080
+
+      APP_PRODUCT_SERVICE_INTERNAL_BASE_URL: http://product-service:8080
+      APP_USER_SERVICE_INTERNAL_BASE_URL: http://user-service:8080
+      APP_ORDER_PENDING_EXPIRE_MINUTES: 30
+      APP_TOKEN_FRESHNESS_USE_REDIS: "true"
+      APP_TOKEN_FRESHNESS_TTL_SEC: 8
+      APP_TOKEN_FRESHNESS_CHANNEL: ${APP_TOKEN_FRESHNESS_CHANNEL:-auth:pv:changed}
+      APP_ORDER_EVENTS_CHANNEL: ${APP_ORDER_EVENTS_CHANNEL:-orders:completed}
+    ports:
+      - "127.0.0.1:12650:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+    networks:
+      - backend-net
+
+  review-service:
+    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:review-prod
+    container_name: koalaswap-review-service-prod
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+    env_file:
+      - /opt/koalaswap/.env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-koalaswap_prod}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-koalaswap}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      SERVER_PORT: 8080
+
+      APP_USER_SERVICE_EXTERNAL_BASE_URL: http://user-service:8080
+      APP_PRODUCT_SERVICE_EXTERNAL_BASE_URL: http://product-service:8080
+      APP_USER_SERVICE_INTERNAL_BASE_URL: http://user-service:8080
+      APP_PRODUCT_SERVICE_INTERNAL_BASE_URL: http://product-service:8080
+      APP_TOKEN_FRESHNESS_USE_REDIS: "true"
+      APP_TOKEN_FRESHNESS_TTL_SEC: 8
+      APP_TOKEN_FRESHNESS_CHANNEL: ${APP_TOKEN_FRESHNESS_CHANNEL:-auth:pv:changed}
+      APP_ORDER_EVENTS_ENABLED: "true"
+      APP_ORDER_EVENTS_CHANNEL: ${APP_ORDER_EVENTS_CHANNEL:-orders:completed}
+    ports:
+      - "127.0.0.1:12651:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+    networks:
+      - backend-net
+
+  chat-service:
+    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:chat-prod
+    container_name: koalaswap-chat-service-prod
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+    env_file:
+      - /opt/koalaswap/.env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-koalaswap_prod}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-koalaswap}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      SERVER_PORT: 8080
+
+      KOALASWAP_SERVICES_USER_BASE_URL: http://user-service:8080
+      KOALASWAP_SERVICES_PRODUCT_BASE_URL: http://product-service:8080
+      KOALASWAP_SERVICES_ORDER_BASE_URL: http://order-service:8080
+      APP_USER_SERVICE_INTERNAL_BASE_URL: http://user-service:8080
+      APP_PRODUCT_SERVICE_INTERNAL_BASE_URL: http://product-service:8080
+      APP_ORDER_SERVICE_INTERNAL_BASE_URL: http://order-service:8080
+      APP_TOKEN_FRESHNESS_USE_REDIS: "true"
+      APP_TOKEN_FRESHNESS_TTL_SEC: 8
+      APP_TOKEN_FRESHNESS_CHANNEL: ${APP_TOKEN_FRESHNESS_CHANNEL:-auth:pv:changed}
+      CHAT_WS_ALLOW_ORIGINS: ${CHAT_WS_ALLOW_ORIGINS}
+      CHAT_ORDER_REDIS_CHANNEL: ${CHAT_ORDER_REDIS_CHANNEL:-orders:status-changed}
+    ports:
+      - "127.0.0.1:12652:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+    networks:
+      - backend-net
+
+  file-service:
+    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:file-prod
+    container_name: koalaswap-file-service-prod
+    restart: always
+    depends_on:
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    env_file:
+      - /opt/koalaswap/.env
+    environment:
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      SERVER_PORT: 8080
+
+      APP_USER_SERVICE_INTERNAL_BASE_URL: http://user-service:8080
+      APP_TOKEN_FRESHNESS_USE_REDIS: "true"
+      APP_TOKEN_FRESHNESS_TTL_SEC: 8
+      APP_TOKEN_FRESHNESS_CHANNEL: ${APP_TOKEN_FRESHNESS_CHANNEL:-auth:pv:changed}
+      AWS_REGION: ${AWS_REGION}
+      S3_BUCKET: ${S3_BUCKET}
+      CDN_BASE: ${CDN_BASE}
+      AWS_PRESIGNED_MINUTES: ${AWS_PRESIGNED_MINUTES:-15}
+    ports:
+      - "127.0.0.1:12647:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+    networks:
+      - backend-net
+
+  gateway-service:
+    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:gateway-prod
+    container_name: koalaswap-gateway-service-prod
+    restart: always
+    depends_on:
+      user-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+      review-service:
+        condition: service_healthy
+      chat-service:
+        condition: service_healthy
+      file-service:
+        condition: service_healthy
+    env_file:
+      - /opt/koalaswap/.env
+    environment:
+      SERVER_PORT: 8080
+      APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS}
+      USER_SERVICE_URL: http://user-service:8080
+      PRODUCT_SERVICE_URL: http://product-service:8080
+      ORDER_SERVICE_URL: http://order-service:8080
+      REVIEW_SERVICE_URL: http://review-service:8080
+      CHAT_SERVICE_URL: http://chat-service:8080
+      CHAT_WS_URL: http://chat-service:8080
+      FILE_SERVICE_URL: http://file-service:8080
+    ports:
+      - "127.0.0.1:18080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+    networks:
+      - backend-net

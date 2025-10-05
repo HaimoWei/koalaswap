@@ -44,6 +44,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/health/**").permitAll()
                         .requestMatchers("/api/internal/**").permitAll()
                         .requestMatchers("/api/orders/**").authenticated()
+                        .requestMatchers("/actuator/health/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(eh -> eh

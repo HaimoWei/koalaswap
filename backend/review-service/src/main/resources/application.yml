@@ -1,47 +1,62 @@
-# review-service ｜ 通用配置（可被环境变量覆盖）
 server:
-  port: 8083
+  port: ${SERVER_PORT:12651}
 
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://db:5432/koalaswap_dev}
+    username: ${SPRING_DATASOURCE_USERNAME:koalaswap}
+    password: ${SPRING_DATASOURCE_PASSWORD:secret}
   jpa:
     hibernate:
-      ddl-auto: none            # 与其它服务一致：不让 JPA 改表
+      ddl-auto: none
     show-sql: true
     properties:
       hibernate.jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    connect-retries: 5
+    postgresql-compatibility: "15"
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
 
-# 自定义配置（与其它服务同一前缀与键名）
 app:
-  # 令牌新鲜度（前缀固定：app.token-freshness）
   token-freshness:
     cache-ttl-sec: ${APP_TOKEN_FRESHNESS_TTL_SEC:8}
-    use-redis: ${APP_TOKEN_FRESHNESS_USE_REDIS:false}
+    use-redis: ${APP_TOKEN_FRESHNESS_USE_REDIS:true}
     pubsub-channel: ${APP_TOKEN_FRESHNESS_CHANNEL:auth:pv:changed}
-
-  # 订单完成事件（Redis Pub/Sub 通道）
+  jwt:
+    secret: ${APP_JWT_SECRET:}
+    issuer: ${APP_JWT_ISSUER:koalaswap}
+    access-token-minutes: ${APP_JWT_ACCESS_MINUTES:60}
   order-events:
-    channel: ${APP_ORDER_COMPLETED_CHANNEL:orders:completed}
-
-  # 依赖服务：review-service 通过“公开 API”访问其他服务
-  # —— 为了兼容你已有写法，我同时提供 services.* 与 *-service.internal-base-url 两套键
+    enabled: ${APP_ORDER_EVENTS_ENABLED:true}
+    channel: ${APP_ORDER_EVENTS_CHANNEL:orders:completed}
   services:
     user:
       base-url: ${APP_USER_SERVICE_EXTERNAL_BASE_URL:http://user-service:8080}
     product:
-      base-url: ${APP_PRODUCT_SERVICE_EXTERNAL_BASE_URL:http://product-service:8081}
-
-  # 兼容键（若你以后在 Provider 里回源会用到）
+      base-url: ${APP_PRODUCT_SERVICE_EXTERNAL_BASE_URL:http://product-service:8080}
   user-service:
     internal-base-url: ${APP_USER_SERVICE_INTERNAL_BASE_URL:http://user-service:8080}
   product-service:
-    internal-base-url: ${APP_PRODUCT_SERVICE_INTERNAL_BASE_URL:http://product-service:8081}
+    internal-base-url: ${APP_PRODUCT_SERVICE_INTERNAL_BASE_URL:http://product-service:8080}
 
 logging:
   level:
-    com.koalaswap.review: INFO
-    org.springframework.web: INFO
-    org.springframework.security: INFO
+    com.koalaswap.review: ${LOGGING_LEVEL_COM_KOALASWAP_REVIEW:INFO}
+    com.koalaswap.common.security: ${LOGGING_LEVEL_COM_KOALASWAP_COMMON_SECURITY:INFO}
+    org.springframework.security: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY:INFO}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

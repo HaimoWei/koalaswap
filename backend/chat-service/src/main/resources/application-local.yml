@@ -1,8 +1,7 @@
-# 本地开发专用：与其他微服务保持一致
-server:
-  port: 12652
-
 spring:
+  config:
+    activate:
+      on-profile: local
   datasource:
     url: jdbc:postgresql://localhost:15433/koalaswap_dev
     username: koalaswap
@@ -14,12 +13,21 @@ spring:
     properties:
       hibernate.jdbc.time_zone: UTC
       hibernate.query.literal_handling_mode: BIND
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    connect-retries: 5
+    postgresql-compatibility: "15"
   data:
     redis:
       host: localhost
       port: 16379
 
-# === 兼容：当前 chat 代码正在读取的键（保留，不影响运行） ===
+server:
+  port: 12652
+
 koalaswap:
   services:
     user-base-url: http://localhost:12649
@@ -28,17 +36,15 @@ koalaswap:
 
 chat:
   ws:
-    allow-origins: "*"         # 按需收紧到你的前端域名
+    allow-origins: "*"
   order:
     redis-channel: orders:status-changed
 
-# === 统一到与其他微服务一致的风格（新增，后续把代码切到这组键） ===
 app:
   token-freshness:
     cache-ttl-sec: 8
     use-redis: true
     pubsub-channel: auth:pv:changed
-
   user-service:
     internal-base-url: http://localhost:12649
   product-service:
@@ -50,7 +56,7 @@ app:
     issuer: koalaswap
     access-token-minutes: 60
   images:
-    placeholder-product: "https://static.example.com/img/placeholder-product.png"
+    placeholder-product: https://static.example.com/img/placeholder-product.png
 
 logging:
   level:
@@ -58,3 +64,12 @@ logging:
     org.springframework.web: INFO
     org.hibernate.SQL: INFO
     com.koalaswap.common.security: DEBUG
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

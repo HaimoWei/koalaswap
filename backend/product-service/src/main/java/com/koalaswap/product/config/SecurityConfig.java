@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,   "/api/products/**").authenticated()
                         .requestMatchers(HttpMethod.PATCH,  "/api/products/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").authenticated()
+                        .requestMatchers("/actuator/health/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(eh -> eh

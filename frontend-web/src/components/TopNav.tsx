@@ -100,18 +100,31 @@ export function TopNav({
                     <div className="flex items-center gap-3">
                         {/* 发布（按需） */}
                         {showPublish && (
-                            <button className="btn btn-primary" onClick={() => nav("/publish")}>发布</button>
+                            <a
+                                href="/publish"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-primary"
+                            >
+                                发布
+                            </a>
                         )}
                         {/* 消息（按需） */}
                         {showMessages && (
-                            <button className="relative btn btn-secondary" onClick={() => nav("/chat")} aria-label="我的消息">
+                            <a
+                                className="relative btn btn-secondary"
+                                href="/chat"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="我的消息"
+                            >
                                 <Icon name="bell" />
                                 {unread > 0 && (
                                     <span className="absolute -top-1 -right-1 text-[10px] min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white flex items-center justify-center">
                                         {unread > 99 ? "99+" : unread}
                                     </span>
                                 )}
-                            </button>
+                            </a>
                         )}
                         {/* 头像 + 菜单 */}
                         <div className="relative" ref={menuRef}>
@@ -133,14 +146,14 @@ export function TopNav({
                                     onMouseEnter={() => setMenuOpen(true)}
                                     onMouseLeave={() => setMenuOpen(false)}
                                 >
-                                    <button className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-muted)]" onClick={() => { setMenuOpen(false); nav("/me/center/listings"); }}>我发布的</button>
-                                    <button className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-muted)]" onClick={() => { setMenuOpen(false); nav("/me/center/orders?role=seller"); }}>我卖出的</button>
-                                    <button className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-muted)]" onClick={() => { setMenuOpen(false); nav("/me/center/orders?role=buyer"); }}>我买到的</button>
-                                    <button className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-muted)]" onClick={() => { setMenuOpen(false); nav("/me/center/favorites"); }}>我的收藏</button>
-                                    <button className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-muted)]" onClick={() => { setMenuOpen(false); nav("/me/center/reviews?tab=commented"); }}>我的评价</button>
-                                    <button className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-muted)]" onClick={() => { setMenuOpen(false); nav("/me/center/profile"); }}>账户管理</button>
+                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center/listings" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>我发布的</a>
+                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center/orders?role=seller" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>我卖出的</a>
+                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center/orders?role=buyer" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>我买到的</a>
+                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center/favorites" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>我的收藏</a>
+                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center/reviews?tab=commented" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>我的评价</a>
+                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center/profile" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>账户管理</a>
                                     <div className="my-1 h-px bg-[var(--color-border)]" />
-                                    <button className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-muted)]" onClick={() => { setMenuOpen(false); nav("/me/center"); }}>进入个人中心</button>
+                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>进入个人中心</a>
                                     <div className="my-1 h-px bg-[var(--color-border)]" />
                                     <button className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-muted)]" onClick={onLogout}>退出登录</button>
                                 </div>

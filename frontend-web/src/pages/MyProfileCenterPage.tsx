@@ -131,7 +131,7 @@ export default function MyProfileCenterPage() {
             </div>
             <Link
               to="/me/center/profile"
-              className="btn btn-secondary text-sm"
+              className="btn btn-primary text-sm"
             >
               编辑资料
             </Link>
@@ -165,6 +165,8 @@ export default function MyProfileCenterPage() {
                   <div className="text-gray-500 mb-4">还没有发布任何商品</div>
                   <Link
                     to="/publish"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,4 +251,3 @@ function TabBtn({
     </button>
   );
 }
-

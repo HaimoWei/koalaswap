@@ -12,29 +12,27 @@ const loginSchema = z.object({
     password: z.string().min(6, "至少 6 位密码"),
 });
 
-const registerSchema = z.object({
-    displayName: z.string().min(1, "请输入昵称"),
-    email: z.string().email("请输入有效邮箱"),
-    password: z.string().min(6, "至少 6 位密码"),
-});
-
 export default function LoginPage() {
     const nav = useNavigate();
     const [sp] = useSearchParams();
-    const next = useMemo(() => sp.get("next") || "/", [sp]);
+    const next = useMemo(() => {
+        const raw = sp.get("next");
+        if (!raw) return "/";
+        try {
+            const url = new URL(raw, window.location.origin);
+            if (url.origin !== window.location.origin) return "/";
+            return url.pathname + url.search + url.hash;
+        } catch {
+            return raw.startsWith("/") ? raw : "/";
+        }
+    }, [sp]);
     const token = useAuthStore((s) => s.token);
     const setAuth = useAuthStore((s) => s.setAuth);
-    const [tab, setTab] = useState<"login" | "register">("login");
-    const [canGoBack, setCanGoBack] = useState(false);
     const [nextHint, setNextHint] = useState<string | null>(null);
 
     useEffect(() => {
         if (token) nav(next, { replace: true });
     }, [token, next, nav]);
-
-    useEffect(() => {
-        setCanGoBack(window.history.length > 1);
-    }, []);
 
     useEffect(() => {
         // 友好提示：登录后将跳转到哪里
@@ -65,7 +63,7 @@ export default function LoginPage() {
                 <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
                     <div className="font-bold text-xl cursor-pointer" onClick={() => nav("/")}>KoalaSwap</div>
                     <button
-                        onClick={() => (canGoBack ? nav(-1) : nav("/"))}
+                        onClick={() => nav(next)}
                         className="text-sm text-gray-600 hover:text-[var(--color-text-strong)]"
                     >
                         继续浏览
@@ -94,6 +92,7 @@ export default function LoginPage() {
 
 
                         <LoginForm
+                            returnPath={next}
                             onSuccess={(auth) => {
                                 setAuth(auth.accessToken, auth.profile);
                                 nav(next, { replace: true });
@@ -111,7 +110,13 @@ export default function LoginPage() {
     );
 }
 
-function LoginForm({ onSuccess }: { onSuccess: (auth: { accessToken: string; profile: any }) => void }) {
+function LoginForm({
+    onSuccess,
+    returnPath,
+}: {
+    onSuccess: (auth: { accessToken: string; profile: any }) => void;
+    returnPath: string;
+}) {
     const { register, handleSubmit, formState } = useForm<z.infer<typeof loginSchema>>({ resolver: zodResolver(loginSchema) });
     const [serverMsg, setServerMsg] = useState<string>("");
     const [showPwd, setShowPwd] = useState(false);
@@ -151,7 +156,7 @@ function LoginForm({ onSuccess }: { onSuccess: (auth: { accessToken: string; pro
                     记住我
                 </label>
                 <div>
-                    <Link to="/auth/forgot" className="underline">忘记密码？</Link>
+                    <Link to={`/auth/forgot?next=${encodeURIComponent(returnPath)}`} className="underline">忘记密码？</Link>
                 </div>
             </div>
             {serverMsg && <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded p-2">{serverMsg}</div>}
@@ -159,7 +164,7 @@ function LoginForm({ onSuccess }: { onSuccess: (auth: { accessToken: string; pro
                 {formState.isSubmitting ? "登录中..." : "登录"}
             </button>
             <div className="text-xs text-gray-600 text-center">
-                没收到验证邮件？ <Link to="/auth/resend" className="underline">重新发送</Link>
+                没收到验证邮件？ <Link to={`/auth/resend?next=${encodeURIComponent(returnPath)}`} className="underline">重新发送</Link>
             </div>
         </form>
     );

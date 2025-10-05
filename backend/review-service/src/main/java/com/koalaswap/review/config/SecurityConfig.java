@@ -38,6 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/health/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reviews/users/**").permitAll() // 用户主页评价公开
                         .requestMatchers("/api/reviews/**").authenticated()
+                        .requestMatchers("/actuator/health/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(eh -> eh

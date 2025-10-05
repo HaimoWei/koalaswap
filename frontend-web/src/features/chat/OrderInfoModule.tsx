@@ -6,6 +6,7 @@ import { confirmOrder } from "../../api/orders";
 import { getOrderReviews } from "../../api/reviews";
 import { useEffect } from "react";
 import { getStomp, subscribeConversationMessages } from "../../ws/stomp";
+import { confirm } from "../../store/overlay";
 
 interface OrderInfoModuleProps {
     conversation: ConversationDetailResponse;
@@ -382,7 +383,7 @@ export function OrderInfoModule({ conversation }: OrderInfoModuleProps) {
                                         case 'confirm':
                                             // 确认收货 - 直接在聊天页面确认，无需跳转
                                             if (orderId) {
-                                                const ok = window.confirm('确认已收货吗？');
+                                                const ok = await confirm('确认收货', '确认已收到商品？确认后将无法撤销');
                                                 if (!ok) return;
                                                 await confirmOrder(orderId);
                                                 await qc.invalidateQueries({ queryKey: ["conv", conversation.id] });

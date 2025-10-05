@@ -1,0 +1,110 @@
+{
+  "user_sample": [
+    {
+      "id": "e41a14a9-7d5b-4cdd-ae22-7fcf3d3d957f",
+      "username": "michael_272",
+      "email": "michael.davis@hotmail.com",
+      "display_name": "Michael Davis",
+      "bio": "Trusted seller in Hobart. Quality items, fast shipping.",
+      "location": "Melbourne, Australia",
+      "rating_avg": 4.5,
+      "rating_count": 184,
+      "member_since": "2022-11-05",
+      "phone_verified": false,
+      "email_verified": true,
+      "source": "generated_from_goofish",
+      "first_name": "Michael",
+      "last_name": "Davis"
+    },
+    {
+      "id": "6f46a0a4-0043-4e36-8385-064d95d3b2ab",
+      "username": "john_857",
+      "email": "john.davis@gmail.com",
+      "display_name": "John Davis",
+      "bio": "Trusted seller in Hobart. Quality items, fast shipping.",
+      "location": "Perth, Australia",
+      "rating_avg": 4.2,
+      "rating_count": 315,
+      "member_since": "2020-02-15",
+      "phone_verified": true,
+      "email_verified": true,
+      "source": "generated_from_goofish",
+      "first_name": "John",
+      "last_name": "Davis"
+    }
+  ],
+  "product_sample": [
+    {
+      "id": "goofish_complete_1",
+      "title": "Apple4s，16gb，送充电线 成色如图，不能刷机还原升级换过电池，其它不知道售出不退不换，包邮，可以自提\n2小时前发布\n¥\n40\n山东\n百分百好评",
+      "description": "Pre-owned Apple4s，16gb，送充电线 成色如图，不能刷机还原升级换过电池，其它不知道售出不退不换，包邮，可以自提\n2小时前发布\n¥\n40\n山东\n百分百好评 - genuine item with normal wear. Works perfectly.",
+      "price": 994,
+      "currency": "AUD",
+      "condition": "GOOD",
+      "category": "Smart Phones",
+      "images": [
+        {
+          "filename": "goofish_complete_1_0.jpg",
+          "is_primary": true,
+          "sort_order": 0,
+          "source_url": "https://img.alicdn.com/bao/uploaded/i2/O1CN01TO0Xla1VUxRFPQkeS_!!4611686018427383665-53-fleamarket.heic_450x10000Q90.jpg_.webp"
+        }
+      ],
+      "created_at": "2025-09-22T04:46:15.238269",
+      "keyword": "iPhone手机",
+      "source": "goofish_logged",
+      "seller_id": "e41a14a9-7d5b-4cdd-ae22-7fcf3d3d957f",
+      "original_text": "苹果4s，16gb，送充电线 成色如图，不能刷机还原升级换过电池，其它不知道售出不退不换，包邮，可以自提\n2小时前发布\n¥\n40\n山东\n百分百好评",
+      "source_url": "https://www.goofish.com/item?id=978145335072&categoryId=126862528",
+      "part": "complete"
+    },
+    {
+      "id": "goofish_complete_2",
+      "title": "iPhone7P 128G,电池90以上，带指纹Unlocked,三网通 插卡即用，拍照清晰，系统还很流畅，功能正常使用，拍照有实况，隔空投送也很丝滑～像素复古！ccd的质感！之前买来当备用机的，ID已经退了 ，",
+      "description": "Pre-owned iPhone7P 128G,电池90以上，带指纹Unlocked,三网通 插卡即用，拍照清晰，系统还很流畅，功能正常使用，拍照有实况，隔空投送也很丝滑～像素复古！ccd的质感！之前买来当备用机的，ID已经退了 ， - genuine item with normal wear. Works perfectly.",
+      "price": 5998,
+      "currency": "AUD",
+      "condition": "EXCELLENT",
+      "category": "Smart Phones",
+      "images": [
+        {
+          "filename": "goofish_complete_2_0.jpg",
+          "is_primary": true,
+          "sort_order": 0,
+          "source_url": "https://img.alicdn.com/bao/uploaded/i1/O1CN01t3dukD1J8GQOEKHAX_!!4611686018427387255-0-fleamarket.jpg_450x10000Q90.jpg_.webp"
+        }
+      ],
+      "created_at": "2025-09-22T04:46:17.932806",
+      "keyword": "iPhone手机",
+      "source": "goofish_logged",
+      "seller_id": "6f46a0a4-0043-4e36-8385-064d95d3b2ab",
+      "original_text": "iPhone7P 128G,电池90以上，带指纹解锁,三网通 插卡即用，拍照清晰，系统还很流畅，功能正常使用，拍照有实况，隔空投送也很丝滑～像素复古！ccd的质感！之前买来当备用机的，ID已经退了 ，可以登录你自己的ID，一直带壳使用，外观保护得好9成新。售后：7天内质量问题包运费退换 ｜质保30天【撕标/私拆不保】默认手机不能刷机还原抹除标价 7代WiFi 32g无指纹#iPhone 7 Plus #春日断舍离 #手机数码换新\n¥\n188\n¥3999\n上海\n回复超快",
+      "source_url": "https://www.goofish.com/item?id=978103227373&categoryId=126862528",
+      "part": "complete"
+    },
+    {
+      "id": "goofish_complete_3",
+      "title": "全是Apple6Phone 内存16G 都没有卡槽 要求高的不要咨询 这是废品价格\n2小时前发布\n¥\n49\n¥79\n河北\n百分百好评",
+      "description": "Pre-owned 全是Apple6Phone 内存16G 都没有卡槽 要求高的不要咨询 这是废品价格\n2小时前发布\n¥\n49\n¥79\n河北\n百分百好评 - genuine item with normal wear. Works perfectly.",
+      "price": 118,
+      "currency": "AUD",
+      "condition": "EXCELLENT",
+      "category": "Smart Phones",
+      "images": [
+        {
+          "filename": "goofish_complete_3_0.jpg",
+          "is_primary": true,
+          "sort_order": 0,
+          "source_url": "https://img.alicdn.com/bao/uploaded/i2/O1CN019iIrHT1bmiUUSWMTa_!!4611686018427382916-53-fleamarket.heic_450x10000Q90.jpg_.webp"
+        }
+      ],
+      "created_at": "2025-09-22T04:46:21.351858",
+      "keyword": "iPhone手机",
+      "source": "goofish_logged",
+      "seller_id": "e3a4630b-6c2d-4144-b0ca-ab3a2e216da0",
+      "original_text": "全是苹果6手机 内存16G 都没有卡槽 要求高的不要咨询 这是废品价格\n2小时前发布\n¥\n49\n¥79\n河北\n百分百好评",
+      "source_url": "https://www.goofish.com/item?id=978145047706&categoryId=126862528",
+      "part": "complete"
+    }
+  ]
+}

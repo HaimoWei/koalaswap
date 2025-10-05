@@ -1,0 +1,16 @@
+.git
+.gitignore
+.idea
+.vscode
+*.iml
+*.log
+*.zip
+*.tar
+*.gz
+*.tgz
+*.tmp
+**/target/
+**/.DS_Store
+**/__pycache__/
+**/node_modules/
+**/.pytest_cache/

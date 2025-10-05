@@ -1,56 +1,66 @@
-# application-local.yml
-server:
-  port: 12649  # 你的 compose 映射了 8080:8080，所以这里保持 8080
-
 spring:
+  config:
+    activate:
+      on-profile: local
   datasource:
     url: jdbc:postgresql://localhost:15433/koalaswap_dev
     username: koalaswap
     password: secret
-
   jpa:
     hibernate:
-      # 你已经用 SQL 脚本建好表结构了，这里建议用 none（不让 JPA 擅自改表）
       ddl-auto: none
     show-sql: true
     properties:
       hibernate.format_sql: true
-
-  # 邮件发送配置（Google Gmail SMTP）
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    connect-retries: 5
+    postgresql-compatibility: "15"
   mail:
     host: smtp.gmail.com
     port: 587
-    username: weihaimoau@gmail.com        # ← 直接写
+    username: weihaimoau@gmail.com
     password: mjokiewawgsyzayu
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
 
-# 自定义配置（JWT 等）
+server:
+  port: 12649
+
 app:
   jwt:
     secret: "p9P2JYpN4mVJXWm7XyQw6kBsF3uCz7rGQh5M8tQ2nA1rS6vY0kL9dH4eT8uZ3xB1"
-    accessTtlMs: 90000000 # 15分钟
+    accessTtlMs: 90000000
   mail:
-    from: weihaimoau@gmail.com            # ← 直接写
+    from: weihaimoau@gmail.com
   urls:
-    verify-redirect-base: http://localhost:5173/verified
+    verify-redirect-base: http://localhost:4200/verified
+  reset:
+    frontendUrl: http://localhost:4200
   file-service:
     base-url: http://localhost:12647
   user:
     default-avatar-url: https://d3367sa0s3hyt3.cloudfront.net/avatar/default-avatar.v1.svg
-
-  # Token 新鲜度配置（user-service 也用，以便自身校验）
   token-freshness:
     use-redis: true
     cache-ttl-sec: 8
     pubsub-channel: auth:pv:changed
-
-
-  # Provider 的 HTTP 回退需要内部地址（本服务可指向自身）
   user-service:
     internal-base-url: http://localhost:12649
 
 logging:
   level:
-    com.koalaswap.common.security: DEBUG  # 观察 L1/L2 命中与发布日志
+    com.koalaswap.common.security: DEBUG
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

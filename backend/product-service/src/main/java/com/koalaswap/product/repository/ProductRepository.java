@@ -15,12 +15,19 @@ import java.util.Collection;
 
 public interface ProductRepository extends JpaRepository<Product, UUID> {
 
-    // 搜索：仅某状态（通常 ACTIVE），其余过滤条件与原版一致 + 可选 sellerId 过滤
+    // 搜索：仅某状态（通常 ACTIVE），支持层级分类查询 + 可选 sellerId 过滤
     @Query("""
         select p from Product p
         where p.status = :status
           and (:kwLike is null or lower(p.title) like :kwLike or lower(p.description) like :kwLike)
-          and (:catId is null or p.categoryId = :catId)
+          and (:catId is null or p.categoryId = :catId or
+               p.categoryId in (
+                   select c1.id from ProductCategory c1 where c1.parentId = :catId
+                   union
+                   select c2.id from ProductCategory c2
+                   join ProductCategory c1 on c2.parentId = c1.id
+                   where c1.parentId = :catId
+               ))
           and (:minPrice is null or p.price >= :minPrice)
           and (:maxPrice is null or p.price <= :maxPrice)
           and (:excludeSellerId is null or p.sellerId <> :excludeSellerId)

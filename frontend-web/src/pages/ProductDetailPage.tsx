@@ -56,7 +56,7 @@ export function ProductDetailPage() {
         }
         try {
             const conv = await createConversation({ productId: p.id, sellerId: p.sellerId });
-            nav(`/chat/${conv.id}`);
+            window.open(`/chat/${conv.id}`, "_blank", "noopener");
         } catch (e: any) {
             toast(e?.message || "发起聊天失败", "error");
         }

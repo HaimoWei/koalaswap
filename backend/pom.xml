@@ -20,7 +20,23 @@
 
     <properties>
         <java.version>21</java.version>
+        <flyway.version>10.16.0</flyway.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-core</artifactId>
+                <version>${flyway.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-database-postgresql</artifactId>
+                <version>${flyway.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <!-- 声明子模块（顺序先 common-service，再各业务模块） -->
     <modules>

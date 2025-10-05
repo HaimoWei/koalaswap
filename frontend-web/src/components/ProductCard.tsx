@@ -7,8 +7,14 @@ import { getUserBrief } from "../api/users";
 export function ProductCard({ p }: { p: ProductRes }) {
     const img = p.images?.[0] || "https://placehold.co/600x600?text=No+Image";
     return (
-        <div className="card hover:shadow-[var(--shadow-2)] transition-all duration-300 overflow-hidden group hover:scale-[1.02]">
-            <Link to={`/product/${p.id}`} className="block" title={p.title}>
+        <div className="card hover:shadow-[var(--shadow-2)] transition-all duration-300 overflow-hidden group">
+            <Link
+                to={`/product/${p.id}`}
+                className="block"
+                title={p.title}
+                target="_blank"
+                rel="noopener noreferrer"
+            >
                 <div className="relative aspect-square bg-[var(--color-muted)] overflow-hidden">
                     <img src={img} alt={p.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
                     {/* 包邮标签 */}
