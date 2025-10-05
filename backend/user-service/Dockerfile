@@ -1,25 +1,27 @@
-######################## build stage ########################
+# syntax=docker/dockerfile:1
+
 FROM maven:3.9.6-eclipse-temurin-21 AS build
+WORKDIR /workspace
 
-# 整个 backend 目录会在 /backend
-WORKDIR /backend
+COPY pom.xml ./
+COPY common-service/pom.xml common-service/pom.xml
+COPY user-service/pom.xml user-service/pom.xml
+COPY product-service/pom.xml product-service/pom.xml
+COPY file-service/pom.xml file-service/pom.xml
+COPY order-service/pom.xml order-service/pom.xml
+COPY review-service/pom.xml review-service/pom.xml
+COPY chat-service/pom.xml chat-service/pom.xml
+COPY gateway-service/pom.xml gateway-service/pom.xml
+RUN mvn -pl user-service -am -B dependency:go-offline
 
-# ====== 1) 复制父 POM + 公共模块 + 当前服务 ======
-COPY pom.xml ./pom.xml
-COPY common ./common
-COPY user-service/pom.xml ./user-service/pom.xml
-COPY user-service/src ./user-service/src
-
-# ====== 2) 打包 user-service（会自动编译 common-service）======
+COPY . ./
 RUN mvn -pl user-service -am -B package -DskipTests
 
-######################## run stage ##########################
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-
-# 把构建产物复制进运行镜像
-COPY --from=build \
-     /backend/user-service/target/user-service-1.0.0-SNAPSHOT.jar \
-     app.jar
-
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+RUN apk add --no-cache curl
+ENV JAVA_OPTS=""
+ENV SPRING_PROFILES_ACTIVE=
+COPY --from=build /workspace/user-service/target/user-service-*.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar /app/app.jar"]

@@ -184,7 +184,11 @@ export function OrderDetailPage() {
 
                         {canConfirm && (
                             <button
-                                onClick={() => confirmM.mutate()}
+                                onClick={async () => {
+                                    if (await confirm("确认收货", "确认已收到商品？确认后将无法撤销")) {
+                                        confirmM.mutate();
+                                    }
+                                }}
                                 disabled={confirmM.isPending}
                                 className="btn btn-primary disabled:opacity-50"
                             >
@@ -216,12 +220,12 @@ export function OrderDetailPage() {
 
             {/* 返回 */}
             <div className="flex gap-3">
-                <Link
-                    to={`/me/center/orders?role=${role === "seller" ? "seller" : "buyer"}`}
-                    className="text-blue-600 underline"
+                <button
+                    onClick={() => nav(role === "seller" ? "/me/center/orders?role=seller" : "/me/center/orders?role=buyer")}
+                    className="btn btn-primary text-sm"
                 >
-                    返回订单列表
-                </Link>
+                    返回我的订单
+                </button>
                 <Link to="/" className="text-blue-600 underline">
                     返回首页
                 </Link>

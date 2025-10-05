@@ -1,8 +1,7 @@
-# 本地开发 profile=local
-server:
-  port: 12650
-
 spring:
+  config:
+    activate:
+      on-profile: local
   datasource:
     url: jdbc:postgresql://localhost:15433/koalaswap_dev
     username: koalaswap
@@ -13,35 +12,36 @@ spring:
     show-sql: true
     properties:
       hibernate.jdbc.time_zone: UTC
-
-  # 如需 Redis + Pub/Sub（和 product-service 一致）
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    connect-retries: 5
+    postgresql-compatibility: "15"
   data:
     redis:
       host: localhost
       port: 16379
 
+server:
+  port: 12650
+
 app:
-  # ===== JWT（本地给出明确的值，避免占位符报错）=====
   jwt:
     secret: "p9P2JYpN4mVJXWm7XyQw6kBsF3uCz7rGQh5M8tQ2nA1rS6vY0kL9dH4eT8uZ3xB1"
     issuer: koalaswap
     access-token-minutes: 60
-
   product-service:
     internal-base-url: http://localhost:12648
   user-service:
     internal-base-url: http://localhost:12649
-
-
   order:
-    pending-expire-minutes: ${APP_ORDER_PENDING_EXPIRE_MINUTES:30}
-
-
+    pending-expire-minutes: 30
   token-freshness:
     cache-ttl-sec: 8
-    use-redis: true         # 如果你本机没起 redis，临时改为 false 也可以
+    use-redis: true
     pubsub-channel: auth:pv:changed
-
   order-events:
     channel: orders:completed
 
@@ -50,3 +50,12 @@ logging:
     com.koalaswap.common.security: DEBUG
     org.springframework.security: INFO
     com.koalaswap.order.security: DEBUG
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

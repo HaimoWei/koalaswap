@@ -10,8 +10,8 @@ export default defineConfig({
     tailwindcss(), // 启用 Tailwind v4
   ],
   server: {
-    host: true,
-    port: 4200,
-    strictPort: true
+    host: '127.0.0.1',  // 强制使用IPv4地址
+    port: 5173,  // 改用Vite默认端口
+    strictPort: false
   },
 });

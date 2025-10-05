@@ -1,34 +1,51 @@
-# ===============================
-# backend/product-service/src/main/resources/application.yml
-# 应用配置｜端口与数据源（通过环境变量注入）
-# ===============================
 server:
-  port: 8081   # 与 user-service 区分端口
+  port: ${SERVER_PORT:12648}
 
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://db:5432/koalaswap_dev}
+    username: ${SPRING_DATASOURCE_USERNAME:koalaswap}
+    password: ${SPRING_DATASOURCE_PASSWORD:secret}
   jpa:
     hibernate:
-      ddl-auto: none        # 使用现有 schema / Flyway，不让 JPA 自动改表
+      ddl-auto: none
     show-sql: true
     properties:
       hibernate.jdbc.time_zone: UTC
+      hibernate.query.literal_handling_mode: BIND
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    connect-retries: 5
+    postgresql-compatibility: "15"
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
 
 app:
+  jwt:
+    secret: ${APP_JWT_SECRET:}
   product:
-    max-images: 8
-  # AWS S3 配置（直接配置）
+    max-images: ${APP_PRODUCT_MAX_IMAGES:8}
+  user-service:
+    internal-base-url: ${APP_USER_SERVICE_INTERNAL_BASE_URL:http://user-service:8080}
+  file-service:
+    base-url: ${APP_FILE_SERVICE_BASE_URL:http://file-service:8080}
+  token-freshness:
+    cache-ttl-sec: ${APP_TOKEN_FRESHNESS_TTL_SEC:8}
+    use-redis: ${APP_TOKEN_FRESHNESS_USE_REDIS:true}
+    pubsub-channel: ${APP_TOKEN_FRESHNESS_CHANNEL:auth:pv:changed}
   aws:
-    region: ap-southeast-2
-    bucket-name: koalaswap
-    cdn-base-url: https://img.koalaswap.au
-    presigned-url-expiration-minutes: 15
+    region: ${AWS_REGION:ap-southeast-2}
+    bucket-name: ${S3_BUCKET:koalaswap}
+    cdn-base-url: ${CDN_BASE:https://d3367sa0s3hyt3.cloudfront.net}
+    presigned-url-expiration-minutes: ${AWS_PRESIGNED_MINUTES:15}
     upload:
-      max-file-size: 10485760  # 10MB
-      max-images-per-product: 8
+      max-file-size: ${APP_AWS_UPLOAD_MAX_FILE_SIZE:10485760}
+      max-images-per-product: ${APP_AWS_UPLOAD_MAX_IMAGES:8}
       allowed-mime-types:
         - image/jpeg
         - image/png
@@ -38,3 +55,18 @@ app:
         - .jpeg
         - .png
         - .webp
+
+logging:
+  level:
+    com.koalaswap.common.security: ${LOGGING_LEVEL_COM_KOALASWAP_COMMON_SECURITY:INFO}
+    org.springframework.security: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY:INFO}
+    com.koalaswap.product.security: ${LOGGING_LEVEL_COM_KOALASWAP_PRODUCT_SECURITY:INFO}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

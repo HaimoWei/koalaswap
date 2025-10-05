@@ -1,8 +1,7 @@
-# 本地开发 profile=local
-server:
-  port: 12651
-
 spring:
+  config:
+    activate:
+      on-profile: local
   datasource:
     url: jdbc:postgresql://localhost:15433/koalaswap_dev
     username: koalaswap
@@ -13,45 +12,55 @@ spring:
     show-sql: true
     properties:
       hibernate.jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    connect-retries: 5
+    postgresql-compatibility: "15"
   data:
     redis:
       host: localhost
       port: 16379
       database: 0
 
-# 自定义配置（与其它服务相同层级/前缀）
+server:
+  port: 12651
+
 app:
   token-freshness:
     cache-ttl-sec: 8
     use-redis: true
     pubsub-channel: auth:pv:changed
-
   jwt:
     secret: "p9P2JYpN4mVJXWm7XyQw6kBsF3uCz7rGQh5M8tQ2nA1rS6vY0kL9dH4eT8uZ3xB1"
     issuer: koalaswap
     access-token-minutes: 60
-
   order-events:
     enabled: true
     channel: orders:completed
-
-  # 依赖服务：指向本机其它服务的 local 端口（按你的现有习惯）
   services:
     user:
       base-url: http://localhost:12649
     product:
       base-url: http://localhost:12648
-
-  # 兼容键（与你其他服务相同风格）
   user-service:
     internal-base-url: http://localhost:12649
   product-service:
     internal-base-url: http://localhost:12648
 
-
-
 logging:
   level:
+    com.koalaswap.review: INFO
     com.koalaswap.common.security: DEBUG
-    com.koalaswap.review.security: DEBUG
     org.springframework.security: INFO
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

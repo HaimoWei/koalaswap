@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getFavorites, type FavoriteProductCard } from "../api/favorites";
 import { removeFavorite } from "../api/products";
 import type { ProductRes, Page } from "../api/types";
-import { ProductCard } from "../components/ProductCard";
+import { FavoriteProductCard } from "../components/FavoriteProductCard";
 
 function pickProduct(x: FavoriteProductCard): ProductRes {
     // 收藏接口里可能是 { product, favoritedAt, firstImageUrl }
@@ -78,25 +78,11 @@ export function MyFavoritesPage() {
                             const inactive = p.status && p.status !== "ACTIVE";
 
                             return (
-                                <div key={idx} className="relative">
-                                    {/* 正常商品卡片 */}
-                                    <ProductCard p={pForCard} />
-
-                                    {/* 失效商品的灰色遮罩 */}
-                                    {inactive && (
-                                        <div className="absolute inset-0 bg-gray-500/70 rounded-lg flex items-center justify-center">
-                                            <span className="text-white text-lg font-bold">已失效</span>
-                                        </div>
-                                    )}
-
-                                    {/* 取消收藏按钮 - 在最下方 */}
-                                    <button
-                                        onClick={() => onRemove(p.id)}
-                                        className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-10 px-4 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded transition-colors"
-                                    >
-                                        取消收藏
-                                    </button>
-                                </div>
+                                <FavoriteProductCard
+                                    key={idx}
+                                    product={pForCard}
+                                    onRemove={onRemove}
+                                />
                             );
                         })}
                     </div>

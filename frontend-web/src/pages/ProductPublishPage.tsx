@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { createProduct, updateProduct, getProduct, type Condition } from "../api/products";
 import { fetchAllCategories, type CategoryRes } from "../api/categories";
 import SimpleImageUploader from "../components/SimpleImageUploader";
+import { toastSuccess } from "../store/overlay";
 
 const CONDITIONS: { value: Condition; label: string }[] = [
     { value: "NEW", label: "全新" },
@@ -100,6 +101,7 @@ export default function ProductPublishPage() {
                 result = await createProduct(payload);
             }
 
+            toastSuccess(isEditing ? "商品更新成功" : "发布成功");
             // 成功后跳转商品详情
             nav(`/products/${result.id}`);
         } catch (err: any) {

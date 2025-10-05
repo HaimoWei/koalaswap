@@ -35,6 +35,9 @@ public class SecurityConfig {
                 // 所有文件上传相关接口需要认证
                 .requestMatchers("/api/files/**").authenticated()
 
+                // Actuator health endpoint
+                .requestMatchers("/actuator/health/**").permitAll()
+
                 // 其他请求默认需要认证
                 .anyRequest().authenticated()
             )

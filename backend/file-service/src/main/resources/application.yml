@@ -1,50 +1,119 @@
-# 默认配置文件（生产环境）
 server:
-  port: 8080
+  port: ${SERVER_PORT:12647}
 
 spring:
   application:
     name: file-service
-
-  profiles:
-    active: local  # 默认激活 local 环境
-
-  # Redis 配置
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      timeout: 2000ms
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      timeout: ${SPRING_DATA_REDIS_TIMEOUT:2000ms}
       lettuce:
         pool:
-          max-active: 8
-          max-idle: 8
+          max-active: ${SPRING_DATA_REDIS_POOL_MAX_ACTIVE:8}
+          max-idle: ${SPRING_DATA_REDIS_POOL_MAX_IDLE:8}
 
-# 应用配置
 app:
   jwt:
-    secret: ${JWT_SECRET:p9P2JYpN4mVJXWm7XyQw6kBsF3uCz7rGQh5M8tQ2nA1rS6vY0kL9dH4eT8uZ3xB1}
-
-  # Token 新鲜度配置
+    secret: ${APP_JWT_SECRET:}
   token-freshness:
-    use-redis: true
-    cache-ttl-sec: 8
-    pubsub-channel: auth:pv:changed
-
-  # 用户服务配置
+    use-redis: ${APP_TOKEN_FRESHNESS_USE_REDIS:true}
+    cache-ttl-sec: ${APP_TOKEN_FRESHNESS_TTL_SEC:8}
+    pubsub-channel: ${APP_TOKEN_FRESHNESS_CHANNEL:auth:pv:changed}
   user-service:
-    internal-base-url: ${USER_SERVICE_URL:http://localhost:12649}
-
-  # 文件配置
+    internal-base-url: ${APP_USER_SERVICE_INTERNAL_BASE_URL:http://user-service:8080}
   file:
     region: ${AWS_REGION:ap-southeast-2}
     bucket-name: ${S3_BUCKET:koalaswap}
     cdn-base-url: ${CDN_BASE:https://d3367sa0s3hyt3.cloudfront.net}
     presigned-url-expiration-minutes: ${AWS_PRESIGNED_MINUTES:15}
+    categories:
+      avatar:
+        max-file-size: ${APP_FILE_AVATAR_MAX_FILE_SIZE:5242880}
+        path-prefix: ${APP_FILE_AVATAR_PATH_PREFIX:images/users}
+        allowed-mime-types:
+          - image/jpeg
+          - image/png
+          - image/webp
+        allowed-extensions:
+          - .jpg
+          - .jpeg
+          - .png
+          - .webp
+        enable-compress: ${APP_FILE_AVATAR_ENABLE_COMPRESS:true}
+        enable-watermark: ${APP_FILE_AVATAR_ENABLE_WATERMARK:false}
+      product:
+        max-file-size: ${APP_FILE_PRODUCT_MAX_FILE_SIZE:10485760}
+        path-prefix: ${APP_FILE_PRODUCT_PATH_PREFIX:images/users}
+        allowed-mime-types:
+          - image/jpeg
+          - image/png
+          - image/webp
+        allowed-extensions:
+          - .jpg
+          - .jpeg
+          - .png
+          - .webp
+        enable-compress: ${APP_FILE_PRODUCT_ENABLE_COMPRESS:true}
+        enable-watermark: ${APP_FILE_PRODUCT_ENABLE_WATERMARK:false}
+      chat:
+        max-file-size: ${APP_FILE_CHAT_MAX_FILE_SIZE:20971520}
+        path-prefix: ${APP_FILE_CHAT_PATH_PREFIX:files/chats}
+        allowed-mime-types:
+          - image/jpeg
+          - image/png
+          - image/webp
+          - image/gif
+        allowed-extensions:
+          - .jpg
+          - .jpeg
+          - .png
+          - .webp
+          - .gif
+        enable-compress: ${APP_FILE_CHAT_ENABLE_COMPRESS:true}
+        enable-watermark: ${APP_FILE_CHAT_ENABLE_WATERMARK:false}
+      document:
+        max-file-size: ${APP_FILE_DOCUMENT_MAX_FILE_SIZE:52428800}
+        path-prefix: ${APP_FILE_DOCUMENT_PATH_PREFIX:files/documents}
+        allowed-mime-types:
+          - application/pdf
+          - application/msword
+          - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+        allowed-extensions:
+          - .pdf
+          - .doc
+          - .docx
+        enable-compress: ${APP_FILE_DOCUMENT_ENABLE_COMPRESS:false}
+        enable-watermark: ${APP_FILE_DOCUMENT_ENABLE_WATERMARK:false}
+      assets:
+        max-file-size: ${APP_FILE_ASSETS_MAX_FILE_SIZE:5242880}
+        path-prefix: ${APP_FILE_ASSETS_PATH_PREFIX:assets}
+        allowed-mime-types:
+          - image/svg+xml
+          - image/png
+          - image/webp
+          - image/jpeg
+        allowed-extensions:
+          - .svg
+          - .png
+          - .webp
+          - .jpg
+          - .jpeg
+        enable-compress: ${APP_FILE_ASSETS_ENABLE_COMPRESS:false}
+        enable-watermark: ${APP_FILE_ASSETS_ENABLE_WATERMARK:false}
 
-# 日志配置
 logging:
   level:
-    com.koalaswap.common.security: INFO
-    com.koalaswap.file: INFO
-    org.springframework.security: WARN
+    com.koalaswap.common.security: ${LOGGING_LEVEL_COM_KOALASWAP_COMMON_SECURITY:INFO}
+    com.koalaswap.file: ${LOGGING_LEVEL_COM_KOALASWAP_FILE:INFO}
+    org.springframework.security: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY:WARN}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

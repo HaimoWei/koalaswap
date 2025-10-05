@@ -1,33 +1,35 @@
-# 本地开发专用：直连你本机或 docker-compose 暴露的 Postgres
-server:
-  port: 12648
-
 spring:
+  config:
+    activate:
+      on-profile: local
   datasource:
-    url: jdbc:postgresql://localhost:15433/koalaswap_dev   # ← 改成你 compose 暴露的端口/库名
-    username: koalaswap                                    # ← 改成你的用户名
-    password: secret                                       # ← 改成你的密码
+    url: jdbc:postgresql://localhost:15433/koalaswap_dev
+    username: koalaswap
+    password: secret
   jpa:
     hibernate:
       ddl-auto: none
     show-sql: true
     properties:
       hibernate.jdbc.time_zone: UTC
-      hibernate.query.literal_handling_mode: BIND   # ← 很关键
-  # Redis 连接
+      hibernate.query.literal_handling_mode: BIND
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    connect-retries: 5
+    postgresql-compatibility: "15"
   data:
     redis:
       host: localhost
       port: 16379
-# 如果你启用了 Flyway，就在本地也开（否则删掉这块）
-#  flyway:
-#    enabled: true
-#    baseline-on-migrate: true
+
+server:
+  port: 12648
 
 app:
   jwt:
-    # product-service 需要用同一把密钥校验 user-service 发的 JWT！
-    # 和 user-service 的 app.jwt.secret 保持一致（≥32 字节）
     secret: "p9P2JYpN4mVJXWm7XyQw6kBsF3uCz7rGQh5M8tQ2nA1rS6vY0kL9dH4eT8uZ3xB1"
   product:
     max-images: 8
@@ -35,18 +37,17 @@ app:
     internal-base-url: http://localhost:12649
   file-service:
     base-url: http://localhost:12647
-  tokenFreshness:
-    cache-ttl-sec: 8   # 建议 5~10；想几乎秒杀可设 0~2（0=禁用缓存）
-    use-redis: true   # 使用 RedisProvider
+  token-freshness:
+    cache-ttl-sec: 8
+    use-redis: true
     pubsub-channel: auth:pv:changed
-  # AWS S3 配置（本地开发）
   aws:
     region: ${AWS_REGION:ap-southeast-2}
     bucket-name: ${S3_BUCKET:koalaswap}
     cdn-base-url: ${CDN_BASE:https://d3367sa0s3hyt3.cloudfront.net}
     presigned-url-expiration-minutes: ${AWS_PRESIGNED_MINUTES:15}
     upload:
-      max-file-size: 10485760  # 10MB
+      max-file-size: 10485760
       max-images-per-product: 8
       allowed-mime-types:
         - image/jpeg
@@ -58,9 +59,17 @@ app:
         - .png
         - .webp
 
-
 logging:
   level:
     com.koalaswap.common.security: DEBUG
     org.springframework.security: INFO
-    com.koalaswap.product.security: DEBUG   # 订阅/失效日志
+    com.koalaswap.product.security: DEBUG
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

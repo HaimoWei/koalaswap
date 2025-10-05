@@ -13,7 +13,7 @@ import java.util.UUID;
 /**
  * 通过调用 user-service 内部接口获取 token 版本号。
  * [MODIFIED] 改为复用共享的 L1（TokenVersionCache），不在类内自建 LoadingCache。
- * 启用条件：app.tokenFreshness.useRedis=false（或缺省）且存在 app.userService.internalBaseUrl。
+ * 启用条件：app.token-freshness.use-redis=false（或缺省）且存在 app.user-service.internal-base-url。
  */
 @Slf4j
 @Component

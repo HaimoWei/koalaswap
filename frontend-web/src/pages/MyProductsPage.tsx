@@ -39,6 +39,8 @@ export function MyProductsPage() {
                 <h1 className="text-xl font-semibold text-gray-900">我发布的商品</h1>
                 <Link
                   to="/publish"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-primary)] text-black shadow hover:brightness-105 transition-colors text-sm"
                   title="发布闲置"
                 >

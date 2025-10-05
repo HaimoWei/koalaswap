@@ -54,6 +54,7 @@ public class SecurityConfig {
                         .requestMatchers("/", "/index.html", "/static/**", "/assets/**").permitAll()
                         // 其余聊天接口必须认证
                         .requestMatchers("/api/chat/**").authenticated()
+                        .requestMatchers("/actuator/health/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(eh -> eh

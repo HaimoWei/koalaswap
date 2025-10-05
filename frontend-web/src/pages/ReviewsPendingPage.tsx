@@ -200,7 +200,7 @@ function GivenRow({ r, onAppend }: { r: ReviewRes; onAppend: () => void }) {
             {/* 只保留【写追评】 */}
             <button
                 onClick={onAppend}
-                className="btn btn-secondary text-sm"
+                className="btn btn-primary text-sm"
             >
                 写追评
             </button>

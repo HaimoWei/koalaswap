@@ -47,8 +47,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/logout").authenticated()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/brief", "/api/users/*/brief").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/users/*/public").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/health/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/internal/**").permitAll() // 给内部探针放行
+                        .requestMatchers("/actuator/health/**").permitAll() // Docker健康检查
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(eh -> eh

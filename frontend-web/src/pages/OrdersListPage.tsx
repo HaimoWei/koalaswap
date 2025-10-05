@@ -37,7 +37,7 @@ function OrderCard({ o }: { o: OrderRes }) {
                 <div className="text-xs text-gray-500 mt-1">创建时间：{new Date(o.createdAt).toLocaleString()}</div>
             </div>
             <div className="flex flex-col items-end justify-between">
-                <Link to={`/orders/${o.id}`} className="btn btn-secondary text-sm">
+                <Link to={`/orders/${o.id}`} className="btn btn-primary text-sm">
                     查看详情
                 </Link>
             </div>

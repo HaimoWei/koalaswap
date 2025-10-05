@@ -76,7 +76,7 @@ This project is licensed under the MIT License.
 ./mvnw -pl product-service -am clean package -DskipTests
 ./mvnw -pl product-service spring-boot:run -Dspring-boot.run.profiles=local
 
-./mvnw -pl common -am -DskipTests clean install
+./mvnw -pl common-service -am -DskipTests clean install
 ./mvnw -pl user-service -DskipTests clean compile
 ./mvnw -pl product-service -DskipTests clean compile
 ./mvnw -pl order-service -DskipTests clean compile
@@ -92,6 +92,9 @@ This project is licensed under the MIT License.
 ./mvnw -pl chat-service spring-boot:run -Dspring-boot.run.profiles=local
 ./mvnw -pl file-service spring-boot:run -Dspring-boot.run.profiles=local
 ./mvnw -pl gateway-service spring-boot:run -Dspring-boot.run.profiles=local
+
+- 日常一键启动：bash scripts/run-backend-local.sh
+- 仅重启服务：bash scripts/run-backend-local.sh --skip-build
 
 docker compose down -v
 docker compose up -d db

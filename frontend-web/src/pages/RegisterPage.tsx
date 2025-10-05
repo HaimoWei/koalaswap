@@ -15,47 +15,61 @@ const registerSchema = z.object({
 export default function RegisterPage() {
     const nav = useNavigate();
     const [sp] = useSearchParams();
-    const next = useMemo(() => sp.get("next") || "/", [sp]);
+    const next = useMemo(() => {
+        const raw = sp.get("next");
+        if (!raw) return "/";
+        try {
+            const url = new URL(raw, window.location.origin);
+            if (url.origin !== window.location.origin) return "/";
+            return url.pathname + url.search + url.hash;
+        } catch {
+            return raw.startsWith("/") ? raw : "/";
+        }
+    }, [sp]);
     const token = useAuthStore((s) => s.token);
-    const [canGoBack, setCanGoBack] = useState(false);
 
     useEffect(() => {
         if (token) nav(next, { replace: true });
     }, [token, next, nav]);
-    useEffect(() => { setCanGoBack(window.history.length > 1); }, []);
-
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* 页头 */}
-            <header className="bg-[var(--color-surface)] border-b border-[var(--color-border)]">
-                <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-                    <div className="font-bold text-xl cursor-pointer" onClick={() => nav("/")}>KoalaSwap</div>
-                    <button onClick={() => (canGoBack ? nav(-1) : nav("/"))} className="text-sm text-gray-600 hover:text-[var(--color-text-strong)]">继续浏览</button>
+            <header className="border-b border-[var(--color-border)] bg-[var(--color-surface)]">
+                <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+                    <div className="cursor-pointer text-xl font-bold" onClick={() => nav("/")}>KoalaSwap</div>
+                    <button
+                        onClick={() => nav(next)}
+                        className="text-sm text-gray-600 transition hover:text-[var(--color-text-strong)]"
+                    >
+                        继续浏览
+                    </button>
                 </div>
             </header>
 
-            {/* 主体：两栏布局 */}
-            <main className="max-w-6xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                {/* 左侧品牌区 */}
+            <main className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-10 md:grid-cols-2">
                 <section className="hidden md:block">
-                    <h1 className="text-3xl font-extrabold">创建你的账户</h1>
-                    <p className="mt-3 text-gray-600">注册后可发布闲置、与卖家聊天、管理订单与收藏。</p>
-                    <ul className="mt-6 space-y-2 text-gray-700">
+                    <p className="text-xs tracking-wide text-[var(--color-secondary-700)]">WELCOME TO KOALASWAP</p>
+                    <h1 className="mt-2 text-3xl font-extrabold text-[var(--color-text-strong)]">创建你的账户</h1>
+                    <p className="mt-3 text-sm text-gray-600">注册后可发布闲置、与卖家聊天、管理订单与收藏。</p>
+                    <ul className="mt-6 space-y-3 text-sm text-gray-700">
                         <li>• 邮箱验证保障账户安全</li>
                         <li>• 随时管理你的发布与收藏</li>
                         <li>• 即时消息与订单提醒</li>
                     </ul>
                 </section>
 
-                {/* 右侧注册卡片 */}
                 <section>
                     <div className="card p-6">
-                        <div className="mb-1 text-2xl font-semibold">注册新账户</div>
-                        <div className="text-xs text-gray-500 mb-4">完成注册后请前往邮箱完成验证</div>
+                        <header className="mb-5 space-y-1">
+                            <div className="text-xs tracking-wide text-[var(--color-secondary-700)]">REGISTER</div>
+                            <div className="text-2xl font-semibold text-[var(--color-text-strong)]">注册新账户</div>
+                            <div className="text-xs text-gray-500">完成注册后请前往邮箱完成验证</div>
+                        </header>
                         <RegisterForm />
                         <div className="mt-4 text-sm text-gray-600">
                             已有账号？
-                            <Link className="ml-1 underline" to={`/login?next=${encodeURIComponent(next)}`}>直接登录</Link>
+                            <Link className="ml-1 font-medium text-[var(--color-secondary)] underline" to={`/login?next=${encodeURIComponent(next)}`}>
+                                直接登录
+                            </Link>
                         </div>
                     </div>
                 </section>
@@ -79,24 +93,28 @@ function RegisterForm() {
     });
 
     return (
-        <form onSubmit={onSubmit} className="space-y-3">
+        <form onSubmit={onSubmit} className="space-y-4">
             <div>
-                <label className="block text-sm mb-1">昵称</label>
-                <input className="w-full border rounded px-3 py-2 text-sm" placeholder="你的昵称" {...register("displayName")} />
-                {formState.errors.displayName && <p className="text-xs text-red-600 mt-1">{formState.errors.displayName.message}</p>}
+                <label className="mb-1 block text-sm text-[var(--color-text-strong)]">昵称</label>
+                <input className="input text-sm" placeholder="你的昵称" {...register("displayName")} />
+                {formState.errors.displayName && <p className="mt-1 text-xs text-red-600">{formState.errors.displayName.message}</p>}
             </div>
             <div>
-                <label className="block text-sm mb-1">邮箱</label>
-                <input className="w-full border rounded px-3 py-2 text-sm" placeholder="you@example.com" {...register("email")} />
-                {formState.errors.email && <p className="text-xs text-red-600 mt-1">{formState.errors.email.message}</p>}
+                <label className="mb-1 block text-sm text-[var(--color-text-strong)]">邮箱</label>
+                <input className="input text-sm" placeholder="you@example.com" {...register("email")} />
+                {formState.errors.email && <p className="mt-1 text-xs text-red-600">{formState.errors.email.message}</p>}
             </div>
             <div>
-                <label className="block text-sm mb-1">密码</label>
-                <input type="password" className="w-full border rounded px-3 py-2 text-sm" placeholder="至少 6 位" {...register("password")} />
-                {formState.errors.password && <p className="text-xs text-red-600 mt-1">{formState.errors.password.message}</p>}
+                <label className="mb-1 block text-sm text-[var(--color-text-strong)]">密码</label>
+                <input type="password" className="input text-sm" placeholder="至少 6 位" {...register("password")} />
+                {formState.errors.password && <p className="mt-1 text-xs text-red-600">{formState.errors.password.message}</p>}
             </div>
-            {serverMsg && <div className="text-xs text-gray-600 bg-gray-50 border rounded p-2">{serverMsg}</div>}
-            <button className="w-full bg-black text-white rounded py-2 text-sm disabled:opacity-60" disabled={formState.isSubmitting}>
+            {serverMsg && (
+                <div className="rounded-lg border border-[var(--info)] bg-[var(--info-bg)] px-3 py-2 text-xs text-[var(--info)]">
+                    {serverMsg}
+                </div>
+            )}
+            <button className="btn w-full bg-[var(--color-primary)] text-[var(--color-text-strong)] hover:bg-[var(--color-primary-600)] disabled:opacity-60" disabled={formState.isSubmitting}>
                 {formState.isSubmitting ? "提交中..." : "注册"}
             </button>
         </form>
