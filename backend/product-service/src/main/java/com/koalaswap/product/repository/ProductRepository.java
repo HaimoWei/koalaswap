@@ -64,11 +64,14 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
         return searchByLikeWithStatus(ProductStatus.ACTIVE, kwLike, catId, minPrice, maxPrice, excludeSellerId, sellerId, pageable);
     }
 
-    // 首页：仅某状态（通常 ACTIVE）
+    // 首页：仅某状态（通常 ACTIVE），优先返回男装（categoryId=2011）
     @Query("""
         select p from Product p
         where p.status = :status
           and (:excludeSellerId is null or p.sellerId <> :excludeSellerId)
+        order by
+          case when p.categoryId = 2011 then 0 else 1 end,
+          p.createdAt desc
     """)
     Page<Product> homeWithStatus(@Param("status") ProductStatus status,
                                  @Param("excludeSellerId") UUID excludeSellerId,

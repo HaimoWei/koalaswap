@@ -1,12 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
 const SLIDES = [
-  // 科技数码
-  "https://images.unsplash.com/photo-1518779578993-ec3579fee39f?auto=format&fit=crop&w=1600&q=80",
-  // 时尚服饰
-  "https://images.unsplash.com/photo-1512499617640-c2f999098c32?auto=format&fit=crop&w=1600&q=80",
-  // 家居生活
-  "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1600&q=80",
+  "https://d3367sa0s3hyt3.cloudfront.net/assets/misc/8873afe3-5a6c-43e8-86ce-1728219b261d/1759783429877-92548f6c-banners_banner-1.jpg",
+  "https://d3367sa0s3hyt3.cloudfront.net/assets/misc/8873afe3-5a6c-43e8-86ce-1728219b261d/1759783430279-75f3d79e-banners_banner-2.jpg",
+  "https://d3367sa0s3hyt3.cloudfront.net/assets/misc/8873afe3-5a6c-43e8-86ce-1728219b261d/1759783430424-8498dc58-banners_banner-3.jpg",
 ];
 
 export function PromoBanner() {
@@ -29,10 +26,10 @@ export function PromoBanner() {
   function go(i: number) { setIdx((i + total) % total); }
 
   return (
-    <section className="h-full" onMouseEnter={stop} onMouseLeave={start}>
-      <div className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] shadow-[var(--shadow-1)] h-full">
+    <section className="w-full" onMouseEnter={stop} onMouseLeave={start}>
+      <div className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] shadow-[var(--shadow-1)] aspect-[21/9]">
         {/* Slides */}
-        <div className="relative w-full h-full min-h-[200px] bg-[var(--color-muted)]">
+        <div className="relative w-full h-full bg-[var(--color-muted)]">
           {SLIDES.map((src, i) => (
             <img
               key={i}

@@ -60,7 +60,8 @@
       "Bash(npx vite:*)",
       "Bash(ssh:*)",
       "Bash(scp:*)",
-      "Bash(wsl ls:*)"
+      "Bash(wsl ls:*)",
+      "Bash(aws ecr describe-images:*)"
     ],
     "deny": [],
     "ask": []
