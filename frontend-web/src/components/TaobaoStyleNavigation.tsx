@@ -86,8 +86,8 @@ export function TaobaoStyleNavigation({ className = "" }: TaobaoStyleNavigationP
   return (
     <div className={`relative ${className}`} onMouseLeave={handleMouseLeave}>
       {/* 左侧分类菜单 */}
-      <div className="w-48 bg-gray-50 rounded-lg border border-gray-200 overflow-hidden h-80 shadow-sm">
-        <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2">
+      <div className="w-64 bg-gray-50 rounded-lg border border-gray-200 overflow-hidden shadow-sm h-full">
+        <div className="bg-gradient-to-r from-amber-400 to-orange-400 text-gray-800 px-4 py-2">
           <div className="flex items-center gap-2">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -102,7 +102,7 @@ export function TaobaoStyleNavigation({ className = "" }: TaobaoStyleNavigationP
               key={category.id}
               className={`px-4 py-2.5 cursor-pointer transition-colors relative group ${
                 hoveredCategory === category.id
-                  ? 'bg-red-50 text-red-600'
+                  ? 'bg-orange-50 text-orange-700'
                   : 'hover:bg-gray-50 text-gray-700'
               }`}
               onMouseEnter={() => handleCategoryHover(category.id)}
@@ -112,7 +112,7 @@ export function TaobaoStyleNavigation({ className = "" }: TaobaoStyleNavigationP
                 <span className="text-sm">{category.name}</span>
                 <svg
                   className={`w-3 h-3 transition-colors ${
-                    hoveredCategory === category.id ? 'text-red-500' : 'text-gray-400'
+                    hoveredCategory === category.id ? 'text-orange-500' : 'text-gray-400'
                   }`}
                   fill="none"
                   stroke="currentColor"
@@ -124,7 +124,7 @@ export function TaobaoStyleNavigation({ className = "" }: TaobaoStyleNavigationP
 
               {/* 悬浮指示条 */}
               {hoveredCategory === category.id && (
-                <div className="absolute right-0 top-0 bottom-0 w-0.5 bg-red-500"></div>
+                <div className="absolute right-0 top-0 bottom-0 w-0.5 bg-orange-500"></div>
               )}
             </div>
           ))}
@@ -133,7 +133,7 @@ export function TaobaoStyleNavigation({ className = "" }: TaobaoStyleNavigationP
 
       {/* 右侧多级分类悬浮层（允许高度超过左侧；内部滚动） */}
       {hoveredCategory && (
-        <div className="absolute left-48 top-0 bg-white shadow-xl border border-gray-200 z-50 w-[800px] max-h-[80vh] min-h-[20rem] overflow-y-auto rounded-r-xl">
+        <div className="absolute left-64 top-0 bg-white shadow-xl border border-gray-200 z-50 w-[800px] max-h-[80vh] min-h-[20rem] overflow-y-auto rounded-r-xl">
           <div className="p-6">
             {subCategories[hoveredCategory] ? (
               <>
@@ -149,10 +149,10 @@ export function TaobaoStyleNavigation({ className = "" }: TaobaoStyleNavigationP
                     <div key={subCategory.id} className="bg-gray-50 rounded-lg p-4 hover:bg-blue-50 hover:shadow-md transition-all duration-200">
                       {/* 二级分类标题 */}
                       <h3
-                        className="text-base font-semibold text-gray-800 cursor-pointer hover:text-red-600 mb-3 flex items-center"
+                        className="text-base font-semibold text-gray-800 cursor-pointer hover:text-orange-600 mb-3 flex items-center"
                         onClick={() => navigateToCategory(subCategory.id)}
                       >
-                        <span className="w-1 h-4 bg-red-500 rounded-full mr-2"></span>
+                        <span className="w-1 h-4 bg-orange-500 rounded-full mr-2"></span>
                         {subCategory.name}
                       </h3>
 
@@ -162,7 +162,7 @@ export function TaobaoStyleNavigation({ className = "" }: TaobaoStyleNavigationP
                           {subSubCategories[subCategory.id].slice(0, 5).map((subSubCategory) => (
                             <button
                               key={subSubCategory.id}
-                              className="block text-sm text-gray-600 hover:text-red-600 hover:bg-white transition-all duration-150 w-full text-left py-1 px-2 rounded-md"
+                              className="block text-sm text-gray-600 hover:text-orange-600 hover:bg-white transition-all duration-150 w-full text-left py-1 px-2 rounded-md"
                               onClick={() => navigateToCategory(subSubCategory.id)}
                             >
                               • {subSubCategory.name}
@@ -170,7 +170,7 @@ export function TaobaoStyleNavigation({ className = "" }: TaobaoStyleNavigationP
                           ))}
                           {subSubCategories[subCategory.id].length > 5 && (
                             <button
-                              className="text-sm text-red-500 hover:text-red-600 transition-colors mt-2 flex items-center"
+                              className="text-sm text-orange-600 hover:text-orange-700 transition-colors mt-2 flex items-center"
                               onClick={() => navigateToCategory(subCategory.id)}
                             >
                               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,7 +185,7 @@ export function TaobaoStyleNavigation({ className = "" }: TaobaoStyleNavigationP
                       {/* 如果没有三级分类，显示查看全部 */}
                       {!subSubCategories[subCategory.id] && (
                         <button
-                          className="text-sm text-gray-500 hover:text-red-600 transition-colors mt-2 flex items-center"
+                          className="text-sm text-gray-500 hover:text-orange-600 transition-colors mt-2 flex items-center"
                           onClick={() => navigateToCategory(subCategory.id)}
                         >
                           <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -202,7 +202,7 @@ export function TaobaoStyleNavigation({ className = "" }: TaobaoStyleNavigationP
                 {subCategories[hoveredCategory].length > 12 && (
                   <div className="mt-8 pt-6 border-t border-gray-200 text-center">
                     <button
-                      className="inline-flex items-center px-6 py-3 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 rounded-lg font-medium transition-all duration-200"
+                      className="inline-flex items-center px-6 py-3 bg-orange-50 hover:bg-orange-100 text-orange-700 hover:text-orange-800 rounded-lg font-medium transition-all duration-200"
                       onClick={() => navigateToCategory(hoveredCategory)}
                     >
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
