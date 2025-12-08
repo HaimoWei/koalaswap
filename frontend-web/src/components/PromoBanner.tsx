@@ -34,7 +34,7 @@ export function PromoBanner() {
             <img
               key={i}
               src={src}
-              alt={`活动 ${i + 1}`}
+              alt={`Promotional banner ${i + 1}`}
               className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${i === idx ? 'opacity-100' : 'opacity-0'}`}
               loading="lazy"
               decoding="async"
@@ -43,13 +43,13 @@ export function PromoBanner() {
         </div>
 
         {/* Controls */}
-        <button aria-label="上一张" onClick={() => go(idx - 1)} className="absolute left-2 top-1/2 -translate-y-1/2 btn btn-secondary btn-sm opacity-80">‹</button>
-        <button aria-label="下一张" onClick={() => go(idx + 1)} className="absolute right-2 top-1/2 -translate-y-1/2 btn btn-secondary btn-sm opacity-80">›</button>
+        <button aria-label="Previous banner" onClick={() => go(idx - 1)} className="absolute left-2 top-1/2 -translate-y-1/2 btn btn-secondary btn-sm opacity-80">‹</button>
+        <button aria-label="Next banner" onClick={() => go(idx + 1)} className="absolute right-2 top-1/2 -translate-y-1/2 btn btn-secondary btn-sm opacity-80">›</button>
 
         {/* Dots */}
         <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2">
           {SLIDES.map((_, i) => (
-            <button key={i} aria-label={`第 ${i + 1} 张`} onClick={() => go(i)} className={`w-2.5 h-2.5 rounded-full ${i === idx ? 'bg-[var(--color-primary)]' : 'bg-white/70'}`}></button>
+            <button key={i} aria-label={`Go to banner ${i + 1}`} onClick={() => go(i)} className={`w-2.5 h-2.5 rounded-full ${i === idx ? 'bg-[var(--color-primary)]' : 'bg-white/70'}`}></button>
           ))}
         </div>
       </div>

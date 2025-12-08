@@ -35,22 +35,22 @@ export default function FabDock() {
 
     return (
         <>
-            <div className="fixed right-4 sm:right-6 bottom-24 z-[999] flex flex-col gap-3" aria-label="快捷操作">
+            <div className="fixed right-4 sm:right-6 bottom-24 z-[999] flex flex-col gap-3" aria-label="Quick actions">
                 <ActionButton
                     icon="plus"
-                    label="发布"
+                    label="List item"
                     variant="primary"
                     onClick={handlePublish}
                 />
                 <ActionButton
                     icon="chat"
-                    label="消息"
+                    label="Messages"
                     variant="secondary"
                     onClick={handleChat}
                 />
                 <ActionButton
                     icon="support"
-                    label="客服"
+                    label="Support"
                     variant="secondary"
                     onClick={handleSupport}
                 />

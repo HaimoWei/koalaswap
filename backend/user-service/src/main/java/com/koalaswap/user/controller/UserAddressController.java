@@ -40,7 +40,7 @@ public class UserAddressController {
     public ApiResponse<AddressRes> getAddress(@PathVariable UUID id, Authentication auth) {
         var userId = SecuritySupport.requireUserId(auth);
         var address = addressRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new RuntimeException("地址不存在或无权访问"));
+                .orElseThrow(() -> new RuntimeException("The address does not exist or you do not have permission to access it."));
         return ApiResponse.ok(toAddressRes(address));
     }
 
@@ -80,7 +80,7 @@ public class UserAddressController {
             Authentication auth) {
         var userId = SecuritySupport.requireUserId(auth);
         var address = addressRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new RuntimeException("地址不存在或无权访问"));
+                .orElseThrow(() -> new RuntimeException("The address does not exist or you do not have permission to access it."));
 
         // 如果要设置为默认地址，先清除用户现有的默认地址
         boolean isDefault = request.isDefault() != null && request.isDefault();
@@ -111,7 +111,7 @@ public class UserAddressController {
 
         // 验证地址存在且属于当前用户
         var address = addressRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new RuntimeException("地址不存在或无权访问"));
+                .orElseThrow(() -> new RuntimeException("The address does not exist or you do not have permission to access it."));
 
         addressRepository.deleteByIdAndUserId(id, userId);
         return ApiResponse.ok(null);
@@ -123,7 +123,7 @@ public class UserAddressController {
     public ApiResponse<AddressRes> setDefaultAddress(@PathVariable UUID id, Authentication auth) {
         var userId = SecuritySupport.requireUserId(auth);
         var address = addressRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new RuntimeException("地址不存在或无权访问"));
+                .orElseThrow(() -> new RuntimeException("The address does not exist or you do not have permission to access it."));
 
         // 清除用户现有的默认地址，设置新的默认地址
         addressRepository.clearDefaultForUser(userId);

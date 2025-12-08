@@ -4,83 +4,83 @@ type Section = { heading?: string; body?: string; items?: string[] };
 type InfoContent = { title: string; intro?: string; sections?: Section[] };
 
 const CONTENT: Record<string, InfoContent> = {
-  // 关于我们
+  // About us
   brand: {
-    title: "品牌故事",
-    intro: "KoalaSwap 致力于打造更可信赖、易使用的二手交易平台。我们相信物尽其用与可持续消费。",
+    title: "Our story",
+    intro: "KoalaSwap is committed to building a more trustworthy and easy-to-use marketplace for pre-owned items. We believe in making the most of every item and promoting sustainable consumption.",
     sections: [
-      { heading: "我们的愿景", body: "让闲置流转更高效，让好物被更多人看见。" },
-      { heading: "核心价值", items: ["真实可信", "交易安全", "极致体验"] },
+      { heading: "Our vision", body: "Make the circulation of idle items more efficient and let great items be seen by more people." },
+      { heading: "Core values", items: ["Trust and authenticity", "Safe transactions", "Great user experience"] },
     ],
   },
   join: {
-    title: "加入我们",
-    intro: "热招产品、前端、后端、运营等岗位，欢迎发送简历至 hr@koalaswap.com（示例）。",
+    title: "Join us",
+    intro: "We are hiring product managers, frontend engineers, backend engineers, and operations specialists. Please send your resume to hr@koalaswap.com (example).",
     sections: [
-      { heading: "开放职位", items: ["产品经理", "前端工程师", "后端工程师", "测试工程师", "运营专员"] },
-      { heading: "我们提供", items: ["弹性办公", "成长空间", "有竞争力的薪酬"] },
+      { heading: "Open roles", items: ["Product Manager", "Frontend Engineer", "Backend Engineer", "QA Engineer", "Operations Specialist"] },
+      { heading: "What we offer", items: ["Flexible working", "Room to grow", "Competitive compensation"] },
     ],
   },
   press: {
-    title: "媒体报道",
-    intro: "如需媒体合作与采访，请联系 pr@koalaswap.com（示例）。",
+    title: "Press & media",
+    intro: "For press inquiries or interviews, please contact pr@koalaswap.com (example).",
     sections: [
-      { heading: "最新动态", body: "这里展示公司的新闻稿、里程碑与社区活动回顾。" },
+      { heading: "Latest updates", body: "Use this section to showcase press releases, milestones, and community event recaps." },
     ],
   },
 
-  // 帮助中心
+  // Help center
   guide: {
-    title: "新手指南",
-    intro: "几步上手 KoalaSwap：注册账号、完善资料、发布商品、在线沟通、完成交易。",
+    title: "Getting started",
+    intro: "Get started with KoalaSwap in a few steps: sign up, complete your profile, list your items, chat online, and complete your trade.",
     sections: [
-      { heading: "建议与提示", items: ["完善商品详情能提升成交率", "使用站内聊天沟通细节", "谨防钓鱼链接，切勿脱离平台交易"] },
+      { heading: "Tips & suggestions", items: ["More detailed listings lead to higher conversion", "Use in-app chat to discuss details", "Beware of phishing links and avoid off-platform payments"] },
     ],
   },
   safety: {
-    title: "交易保障",
-    intro: "我们通过风控校验、评价体系与举报通道，尽力保障交易安全。",
+    title: "Safety & protection",
+    intro: "We use risk controls, review systems, and reporting channels to help keep your trades safe.",
     sections: [
-      { heading: "安全指南", items: ["不透露敏感信息", "当面交易注意财物安全", "平台内完成沟通与支付流程"] },
+      { heading: "Safety guidelines", items: ["Never share sensitive information", "Stay aware of your surroundings when meeting in person", "Complete communication and payments within the platform"] },
     ],
   },
   support: {
-    title: "联系客服",
-    intro: "如遇问题可在“我的-帮助与反馈”中提交，或发送邮件至 support@koalaswap.com（示例）。",
+    title: "Contact support",
+    intro: "If you have any issues, submit a ticket via “My > Help & Feedback” or email support@koalaswap.com (example).",
   },
 
-  // 政策与条款
+  // Policies & terms
   terms: {
-    title: "用户协议",
-    intro: "本页面为演示用的占位内容，正式协议以平台发布为准。",
+    title: "User agreement",
+    intro: "This page is placeholder content for demonstration purposes. The official agreement is subject to the platform’s published terms.",
     sections: [
-      { heading: "总则", body: "使用本服务即视为同意遵守平台相关规则与政策。" },
-      { heading: "用户义务", items: ["依法发布与交易", "尊重他人权益", "遵守社区规范"] },
+      { heading: "General", body: "By using this service, you agree to comply with the platform’s rules and policies." },
+      { heading: "User obligations", items: ["Publish and trade in accordance with the law", "Respect the rights of others", "Follow community guidelines"] },
     ],
   },
   privacy: {
-    title: "隐私政策",
-    intro: "我们重视您的隐私，仅在法律允许与业务必要的前提下收集与使用您的信息。",
+    title: "Privacy policy",
+    intro: "We value your privacy and only collect and use your information where legally allowed and necessary for business operations.",
     sections: [
-      { heading: "信息使用", items: ["用于提供与优化服务", "提升安全与风控能力"] },
+      { heading: "Use of information", items: ["To provide and improve our services", "To enhance security and risk control"] },
     ],
   },
   rules: {
-    title: "平台规则",
-    intro: "为维护健康的交易生态，我们对违规行为有明确的处理机制。",
+    title: "Platform rules",
+    intro: "To maintain a healthy trading ecosystem, we have clear policies for handling violations.",
     sections: [
-      { heading: "常见违规", items: ["售卖违禁品", "欺诈与钓鱼", "恶意评价与骚扰"] },
+      { heading: "Common violations", items: ["Selling prohibited items", "Fraud and phishing", "Abusive reviews and harassment"] },
     ],
   },
 
-  // 联系与关注
+  // Contact & follow
   wechat: {
-    title: "微信公众号",
-    intro: "扫码关注我们的官方公众号，获取最新活动与公告（示意图）。",
+    title: "WeChat official account",
+    intro: "Scan the QR code to follow our official WeChat account and get the latest updates (placeholder).",
   },
   weibo: {
-    title: "微博",
-    intro: "关注我们的官方微博账号，了解平台动态与社区故事（示例）。",
+    title: "Weibo",
+    intro: "Follow our official Weibo account to learn about platform news and community stories (example).",
   },
   twitter: {
     title: "Twitter",
@@ -96,11 +96,11 @@ export default function InfoPage() {
     return (
       <main className="page py-8">
         <div className="card p-6 text-center">
-          <h1 className="text-xl font-semibold mb-2">页面建设中</h1>
-          <p className="text-gray-600 mb-4">我们正在准备更详细的内容，敬请期待。</p>
+          <h1 className="text-xl font-semibold mb-2">Page under construction</h1>
+          <p className="text-gray-600 mb-4">We are preparing more detailed content. Please stay tuned.</p>
           <img src="https://placehold.co/800x240?text=Coming+Soon" alt="coming soon" className="rounded border mx-auto" />
           <div className="mt-6">
-            <Link to="/" className="btn btn-secondary text-sm">返回首页</Link>
+            <Link to="/" className="btn btn-secondary text-sm">Back to home</Link>
           </div>
         </div>
       </main>
@@ -115,12 +115,12 @@ export default function InfoPage() {
           {data.intro && <p className="text-gray-600 mt-2">{data.intro}</p>}
         </header>
 
-        {data.title === "微信公众号" && (
+        {data.title === "WeChat official account" && (
           <section className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
             <img src="https://placehold.co/280x280?text=QR" alt="QR" className="mx-auto rounded border" />
             <div className="text-sm text-gray-700">
-              <p>使用微信扫描二维码即可关注（示意图）。</p>
-              <p className="mt-2">后续可替换为真实二维码与公众号介绍。</p>
+              <p>Scan with WeChat to follow our official account (mockup).</p>
+              <p className="mt-2">This can be replaced with a real QR code and introduction later.</p>
             </div>
           </section>
         )}
@@ -139,12 +139,12 @@ export default function InfoPage() {
 
         {(slug === "weibo" || slug === "twitter") && (
           <section className="text-sm text-gray-600">
-            <p>以上为演示内容，可在此放置官方账号链接与活动信息。</p>
+            <p>The above is demo content. Use this section to place links to official accounts and campaign information.</p>
           </section>
         )}
 
         <footer className="pt-2 border-t border-gray-100 text-sm text-gray-500">
-          如需更多信息，请通过“联系客服”与我们取得联系。
+          For more information, please contact us via “Contact support”.
         </footer>
       </article>
     </main>

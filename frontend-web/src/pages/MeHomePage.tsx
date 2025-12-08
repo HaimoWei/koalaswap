@@ -7,25 +7,25 @@ export function MeHomePage() {
 
     return (
         <main className="space-y-4">
-            {/* 快捷入口区（个人中心右侧头卡下方） */}
+            {/* Quick shortcuts under profile header */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <Link to="/me/center/listings" className="p-4 card hover:shadow-[var(--shadow-2)]">
-                    我发布的
+                    My listings
                 </Link>
                 <Link to="/me/center/orders?role=buyer" className="p-4 card hover:shadow-[var(--shadow-2)]">
-                    我买到的
+                    Orders I bought
                 </Link>
                 <Link to="/me/center/orders?role=seller" className="p-4 card hover:shadow-[var(--shadow-2)]">
-                    我卖出的
+                    Orders I sold
                 </Link>
                 <Link to="/me/center/favorites" className="p-4 card hover:shadow-[var(--shadow-2)]">
-                    我的收藏（{favCountQ.data ?? 0}）
+                    My favorites ({favCountQ.data ?? 0})
                 </Link>
                 <Link to="/me/center/reviews?tab=buyer" className="p-4 card hover:shadow-[var(--shadow-2)]">
-                    待评价
+                    To review
                 </Link>
                 <Link to="/me/center/reviews?tab=commented" className="p-4 card hover:shadow-[var(--shadow-2)]">
-                    我的评价
+                    My reviews
                 </Link>
             </div>
         </main>

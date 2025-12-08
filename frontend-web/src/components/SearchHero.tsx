@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 
-const DEFAULT_TAGS = ["手机", "数码", "电脑", "服饰", "运动", "家居", "美妆", "母婴", "技能", "卡券"];
+const DEFAULT_TAGS = ["Phones", "Electronics", "Computers", "Clothing", "Sports", "Home", "Beauty", "Baby", "Skills", "Vouchers"];
 
 export function SearchHero({ preset }: { preset?: string }) {
     const nav = useNavigate();
@@ -24,20 +24,20 @@ export function SearchHero({ preset }: { preset?: string }) {
     return (
         <section className="mb-6">
             <div className="card p-6 md:p-10 text-center">
-                <h1 className="text-2xl md:text-3xl font-extrabold text-[var(--color-text-strong)]">发现靠谱的二手好物</h1>
-                <p className="mt-2 text-sm text-gray-600">安全省心，聊一聊即可交易</p>
+                <h1 className="text-2xl md:text-3xl font-extrabold text-[var(--color-text-strong)]">Discover trusted second-hand deals</h1>
+                <p className="mt-2 text-sm text-gray-600">Safe, convenient, and easy to trade via chat.</p>
 
                 <div className="mt-5 max-w-2xl mx-auto flex gap-2">
                     <input
                         className="input text-base md:text-lg flex-1"
-                        placeholder="搜一搜：iPhone 12 / Switch / 显卡..."
+                        placeholder="Search: iPhone 12 / Switch / graphics card..."
                         value={q}
                         onChange={(e) => setQ(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && goSearch()}
-                        aria-label="搜索关键词"
+                        aria-label="Search keywords"
                     />
-                    <button className="btn btn-primary md:px-6 md:btn-lg" onClick={() => goSearch()} aria-label="搜索">
-                        搜索
+                    <button className="btn btn-primary md:px-6 md:btn-lg" onClick={() => goSearch()} aria-label="Search">
+                        Search
                     </button>
                 </div>
 
@@ -47,7 +47,7 @@ export function SearchHero({ preset }: { preset?: string }) {
                             key={t}
                             className="chip chip-secondary hover:brightness-95"
                             onClick={() => goSearch(t)}
-                            aria-label={`搜索 ${t}`}
+                            aria-label={`Search ${t}`}
                         >
                             {t}
                         </button>

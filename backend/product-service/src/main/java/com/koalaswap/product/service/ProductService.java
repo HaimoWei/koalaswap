@@ -32,7 +32,7 @@ public class ProductService {
     @Transactional
     public ProductRes create(UUID sellerId, ProductCreateReq req) {
         if (req.images() != null && req.images().size() > props.getMaxImages()) {
-            throw new IllegalArgumentException("最多上传 " + props.getMaxImages() + " 张图片");
+            throw new IllegalArgumentException("You can upload at most " + props.getMaxImages() + " images.");
         }
         var p = new Product();
         p.setSellerId(sellerId);
@@ -65,14 +65,14 @@ public class ProductService {
 
     /** 商品详情 */
     public ProductRes find(UUID id) {
-        var p = products.findById(id).orElseThrow(() -> new IllegalArgumentException("商品不存在"));
+        var p = products.findById(id).orElseThrow(() -> new IllegalArgumentException("Item does not exist."));
         return toRes(p, imageUrlsOf(id));
     }
 
     /** 修改商品（仅作者；图片全量替换 → 先删后插 + flush 防止唯一键冲突） */
     @Transactional
     public ProductRes update(UUID editorId, UUID id, ProductUpdateReq req) {
-        var p = products.findById(id).orElseThrow(() -> new IllegalArgumentException("商品不存在"));
+        var p = products.findById(id).orElseThrow(() -> new IllegalArgumentException("Item does not exist."));
         assertOwner(p, editorId);
 
         if (req.title() != null) p.setTitle(req.title());
@@ -86,7 +86,7 @@ public class ProductService {
 
         if (req.images() != null) {
             if (req.images().size() > props.getMaxImages()) {
-                throw new IllegalArgumentException("最多上传 " + props.getMaxImages() + " 张图片");
+                throw new IllegalArgumentException("You can upload at most " + props.getMaxImages() + " images.");
             }
             images.deleteByProductId(id);
             images.flush(); // 避免 (product_id, sort_order) 冲突
@@ -110,7 +110,7 @@ public class ProductService {
     /** 下架（仅作者）：设置为 HIDDEN */
     @Transactional
     public void softHide(UUID requesterId, UUID id) {
-        var p = products.findById(id).orElseThrow(() -> new IllegalArgumentException("商品不存在"));
+        var p = products.findById(id).orElseThrow(() -> new IllegalArgumentException("Item does not exist."));
         assertOwner(p, requesterId);
         if (p.getStatus() == ProductStatus.HIDDEN) return; // 幂等
         p.setStatus(ProductStatus.HIDDEN);
@@ -120,16 +120,16 @@ public class ProductService {
     // ProductService.java —— 仅替换这个方法
     @Transactional
     public void relist(UUID requesterId, UUID id) {
-        var p = products.findById(id).orElseThrow(() -> new IllegalArgumentException("商品不存在"));
+        var p = products.findById(id).orElseThrow(() -> new IllegalArgumentException("Item does not exist."));
         assertOwner(p, requesterId);
 
         // SOLD：不允许重新上架（业务规则）
         if (p.getStatus() == ProductStatus.SOLD) {
-            throw new IllegalArgumentException("已售出的商品不能重新上架");
+            throw new IllegalArgumentException("Items that have been sold cannot be listed again.");
         }
         // RESERVED：有进行中的订单，不允许上架
         if (p.getStatus() == ProductStatus.RESERVED) {
-            throw new IllegalArgumentException("有进行中的订单，暂不能上架");
+            throw new IllegalArgumentException("There is an active order for this item, so it cannot be listed right now.");
         }
         // 已经是 ACTIVE，幂等返回
         if (p.getStatus() == ProductStatus.ACTIVE) {
@@ -141,23 +141,23 @@ public class ProductService {
         if (updated == 0) {
             // 并发或非法状态导致更新失败：再读一次状态给出明确提示（返回 400，而不是 500）
             var now = products.findById(id).orElseThrow();
-            throw new IllegalArgumentException("当前状态不可上架：" + now.getStatus());
+            throw new IllegalArgumentException("The current item status does not allow relisting: " + now.getStatus());
         }
     }
 
     /** 彻底删除（仅作者）：仅允许在 HIDDEN 状态；如存在订单将因外键失败 */
     @Transactional
     public void hardDelete(UUID requesterId, UUID id) {
-        var p = products.findById(id).orElseThrow(() -> new IllegalArgumentException("商品不存在"));
+        var p = products.findById(id).orElseThrow(() -> new IllegalArgumentException("Item does not exist."));
         assertOwner(p, requesterId);
         if (p.getStatus() != ProductStatus.HIDDEN) {
-            throw new IllegalArgumentException("仅可以删除“已下架”的商品");
+            throw new IllegalArgumentException("You can only delete items that have been taken down.");
         }
         try {
             products.delete(p); // images & favorites 级联删除；orders 为 RESTRICT
         } catch (DataIntegrityViolationException e) {
             // 订单引用（ON DELETE RESTRICT），数据库会拒绝；给出友好提示
-            throw new IllegalArgumentException("该商品存在订单记录，无法删除");
+            throw new IllegalArgumentException("This item has existing order records and cannot be deleted.");
         }
     }
 
@@ -204,7 +204,7 @@ public class ProductService {
     // ---------- helpers ----------
     private void assertOwner(Product p, UUID userId) {
         if (!p.getSellerId().equals(userId)) {
-            throw new IllegalArgumentException("无权操作：只能修改/删除自己的商品");
+            throw new IllegalArgumentException("You do not have permission to modify or delete this item.");
         }
     }
 

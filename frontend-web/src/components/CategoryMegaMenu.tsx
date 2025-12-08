@@ -23,12 +23,12 @@ export function CategoryMegaMenu({ className = "" }: CategoryMegaMenuProps) {
         setCategories(topLevel);
       })
       .catch((err) => {
-        console.error("加载分类失败:", err);
-        // 失败时使用默认分类
+        console.error("Failed to load categories:", err);
+        // Fallback to default categories on failure
         setCategories([
-          { id: 1000, name: "数码电子", parentId: null, children: [] },
-          { id: 2000, name: "生活用品", parentId: null, children: [] },
-          { id: 3000, name: "图书文娱", parentId: null, children: [] },
+          { id: 1000, name: "Electronics", parentId: null, children: [] },
+          { id: 2000, name: "Home & living", parentId: null, children: [] },
+          { id: 3000, name: "Books & entertainment", parentId: null, children: [] },
         ]);
       })
       .finally(() => setLoading(false));
@@ -48,7 +48,7 @@ export function CategoryMegaMenu({ className = "" }: CategoryMegaMenuProps) {
         [categoryId]: children
       }));
     } catch (err) {
-      console.error("加载子分类失败:", err);
+      console.error("Failed to load child categories:", err);
     }
   };
 
@@ -63,7 +63,7 @@ export function CategoryMegaMenu({ className = "" }: CategoryMegaMenuProps) {
   if (loading) {
     return (
       <div className={`bg-white shadow-lg rounded-lg ${className}`}>
-        <div className="p-4 text-center text-gray-500">加载分类中...</div>
+        <div className="p-4 text-center text-gray-500">Loading categories...</div>
       </div>
     );
   }
@@ -132,7 +132,7 @@ export function CategoryMegaMenu({ className = "" }: CategoryMegaMenuProps) {
                 <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
-                <p className="text-sm">将鼠标悬停在左侧分类上查看更多选项</p>
+                <p className="text-sm">Hover over a category on the left to see more options.</p>
               </div>
             </div>
           )}
@@ -155,7 +155,7 @@ function SubCategoryList({ parentId, onCategoryClick }: { parentId: number; onCa
   }, [parentId]);
 
   if (loading) {
-    return <div className="text-xs text-gray-400">加载中...</div>;
+    return <div className="text-xs text-gray-400">Loading...</div>;
   }
 
   if (subCategories.length === 0) {
@@ -180,7 +180,7 @@ function SubCategoryList({ parentId, onCategoryClick }: { parentId: number; onCa
             className="text-xs text-red-500 hover:text-red-600 transition-colors"
             onClick={() => onCategoryClick(parentId)}
           >
-            查看更多 →
+            View more →
           </button>
         </li>
       )}

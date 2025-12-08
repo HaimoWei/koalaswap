@@ -160,39 +160,39 @@ export function OrderInfoModule({ conversation }: OrderInfoModuleProps) {
         fullConversation: conversation,
     });
     
-    // 格式化价格显示
+    // Format price for display
     const formatPrice = (price?: number | null) => {
-        if (price == null) return "--"; // 允许 0 被正常显示
-        return `¥${price.toFixed(2)}`;
+        if (price == null) return "--"; // allow 0 to be displayed normally
+        return `$${price.toFixed(2)}`;
     };
     
-    // 格式化订单状态显示
+    // Format order status display
     const getOrderStatusDisplay = (status?: string | null, hasOrder?: boolean) => {
         if (!hasOrder) {
-            return { text: '未购买', color: 'tag tag-warning' };
+            return { text: 'Not purchased', color: 'tag tag-warning' };
         }
         switch (status) {
-            case 'PENDING': return { text: '待付款', color: 'tag tag-warning' };
-            case 'PAID': return { text: '已付款', color: 'tag tag-info' };
-            case 'SHIPPED': return { text: '已发货', color: 'tag tag-info' };
-            case 'COMPLETED': return { text: '已完成', color: 'tag tag-success' };
-            case 'CANCELLED': return { text: '已取消', color: 'tag tag-neutral' };
-            default: return { text: '未知状态', color: 'tag tag-neutral' };
+            case 'PENDING': return { text: 'Awaiting payment', color: 'tag tag-warning' };
+            case 'PAID': return { text: 'Paid', color: 'tag tag-info' };
+            case 'SHIPPED': return { text: 'Shipped', color: 'tag tag-info' };
+            case 'COMPLETED': return { text: 'Completed', color: 'tag tag-success' };
+            case 'CANCELLED': return { text: 'Cancelled', color: 'tag tag-neutral' };
+            default: return { text: 'Unknown status', color: 'tag tag-neutral' };
         }
     };
     
-    // 根据当前用户角色和订单状态决定要显示的操作按钮
+    // Decide which action buttons to show based on role and order status
     const getActionButtons = () => {
-        // 使用统一的订单状态
+        // Use a unified order status
         const currentOrderStatus = conversation.orderDetail?.status || conversation.orderStatus;
         const hasOrder = !!(conversation.orderDetail?.orderId || conversation.orderStatus);
         const buttons = [];
 
         if (isBuyer) {
-            // 买家还没有购买
+            // Buyer has not purchased yet
             if (!hasOrder) {
                 buttons.push({
-                    text: '去购买',
+                    text: 'Buy item',
                     color: 'bg-orange-500 hover:bg-orange-600 text-white',
                     action: 'buy'
                 });
@@ -200,19 +200,19 @@ export function OrderInfoModule({ conversation }: OrderInfoModuleProps) {
                 switch (currentOrderStatus) {
                     case 'PENDING':
                         buttons.push({
-                            text: '立即付款',
+                            text: 'Pay now',
                             color: 'bg-blue-500 hover:bg-blue-600 text-white',
                             action: 'pay'
                         });
                         break;
                     case 'SHIPPED':
                         buttons.push({
-                            text: '查看订单',
+                            text: 'View order',
                             color: 'bg-gray-500 hover:bg-gray-600 text-white',
                             action: 'viewOrder'
                         });
                         buttons.push({
-                            text: '确认收货',
+                            text: 'Confirm receipt',
                             color: 'bg-green-500 hover:bg-green-600 text-white',
                             action: 'confirm'
                         });
@@ -221,22 +221,22 @@ export function OrderInfoModule({ conversation }: OrderInfoModuleProps) {
                         // 检查用户是否已经评价，显示相应的按钮
                         if (checkIfUserHasReviewed()) {
                             buttons.push({
-                                text: '写追评',
+                                text: 'Write additional review',
                                 color: 'bg-yellow-500 hover:bg-yellow-600 text-white',
                                 action: 'additionalReview'
                             });
                         } else {
                             buttons.push({
-                                text: '去评价',
+                                text: 'Write a review',
                                 color: 'bg-yellow-500 hover:bg-yellow-600 text-white',
                                 action: 'review'
                             });
                         }
                         break;
                     case 'CANCELLED':
-                        // 订单已取消，买家可以再次购买
+                        // Order was cancelled; buyer can purchase again
                         buttons.push({
-                            text: '再次购买',
+                            text: 'Buy again',
                             color: 'bg-orange-500 hover:bg-orange-600 text-white',
                             action: 'buy'
                         });
@@ -244,37 +244,37 @@ export function OrderInfoModule({ conversation }: OrderInfoModuleProps) {
                 }
             }
         } else if (isSeller) {
-            // 卖家视角：如果没有订单，不显示任何操作
+            // Seller view: if there is no order, no actions are shown
             if (hasOrder) {
                 switch (currentOrderStatus) {
                     case 'PAID':
                         buttons.push({
-                            text: '去发货',
+                            text: 'Ship item',
                             color: 'bg-purple-500 hover:bg-purple-600 text-white',
                             action: 'ship'
                         });
                         break;
                     case 'COMPLETED':
-                        // 检查用户是否已经评价，显示相应的按钮
+                        // Check whether the user has already reviewed; show appropriate button
                         if (checkIfUserHasReviewed()) {
                             buttons.push({
-                                text: '写追评',
+                                text: 'Write additional review',
                                 color: 'bg-yellow-500 hover:bg-yellow-600 text-white',
                                 action: 'additionalReview'
                             });
                         } else {
                             buttons.push({
-                                text: '去评价',
+                                text: 'Write a review',
                                 color: 'bg-yellow-500 hover:bg-yellow-600 text-white',
                                 action: 'review'
                             });
                         }
                         break;
                     default:
-                        // 对于其他状态，显示查看订单按钮
+                        // For other statuses, show "view order" button
                         if (currentOrderStatus !== 'CANCELLED') {
                             buttons.push({
-                                text: '查看订单',
+                                text: 'View order',
                                 color: 'bg-gray-500 hover:bg-gray-600 text-white',
                                 action: 'viewOrder'
                             });
@@ -287,7 +287,7 @@ export function OrderInfoModule({ conversation }: OrderInfoModuleProps) {
         return buttons;
     };
 
-    // 优先使用orderDetail中的状态，如果没有则使用conversation的orderStatus
+    // Prefer status from orderDetail; fall back to conversation.orderStatus
     const orderStatus = conversation.orderDetail?.status || conversation.orderStatus;
     const hasOrder = !!(conversation.orderDetail?.orderId || conversation.orderStatus);
     const orderStatusDisplay = getOrderStatusDisplay(orderStatus, hasOrder);
@@ -296,12 +296,12 @@ export function OrderInfoModule({ conversation }: OrderInfoModuleProps) {
     return (
         <div className="bg-[var(--color-surface)] border-b border-[var(--color-border)] p-4">
             <div className="flex items-center space-x-4">
-                {/* 商品图片 */}
+                {/* Item image */}
                 <div className="flex-shrink-0 w-16 h-16 rounded-lg bg-[var(--color-muted)] overflow-hidden">
                     {conversation.productFirstImage ? (
                         <img 
                             src={conversation.productFirstImage}
-                            alt={conversation.productTitle || "商品图片"}
+                            alt={conversation.productTitle || "Item image"}
                             className="w-full h-full object-cover"
                         />
                     ) : (
@@ -313,26 +313,26 @@ export function OrderInfoModule({ conversation }: OrderInfoModuleProps) {
                     )}
                 </div>
                 
-                {/* 商品和订单信息 */}
+                {/* Item and order info */}
                 <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-gray-900 truncate">
-                        {conversation.productTitle || "商品标题"}
+                        {conversation.productTitle || "Item title"}
                     </h3>
                     <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
-                        <span>商品价格: {formatPrice(conversation.productPrice)}</span>
+                        <span>Item price: {formatPrice(conversation.productPrice)}</span>
                         {conversation.orderDetail?.priceSnapshot && (
-                            <span>订单价格: {formatPrice(conversation.orderDetail.priceSnapshot)}</span>
+                            <span>Order price: {formatPrice(conversation.orderDetail.priceSnapshot)}</span>
                         )}
-                        {/* 始终显示订单状态，即使没有数据也显示默认状态 */}
+                        {/* Always show order status, even if default */}
                         <span className={`${orderStatusDisplay.color}`}>
                             {orderStatusDisplay.text}
                         </span>
                     </div>
                     
-                    {/* 物流信息 */}
+                    {/* Shipping info */}
                     {conversation.orderDetail?.trackingNo && (
                         <div className="mt-1 text-xs text-gray-500">
-                            物流单号: {conversation.orderDetail.trackingNo}
+                            Tracking number: {conversation.orderDetail.trackingNo}
                             {conversation.orderDetail.carrier && ` (${conversation.orderDetail.carrier})`}
                         </div>
                     )}
@@ -354,68 +354,66 @@ export function OrderInfoModule({ conversation }: OrderInfoModuleProps) {
                                             nav(`/products/${conversation.productId}`);
                                             break;
                                         case 'pay':
-                                            // 跳转到支付页面
+                                            // Go to payment page
                                             if (orderId) {
                                                 nav(`/pay/${orderId}`);
                                             } else {
-                                                console.warn('没有找到订单ID，无法跳转到支付页面');
-                                                alert('订单信息异常，请刷新页面重试');
+                                                console.warn('Order ID not found; cannot go to payment page');
+                                                alert('Order information is invalid. Please refresh the page and try again.');
                                             }
                                             break;
                                         case 'ship':
-                                            // 跳转到订单详情页，方便卖家进行发货操作
+                                            // Go to order detail page so seller can ship
                                             if (orderId) {
                                                 nav(`/orders/${orderId}`);
                                             } else {
-                                                console.warn('没有找到订单ID');
-                                                alert('订单信息异常，请刷新页面重试');
+                                                console.warn('Order ID not found');
+                                                alert('Order information is invalid. Please refresh the page and try again.');
                                             }
                                             break;
                                         case 'viewOrder':
-                                            // 跳转到订单详情页查看
+                                            // Go to order detail page to view order
                                             if (orderId) {
                                                 nav(`/orders/${orderId}`);
                                             } else {
-                                                console.warn('没有找到订单ID');
-                                                alert('订单信息异常，请刷新页面重试');
+                                                console.warn('Order ID not found');
+                                                alert('Order information is invalid. Please refresh the page and try again.');
                                             }
                                             break;
                                         case 'confirm':
-                                            // 确认收货 - 直接在聊天页面确认，无需跳转
+                                            // Confirm receipt directly in chat without redirect
                                             if (orderId) {
-                                                const ok = await confirm('确认收货', '确认已收到商品？确认后将无法撤销');
+                                                const ok = await confirm('Confirm receipt', 'Have you received the item? This action cannot be undone.');
                                                 if (!ok) return;
                                                 await confirmOrder(orderId);
                                                 await qc.invalidateQueries({ queryKey: ["conv", conversation.id] });
                                                 await qc.invalidateQueries({ queryKey: ["conversations"] });
                                             } else {
-                                                console.warn('没有找到订单ID');
-                                                alert('订单信息异常，请刷新页面重试');
+                                                console.warn('Order ID not found');
+                                                alert('Order information is invalid. Please refresh the page and try again.');
                                             }
                                             break;
                                         case 'review':
-                                            // 根据用户角色跳转到相应的待评价页面
+                                            // Navigate to the appropriate review tab based on user role
                                             if (isBuyer) {
-                                                // 买家跳转到买家待评页面
                                                 nav('/me/center/reviews?tab=buyer');
                                             } else if (isSeller) {
-                                                // 卖家跳转到卖家待评页面
                                                 nav('/me/center/reviews?tab=seller');
                                             } else {
-                                                console.warn('用户角色不明确');
+                                                console.warn('User role is unclear');
                                                 nav('/me/center/reviews');
                                             }
                                             break;
                                         case 'additionalReview':
-                                            // 跳转到已评价页面写追评
+                                            // Go to "commented" tab to write an additional review
                                             nav('/me/center/reviews?tab=commented');
                                             break;
                                         default:
-                                            console.warn('未知的操作类型:', button.action);
+                                            console.warn('Unknown action type:', button.action);
                                             break;
                                     }
                                 } catch (e: any) {
-                                    alert(e?.message || '操作失败，请稍后再试');
+                                    alert(e?.message || 'Operation failed. Please try again later.');
                                 }
                             }}
                         >

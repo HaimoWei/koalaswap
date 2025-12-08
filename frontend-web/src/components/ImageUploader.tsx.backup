@@ -34,17 +34,17 @@ export default function ImageUploader({
 
   const currentImageCount = completedImages.length + uploadingImages.length;
 
-  // 验证文件
+  // Validate file
   const validateFile = (file: File): string | null => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     const maxSize = 10 * 1024 * 1024; // 10MB
 
     if (!allowedTypes.includes(file.type)) {
-      return '只支持 JPG、PNG、WebP 格式的图片';
+      return 'Only JPG, PNG and WebP images are supported.';
     }
 
     if (file.size > maxSize) {
-      return '图片大小不能超过 10MB';
+      return 'Image size must not exceed 10MB.';
     }
 
     return null;
@@ -67,9 +67,9 @@ export default function ImageUploader({
     setUploadingImages(prev => [...prev, uploadingImage]);
 
     try {
-      // 步骤1: 请求预签名URL
+      // Step 1: request pre-signed URL
       if (!productId) {
-        throw new Error('上传图片需要先保存商品信息');
+        throw new Error('Please save the item before uploading images.');
       }
 
       const uploadResponse = await requestImageUpload({
@@ -85,7 +85,7 @@ export default function ImageUploader({
         img.id === tempId ? { ...img, progress: 30, imageId: uploadResponse.imageId } : img
       ));
 
-      // 步骤2: 直接上传到S3
+      // Step 2: upload directly to S3
       await uploadFileToS3(file, uploadResponse.uploadUrl);
 
       // 更新进度
@@ -93,16 +93,16 @@ export default function ImageUploader({
         img.id === tempId ? { ...img, progress: 90 } : img
       ));
 
-      // 步骤3: 通知后端上传完成
+      // Step 3: notify backend that upload is completed
       await completeImageUpload({
         imageId: uploadResponse.imageId,
         success: true
       });
 
-      // 生成CDN URL
+      // Generate CDN URL
       const cdnUrl = `https://img.koalaswap.au/${uploadResponse.objectKey}`;
 
-      // 标记完成
+      // Mark as completed
       setUploadingImages(prev => prev.map(img =>
         img.id === tempId ? {
           ...img,
@@ -112,32 +112,32 @@ export default function ImageUploader({
         } : img
       ));
 
-      // 添加到完成列表
+      // Add to completed list
       setCompletedImages(prev => {
         const newImages = [...prev, cdnUrl];
         onImagesChange(newImages);
         return newImages;
       });
 
-      // 延迟移除上传状态
+      // Remove uploading state after a short delay
       setTimeout(() => {
         setUploadingImages(prev => prev.filter(img => img.id !== tempId));
         URL.revokeObjectURL(preview);
       }, 1000);
 
     } catch (error: any) {
-      console.error('上传失败:', error);
+      console.error('Image upload failed:', error);
 
-      // 标记失败
+      // Mark as failed
       setUploadingImages(prev => prev.map(img =>
         img.id === tempId ? {
           ...img,
           status: 'failed',
-          errorMessage: error.message || '上传失败'
+          errorMessage: error.message || 'Upload failed'
         } : img
       ));
 
-      // 通知后端上传失败（如果有imageId）
+      // Notify backend of failed upload (if imageId exists)
       const failedImage = uploadingImages.find(img => img.id === tempId);
       if (failedImage?.imageId) {
         try {
@@ -147,13 +147,13 @@ export default function ImageUploader({
             errorMessage: error.message
           });
         } catch (e) {
-          console.error('通知上传失败失败:', e);
+          console.error('Failed to notify backend about upload failure:', e);
         }
       }
     }
   }, [productId, onImagesChange]);
 
-  // 处理文件选择
+  // Handle file selection
   const handleFileSelect = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
@@ -161,7 +161,7 @@ export default function ImageUploader({
     const availableSlots = maxImages - currentImageCount;
     const filesToUpload = fileArray.slice(0, availableSlots);
 
-    // 验证所有文件
+    // Validate all files
     const validationErrors: string[] = [];
     const validFiles: File[] = [];
 
@@ -174,24 +174,24 @@ export default function ImageUploader({
       }
     });
 
-    // 显示验证错误
+    // Show validation errors
     if (validationErrors.length > 0) {
-      alert('以下文件无法上传:\n' + validationErrors.join('\n'));
+      alert('The following files could not be uploaded:\n' + validationErrors.join('\n'));
     }
 
-    // 上传有效文件
+    // Upload valid files
     validFiles.forEach((file, index) => {
       const displayOrder = currentImageCount + index;
       uploadFile(file, displayOrder);
     });
 
-    // 清空文件输入
+    // Clear file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   }, [currentImageCount, maxImages, uploadFile]);
 
-  // 拖拽处理
+  // Drag & drop handlers
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
@@ -208,28 +208,28 @@ export default function ImageUploader({
     handleFileSelect(e.dataTransfer.files);
   }, [handleFileSelect]);
 
-  // 删除已完成的图片
+  // Remove completed image
   const handleRemoveImage = useCallback((index: number) => {
     const newImages = completedImages.filter((_, i) => i !== index);
     setCompletedImages(newImages);
     onImagesChange(newImages);
   }, [completedImages, onImagesChange]);
 
-  // 删除上传中/失败的图片
+  // Remove uploading/failed image
   const handleRemoveUploadingImage = useCallback(async (id: string) => {
     const image = uploadingImages.find(img => img.id === id);
     if (image) {
-      // 如果有imageId，通知后端删除
+      // If there is an imageId, notify backend
       if (image.imageId) {
         try {
-          // 这里应该调用删除接口，但由于可能还在上传中，我们只是标记为取消
+          // Here we could call delete API; for now, just mark as cancelled
           await completeImageUpload({
             imageId: image.imageId,
             success: false,
-            errorMessage: '用户取消上传'
+            errorMessage: 'User cancelled upload'
           });
         } catch (e) {
-          console.error('取消上传失败:', e);
+          console.error('Failed to cancel upload:', e);
         }
       }
 
@@ -245,7 +245,7 @@ export default function ImageUploader({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* 上传区域 */}
+      {/* Upload area */}
       {canUpload && (
         <div
           className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
@@ -267,12 +267,12 @@ export default function ImageUploader({
                 className="text-blue-600 hover:text-blue-700 font-medium"
                 onClick={() => fileInputRef.current?.click()}
               >
-                点击选择图片
+                Click to choose images
               </button>
-              <span className="text-gray-500"> 或拖拽到这里</span>
+              <span className="text-gray-500"> or drag and drop here</span>
             </div>
             <p className="text-xs text-gray-400">
-              支持 JPG、PNG、WebP 格式，最大 10MB，还能上传 {maxImages - currentImageCount} 张
+              Supports JPG, PNG and WebP formats, up to 10MB each. You can upload {maxImages - currentImageCount} more images.
             </p>
           </div>
 
@@ -287,16 +287,16 @@ export default function ImageUploader({
         </div>
       )}
 
-      {/* 图片预览区域 */}
+      {/* Image preview area */}
       {(completedImages.length > 0 || uploadingImages.length > 0) && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {/* 已完成的图片 */}
+          {/* Completed images */}
           {completedImages.map((url, index) => (
             <div key={`completed-${index}`} className="relative group">
               <div className="aspect-square border rounded-lg overflow-hidden bg-gray-100">
                 <img
                   src={url}
-                  alt={`图片 ${index + 1}`}
+                  alt={`Image ${index + 1}`}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiPjxwYXRoIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLXdpZHRoPSIyIiBkPSJtMjEgMTYtNC00LTQuNyA0LjctMy4xLTMuMS0yLjMgMi4zWiIvPjxjaXJjbGUgY3g9IjkiIGN5PSI5IiByPSIyIi8+PHBhdGggZD0ibTIxIDIxLTYuNi02LjZhNCA0IDAgMCAwLTUuNzMgMUwzIDIxeiIvPjwvc3ZnPg==';
@@ -304,7 +304,7 @@ export default function ImageUploader({
                 />
               </div>
 
-              {/* 删除按钮 */}
+              {/* Delete button */}
               <button
                 type="button"
                 onClick={() => handleRemoveImage(index)}
@@ -313,26 +313,26 @@ export default function ImageUploader({
                 ×
               </button>
 
-              {/* 主图标记 */}
+              {/* Primary image badge */}
               {index === 0 && (
                 <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                  主图
+                  Main
                 </div>
               )}
             </div>
           ))}
 
-          {/* 上传中的图片 */}
+          {/* Uploading images */}
           {uploadingImages.map((image) => (
             <div key={image.id} className="relative group">
               <div className="aspect-square border rounded-lg overflow-hidden bg-gray-100">
                 <img
                   src={image.preview}
-                  alt="上传中"
+                  alt="Uploading"
                   className="w-full h-full object-cover"
                 />
 
-                {/* 上传进度遮罩 */}
+                {/* Upload progress overlay */}
                 <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                   {image.status === 'uploading' && (
                     <div className="text-center">
@@ -359,13 +359,13 @@ export default function ImageUploader({
                       <svg className="w-8 h-8 mx-auto" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                       </svg>
-                      <div className="text-xs mt-1">上传失败</div>
+                      <div className="text-xs mt-1">Upload failed</div>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* 删除按钮 */}
+              {/* Delete button */}
               <button
                 type="button"
                 onClick={() => handleRemoveUploadingImage(image.id)}
@@ -378,10 +378,10 @@ export default function ImageUploader({
         </div>
       )}
 
-      {/* 空状态提示 */}
+      {/* Empty state hint */}
       {completedImages.length === 0 && uploadingImages.length === 0 && !canUpload && (
         <div className="text-center py-8 text-gray-500">
-          已达到最大图片数量限制 ({maxImages} 张)
+          You have reached the maximum number of images ({maxImages}).
         </div>
       )}
     </div>

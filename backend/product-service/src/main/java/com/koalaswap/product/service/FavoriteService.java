@@ -25,9 +25,9 @@ public class FavoriteService {
     @Transactional
     public boolean add(UUID userId, UUID productId) {
         var p = products.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("商品不存在"));
+                .orElseThrow(() -> new IllegalArgumentException("Item does not exist."));
         if (userId.equals(p.getSellerId())) {
-            throw new IllegalArgumentException("不能收藏自己的商品");
+            throw new IllegalArgumentException("You cannot favorite your own item.");
         }
         if (favorites.existsByIdUserIdAndIdProductId(userId, productId)) return true;
 

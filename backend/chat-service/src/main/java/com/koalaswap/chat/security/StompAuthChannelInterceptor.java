@@ -35,16 +35,16 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-            log.debug("WebSocket CONNECT请求开始认证");
+            log.debug("WebSocket CONNECT authentication started");
             
             String userId = authenticateUser(accessor);
             if (userId != null) {
                 accessor.setUser(new SimplePrincipal(userId));
-                log.info("WebSocket认证成功，用户ID: {}", userId);
+                log.info("WebSocket authentication succeeded, userId: {}", userId);
                 return message;
             }
             
-            log.warn("WebSocket认证失败，拒绝连接");
+            log.warn("WebSocket authentication failed, rejecting connection");
             throw new IllegalArgumentException("WebSocket authentication failed: no valid credentials provided");
         }
         
@@ -61,21 +61,21 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
         // 方式1：优先从Spring Security上下文获取（HTTP升级的情况）
         String userId = authenticateFromSecurityContext();
         if (userId != null) {
-            log.debug("通过Spring Security上下文认证成功");
+            log.debug("Authenticated via Spring Security context");
             return userId;
         }
         
         // 方式2：从Authorization header解析JWT（主要方式）
         userId = authenticateFromJwtToken(accessor);
         if (userId != null) {
-            log.debug("通过JWT Token认证成功");
+            log.debug("Authenticated via JWT token");
             return userId;
         }
         
         // 方式3：兜底从uid header获取（仅用于开发/测试环境）
         userId = authenticateFromUidHeader(accessor);
         if (userId != null) {
-            log.debug("通过UID Header认证成功（开发模式）");
+            log.debug("Authenticated via UID header (development mode)");
             return userId;
         }
         
@@ -90,7 +90,7 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
             UUID uid = CurrentUser.idRequired();
             return uid.toString();
         } catch (Exception e) {
-            log.debug("Spring Security上下文中无用户信息: {}", e.getMessage());
+            log.debug("No user found in Spring Security context: {}", e.getMessage());
             return null;
         }
     }
@@ -101,19 +101,19 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
     private String authenticateFromJwtToken(StompHeaderAccessor accessor) {
         List<String> authHeaders = accessor.getNativeHeader("Authorization");
         if (authHeaders == null || authHeaders.isEmpty()) {
-            log.debug("缺少Authorization header");
+            log.debug("Missing Authorization header");
             return null;
         }
 
         String authHeader = authHeaders.get(0);
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.debug("Authorization header格式错误: {}", authHeader);
+            log.debug("Authorization header has invalid format: {}", authHeader);
             return null;
         }
 
         String token = authHeader.substring(7).trim();
         if (token.isEmpty()) {
-            log.debug("JWT token为空");
+            log.debug("JWT token is empty");
             return null;
         }
 
@@ -123,14 +123,14 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
             UUID userId = jwtService.getUserId(token);
             
             if (userId == null) {
-                log.debug("JWT token中缺少用户ID");
+                log.debug("JWT token does not contain a userId");
                 return null;
             }
 
             return userId.toString();
 
         } catch (Exception e) {
-            log.debug("JWT token解析失败: {}", e.getMessage());
+            log.debug("Failed to parse JWT token: {}", e.getMessage());
             return null;
         }
     }
@@ -141,23 +141,23 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
     private String authenticateFromUidHeader(StompHeaderAccessor accessor) {
         List<String> uids = accessor.getNativeHeader("uid");
         if (uids == null || uids.isEmpty()) {
-            log.debug("缺少uid header");
+            log.debug("Missing uid header");
             return null;
         }
 
         String uid = uids.get(0);
         if (uid == null || uid.trim().isEmpty()) {
-            log.debug("uid header为空");
+            log.debug("uid header is empty");
             return null;
         }
 
         try {
             // 验证UUID格式
             UUID.fromString(uid);
-            log.warn("使用uid header认证（仅限开发环境）: {}", uid);
+            log.warn("Authenticating via uid header (development only): {}", uid);
             return uid;
         } catch (IllegalArgumentException e) {
-            log.debug("uid header格式无效: {}", uid);
+            log.debug("Invalid uid header format: {}", uid);
             return null;
         }
     }

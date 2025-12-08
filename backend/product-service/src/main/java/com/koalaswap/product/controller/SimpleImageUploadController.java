@@ -39,7 +39,7 @@ public class SimpleImageUploadController {
         UUID currentUserId = SecuritySupport.requireUserId(auth);
         String jwtToken = extractJwtToken(httpRequest);
 
-        log.info("用户 {} 通过product-service代理请求图片上传URL", currentUserId);
+        log.info("User {} requests image upload URL via product-service proxy", currentUserId);
 
         SimpleImageUploadResponse response = fileServiceClient.getImageUploadUrl(request, jwtToken);
         return ResponseEntity.ok(response);
@@ -59,10 +59,10 @@ public class SimpleImageUploadController {
         String jwtToken = extractJwtToken(httpRequest);
 
         if (requests.size() > 8) {
-            throw new RuntimeException("单次最多上传8张图片");
+            throw new RuntimeException("You can upload at most 8 images in a single request.");
         }
 
-        log.info("用户 {} 通过product-service代理请求批量图片上传URL", currentUserId);
+        log.info("User {} requests batch image upload URLs via product-service proxy", currentUserId);
 
         List<SimpleImageUploadResponse> responses = fileServiceClient.getBatchImageUploadUrls(requests, jwtToken);
         return ResponseEntity.ok(responses);

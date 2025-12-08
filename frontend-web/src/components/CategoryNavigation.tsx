@@ -24,11 +24,11 @@ export function CategoryNavigation() {
     fetchTopCategories()
       .then(setCategories)
       .catch((err) => {
-        console.error("加载分类失败:", err);
+        console.error("Failed to load categories:", err);
         setCategories([
-          { id: 1000, name: "数码电子", parentId: null, children: [] },
-          { id: 2000, name: "生活用品", parentId: null, children: [] },
-          { id: 3000, name: "图书文娱", parentId: null, children: [] },
+          { id: 1000, name: "Electronics", parentId: null, children: [] },
+          { id: 2000, name: "Home & living", parentId: null, children: [] },
+          { id: 3000, name: "Books & entertainment", parentId: null, children: [] },
         ]);
       })
       .finally(() => setLoading(false));
@@ -63,7 +63,7 @@ export function CategoryNavigation() {
     return (
       <div className="mb-6">
         <div className="flex gap-2 overflow-auto no-scrollbar py-1">
-          <div className="chip chip-secondary animate-pulse shrink-0">加载中...</div>
+          <div className="chip chip-secondary animate-pulse shrink-0">Loading...</div>
         </div>
       </div>
     );
@@ -88,7 +88,7 @@ export function CategoryNavigation() {
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
-            全部分类
+            All categories
             <svg className={`w-3 h-3 transition-transform ${showMegaMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
             </svg>
@@ -128,7 +128,7 @@ export function CategoryNavigation() {
           <div className="p-4">
             {/* 移动端标题栏 */}
             <div className="flex justify-between items-center mb-4 pb-4 border-b">
-              <h2 className="text-lg font-semibold">全部分类</h2>
+              <h2 className="text-lg font-semibold">All categories</h2>
               <button
                 onClick={() => setShowMegaMenu(false)}
                 className="p-2 hover:bg-gray-100 rounded-full"
@@ -229,10 +229,10 @@ function MobileCategoryItem({
       {isExpanded && (
         <div className="p-4 bg-white">
           {loading ? (
-            <div className="text-center text-gray-500 py-4">加载中...</div>
+            <div className="text-center text-gray-500 py-4">Loading...</div>
           ) : (
             <div className="text-center text-gray-500 py-4">
-              暂无子分类
+              No subcategories
             </div>
           )}
         </div>

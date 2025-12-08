@@ -42,11 +42,11 @@ export default function SimpleImageUploader({
     const maxSize = 10 * 1024 * 1024; // 10MB
 
     if (!allowedTypes.includes(file.type)) {
-      return '只支持 JPG、PNG、WebP 格式的图片';
+      return 'Only JPG, PNG and WebP images are supported.';
     }
 
     if (file.size > maxSize) {
-      return '图片大小不能超过 10MB';
+      return 'Image size must not exceed 10MB.';
     }
 
     return null;
@@ -95,10 +95,10 @@ export default function SimpleImageUploader({
       URL.revokeObjectURL(preview);
 
     } catch (error: any) {
-      console.error('上传失败:', error);
+      console.error('Image upload failed:', error);
 
-      // 上传失败：弹出错误框，移除失败的图片
-      alert(`图片上传失败: ${error.message || '未知错误'}`);
+      // Upload failed: show error dialog and remove the failed image
+      alert(`Image upload failed: ${error.message || 'Unknown error'}`);
       setUploadingImages(prev => prev.filter(img => img.id !== tempId));
       URL.revokeObjectURL(preview);
     }
@@ -125,9 +125,9 @@ export default function SimpleImageUploader({
       }
     });
 
-    // 显示验证错误
+    // Show validation errors
     if (validationErrors.length > 0) {
-      alert('以下文件无法上传:\n' + validationErrors.join('\n'));
+      alert('The following files could not be uploaded:\n' + validationErrors.join('\n'));
     }
 
     // 并发上传有效文件
@@ -201,12 +201,12 @@ export default function SimpleImageUploader({
                 className="text-blue-600 hover:text-blue-700 font-medium"
                 onClick={() => fileInputRef.current?.click()}
               >
-                点击选择图片
+                Click to choose images
               </button>
-              <span className="text-gray-500"> 或拖拽到这里</span>
+              <span className="text-gray-500"> or drag and drop here</span>
             </div>
             <p className="text-xs text-gray-400">
-              支持 JPG、PNG、WebP 格式，最大 10MB，还能上传 {maxImages - currentImageCount} 张
+              Supports JPG, PNG and WebP formats, up to 10MB each. You can upload {maxImages - currentImageCount} more images.
             </p>
           </div>
 
@@ -230,7 +230,7 @@ export default function SimpleImageUploader({
               <div className="aspect-square border-2 border-gray-200 rounded-lg overflow-hidden bg-gray-100">
                 <img
                   src={url}
-                  alt={`图片 ${index + 1}`}
+                  alt={`Image ${index + 1}`}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiPjxwYXRoIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLXdpZHRoPSIyIiBkPSJtMjEgMTYtNC00LTQuNyA0LjctMy4xLTMuMS0yLjMgMi4zWiIvPjxjaXJjbGUgY3g9IjkiIGN5PSI5IiByPSIyIi8+PHBhdGggZD0ibTIxIDIxLTYuNi02LjZhNCA0IDAgMCAwLTUuNzMgMUwzIDIxeiIvPjwvc3ZnPg==';
@@ -249,12 +249,12 @@ export default function SimpleImageUploader({
                 </svg>
               </button>
 
-              {/* 主图标记 - 合适大小的标签 */}
-              {index === 0 && (
-                <div className="absolute top-1.5 left-1.5 text-xs px-2 py-1 rounded text-white font-medium shadow-sm" style={{
-                  backgroundColor: '#FFD400'
-                }}>
-                  主图
+      {/* Primary image badge */}
+      {index === 0 && (
+        <div className="absolute top-1.5 left-1.5 text-xs px-2 py-1 rounded text-white font-medium shadow-sm" style={{
+          backgroundColor: '#FFD400'
+        }}>
+          Main
                 </div>
               )}
             </div>
@@ -266,7 +266,7 @@ export default function SimpleImageUploader({
               <div className="aspect-square border rounded-lg overflow-hidden bg-gray-100">
                 <img
                   src={image.preview}
-                  alt="上传中"
+                  alt="Uploading"
                   className="w-full h-full object-cover"
                 />
 
@@ -302,7 +302,7 @@ export default function SimpleImageUploader({
       {/* 空状态提示 */}
       {completedImages.length === 0 && uploadingImages.length === 0 && !canUpload && (
         <div className="text-center py-8 text-gray-500">
-          已达到最大图片数量限制 ({maxImages} 张)
+          You have reached the maximum number of images ({maxImages}).
         </div>
       )}
     </div>

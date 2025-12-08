@@ -10,7 +10,7 @@ export default function PayResultPage() {
     return (
         <main className="max-w-4xl mx-auto p-6">
             <div className="card p-8 text-center">
-                {/* 状态图标 */}
+                {/* Status icon */}
                 <div className="mb-4">
                     {isSuccess ? (
                         <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center">
@@ -26,16 +26,18 @@ export default function PayResultPage() {
                         </div>
                     )}
                 </div>
-                <div className="text-2xl font-semibold mb-2">{isSuccess ? "支付成功" : "待支付"}</div>
+                <div className="text-2xl font-semibold mb-2">
+                    {isSuccess ? "Payment successful" : "Payment pending"}
+                </div>
                 <div className="text-sm text-gray-600 mb-6">
                     {isSuccess
-                        ? "订单已成功支付，您可以在订单详情中查看物流信息和交易状态。"
-                        : "订单为你锁定 30 分钟，超时有可能被抢拍。"}
+                        ? "Your order has been paid successfully. You can view shipping and status details on the order page."
+                        : "This order has been reserved for 30 minutes. If you do not pay in time, it may be taken by someone else."}
                 </div>
 
                 {orderId && (
                     <div className="mb-6 text-gray-700">
-                        <div className="text-sm">订单编号：</div>
+                        <div className="text-sm">Order ID:</div>
                         <div className="text-base font-medium">{orderId}</div>
                     </div>
                 )}
@@ -47,10 +49,10 @@ export default function PayResultPage() {
                                 to={`/orders/${orderId}`}
                                 className="btn btn-primary text-sm"
                             >
-                                查看订单详情
+                                View order details
                             </Link>
                             <Link to="/" className="btn btn-secondary text-sm">
-                                回首页
+                                Back to home
                             </Link>
                         </>
                     ) : (
@@ -60,11 +62,11 @@ export default function PayResultPage() {
                                     to={`/pay/${orderId}`}
                                     className="btn btn-primary text-sm"
                                 >
-                                    去支付
+                                    Go to payment
                                 </Link>
                             )}
                             <Link to="/" className="btn btn-secondary text-sm">
-                                回首页
+                                Back to home
                             </Link>
                         </>
                     )}

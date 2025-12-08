@@ -7,8 +7,8 @@ import jakarta.validation.constraints.Size;
  * 更新头像请求 DTO
  */
 public record UpdateAvatarReq(
-    @NotBlank(message = "头像URL不能为空")
-    @Size(max = 500, message = "头像URL长度不能超过500字符")
+    @NotBlank(message = "Avatar URL must not be empty.")
+    @Size(max = 500, message = "Avatar URL must not exceed 500 characters.")
     String avatarUrl
 ) {
 }

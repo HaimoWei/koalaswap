@@ -1,7 +1,7 @@
-// 简单时间线：根据 status 高亮节点
+// Simple timeline: highlight nodes based on status
 export function OrderTimeline({ status }: { status: string }) {
     const up = (status || "").toUpperCase();
-    const steps = ["PENDING", "PAID", "SHIPPED", "CONFIRMED"]; // ← 用 PENDING 起步
+    const steps = ["PENDING", "PAID", "SHIPPED", "CONFIRMED"]; // start from PENDING
     const idx = Math.max(
         steps.findIndex((s) => s === up || (up === "CREATED" && s === "PENDING") || (up === "NEW" && s === "PENDING")),
         up === "COMPLETED" ? steps.length - 1 : -1
@@ -17,12 +17,17 @@ export function OrderTimeline({ status }: { status: string }) {
                 </div>
             ))}
             {(up === "CANCELLED" || up === "CANCELED") && (
-                <div className="ml-2 text-xs text-gray-600">→ 已取消</div>
+                <div className="ml-2 text-xs text-gray-600">→ Cancelled</div>
             )}
         </div>
     );
 }
 function mapText(s: string) {
-    const m: Record<string,string> = { PENDING: "待支付", PAID: "已支付", SHIPPED: "已发货", CONFIRMED: "已收货" };
+    const m: Record<string,string> = {
+        PENDING: "Pending payment",
+        PAID: "Paid",
+        SHIPPED: "Shipped",
+        CONFIRMED: "Received",
+    };
     return m[s] || s;
 }

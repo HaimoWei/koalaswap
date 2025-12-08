@@ -58,12 +58,12 @@ public class FileServiceClient {
             ResponseEntity<Map> response = restTemplate.exchange(
                 url, HttpMethod.POST, request, Map.class);
 
-            log.info("成功获取头像上传URL: {}", fileName);
+            log.info("Successfully obtained avatar upload URL: {}", fileName);
             return response.getBody();
 
         } catch (Exception e) {
-            log.error("获取头像上传URL失败: {}", e.getMessage(), e);
-            throw new RuntimeException("获取上传URL失败: " + e.getMessage());
+            log.error("Failed to obtain avatar upload URL: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to obtain upload URL: " + e.getMessage());
         }
     }
 }

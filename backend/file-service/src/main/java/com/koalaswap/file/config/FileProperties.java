@@ -93,7 +93,7 @@ public class FileProperties {
     public CategoryConfig getCategoryConfig(String category) {
         CategoryConfig config = categories.get(category);
         if (config == null) {
-            throw new IllegalArgumentException("不支持的文件分类: " + category);
+            throw new IllegalArgumentException("Unsupported file category: " + category);
         }
         return config;
     }

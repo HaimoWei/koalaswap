@@ -71,12 +71,12 @@ public class FileServiceClient {
                     ((Number) data.get("expiresAt")).longValue()
                 );
             } else {
-                throw new RuntimeException("调用file-service失败: " + response.getStatusCode());
+                throw new RuntimeException("file-service responded with a non-success status: " + response.getStatusCode());
             }
 
         } catch (Exception e) {
-            log.error("调用file-service获取上传URL失败: {}", e.getMessage(), e);
-            throw new RuntimeException("获取图片上传URL失败: " + e.getMessage());
+            log.error("Failed to call file-service to get upload URL: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to get image upload URL: " + e.getMessage());
         }
     }
 
@@ -130,12 +130,12 @@ public class FileServiceClient {
                     ))
                     .toList();
             } else {
-                throw new RuntimeException("调用file-service失败: " + response.getStatusCode());
+                throw new RuntimeException("file-service responded with a non-success status: " + response.getStatusCode());
             }
 
         } catch (Exception e) {
-            log.error("调用file-service批量获取上传URL失败: {}", e.getMessage(), e);
-            throw new RuntimeException("批量获取图片上传URL失败: " + e.getMessage());
+            log.error("Failed to call file-service to get batch upload URLs: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to get batch image upload URLs: " + e.getMessage());
         }
     }
 }

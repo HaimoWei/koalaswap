@@ -10,15 +10,15 @@ import { UserProfileCard } from "../components/UserProfileCard";
 const AVATAR_FALLBACK_40 = "https://placehold.co/40x40?text=%20";
 const AVATAR_FALLBACK_64 = "https://placehold.co/64x64?text=%20";
 
-/** 将第三方图片切到公共代理，解决 521/跨域/防盗链等问题 */
+/** Proxy third-party images via a public CDN to avoid 521/CORS/hotlinking issues */
 function proxyImg(url: string, size: number) {
-    // images.weserv.nl 要求去掉协议
+    // images.weserv.nl requires protocol-stripped URL
     const noProto = url.replace(/^https?:\/\//i, "");
-    // fit=cover 保证等比裁剪为正方形
+    // fit=cover ensures a square cropped image
     return `https://images.weserv.nl/?url=${encodeURIComponent(noProto)}&w=${size}&h=${size}&fit=cover`;
 }
 
-/** 统一头像组件：先尝试原图，失败→代理，再失败→占位图 */
+/** Avatar component: try original URL, then proxy, then fallback */
 function Avatar({
                     url,
                     name,
@@ -33,7 +33,7 @@ function Avatar({
     className?: string;
 }) {
     const fb = fallback || `https://placehold.co/${size}x${size}?text=%20`;
-    const alt = name ? `${name} 的头像` : "用户头像";
+    const alt = name ? `${name}'s avatar` : "User avatar";
 
     return (
         <img
@@ -45,17 +45,17 @@ function Avatar({
             loading="lazy"
             decoding="async"
             referrerPolicy="no-referrer"
-            // ⚠️ 不要加 crossOrigin，避免把普通 <img> 变成 CORS 模式
+            // ⚠️ Do not add crossOrigin to avoid turning a normal <img> into a CORS image
             onError={(e) => {
                 const img = e.currentTarget as HTMLImageElement;
                 const tried = img.getAttribute("data-tried") || "";
-                // 第一次失败：如果有原始 url，尝试代理
+                // First failure: if there is an original URL, try proxy
                 if (url && tried !== "proxy") {
                     img.setAttribute("data-tried", "proxy");
                     img.src = proxyImg(url, size);
                     return;
                 }
-                // 第二次失败：回落到占位图
+                // Second failure: fall back to placeholder
                 if (img.src !== fb) {
                     img.onerror = null;
                     img.src = fb;
@@ -70,7 +70,7 @@ export default function SellerProfilePage() {
     const nav = useNavigate();
     const [tab, setTab] = useState<"products" | "reviews">("products");
 
-    // —— 固定 Hooks 顺序：所有 useQuery 在顶部 —— //
+    // —— Keep hook order fixed: all useQuery calls at the top —— //
     const userQ = useQuery({
         queryKey: ["sellerPublic", id],
         queryFn: () => getUserPublic(id),
@@ -89,19 +89,23 @@ export default function SellerProfilePage() {
         enabled: !!id && tab === "reviews",
     });
 
-    // —— 渲染早返回（不会影响 Hook 数量） —— //
-    if (userQ.isLoading) return <main className="max-w-6xl mx-auto p-6">加载中…</main>;
+    // —— Early returns for loading/error (do not affect hook count) —— //
+    if (userQ.isLoading) return <main className="max-w-6xl mx-auto p-6">Loading…</main>;
     if (userQ.isError || !userQ.data)
-        return <main className="max-w-6xl mx-auto p-6 text-red-600">卖家不存在或已被封禁</main>;
+        return (
+            <main className="max-w-6xl mx-auto p-6 text-red-600">
+                Seller does not exist or has been banned.
+            </main>
+        );
 
     const u = userQ.data;
 
-    // 计算会员年数
+    // Calculate membership years
     const memberYears = u.memberSince ? Math.floor((new Date().getTime() - new Date(u.memberSince).getTime()) / (365 * 24 * 60 * 60 * 1000)) : 0;
 
-    // 格式化最后活跃时间
+    // Format last active time
     const formatLastActive = (lastActiveAt?: string) => {
-        if (!lastActiveAt) return "最近活跃: 未知";
+        if (!lastActiveAt) return "Last active: unknown";
 
         const now = Date.now();
         const lastActive = new Date(lastActiveAt).getTime();
@@ -111,26 +115,26 @@ export default function SellerProfilePage() {
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-        if (minutes < 1) return "最近活跃: 刚刚";
-        if (minutes < 60) return `最近活跃: ${minutes}分钟前`;
-        if (hours < 24) return `最近活跃: ${hours}小时前`;
-        if (days < 7) return `最近活跃: ${days}天前`;
-        if (days < 30) return `最近活跃: ${days}天前`;
+        if (minutes < 1) return "Last active: just now";
+        if (minutes < 60) return `Last active: ${minutes} minutes ago`;
+        if (hours < 24) return `Last active: ${hours} hours ago`;
+        if (days < 7) return `Last active: ${days} days ago`;
+        if (days < 30) return `Last active: ${days} days ago`;
 
         const date = new Date(lastActiveAt);
         const month = date.getMonth() + 1;
         const day = date.getDate();
-        return `最近活跃: ${month}月${day}日`;
+        return `Last active: ${month}/${day}`;
     };
 
-    // 评分与分组（纯函数）
+    // Rating and grouping (pure functions)
     const reviews = (reviewsQ.data?.content ?? []) as SellerReview[];
     const avg = reviews.length ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1) : null;
     const grouped = groupReviews(reviews);
 
     return (
         <main className="max-w-6xl mx-auto p-6 space-y-6">
-            {/* 顶部卖家信息 */}
+                        {/* Top seller info */}
             <section className="card p-6">
                 <div className="flex items-start gap-6">
                     <Avatar url={u.avatarUrl} name={u.displayName} size={80} fallback={AVATAR_FALLBACK_64} />
@@ -147,53 +151,53 @@ export default function SellerProfilePage() {
                                         {u.location}
                                     </div>
                                 )}
-                                {memberYears > 0 && <span>会员{memberYears}年</span>}
+                                {memberYears > 0 && <span>Member for {memberYears} years</span>}
                                 <span>{formatLastActive(u.lastActiveAt)}</span>
                             </div>
                         </div>
 
-                        {/* 个人简介 */}
+                        {/* Bio */}
                         {u.bio && (
                             <div className="text-gray-700 leading-relaxed">
                                 {u.bio}
                             </div>
                         )}
 
-                        {/* 信誉和统计信息 */}
+                        {/* Ratings and stats */}
                         <div className="grid grid-cols-2 gap-8 py-4 border-t border-gray-100">
                             <div className="text-center">
                                 <div className="text-lg font-semibold text-orange-500">
-                                    {u.ratingAvg && u.ratingAvg > 0 ? u.ratingAvg.toFixed(1) : "暂无"}
+                                    {u.ratingAvg && u.ratingAvg > 0 ? u.ratingAvg.toFixed(1) : "N/A"}
                                 </div>
-                                <div className="text-xs text-gray-500">好评度</div>
+                                <div className="text-xs text-gray-500">Rating</div>
                                 <div className="text-xs text-gray-400 mt-1">
-                                    {u.ratingCount || 0}条评价
+                                    {u.ratingCount || 0} reviews
                                 </div>
                             </div>
                             <div className="text-center">
                                 <div className="text-lg font-semibold text-purple-500">
                                     {productsQ.data?.totalElements || 0}
                                 </div>
-                                <div className="text-xs text-gray-500">在售商品</div>
+                                <div className="text-xs text-gray-500">Active listings</div>
                                 <div className="text-xs text-gray-400 mt-1">
-                                    加入于{u.memberSince ? new Date(u.memberSince).getFullYear() : '未知'}年
+                                    Joined in {u.memberSince ? new Date(u.memberSince).getFullYear() : 'Unknown'}
                                 </div>
                             </div>
                         </div>
 
-                        {/* 认证信息 */}
+                        {/* Verification info */}
                         <div className="flex items-center gap-4 pt-2">
-                            <span className="text-xs text-gray-500">认证状态:</span>
+                            <span className="text-xs text-gray-500">Verification status:</span>
                             <div className="flex gap-3">
                                 {u.phoneVerified ? (
                                     <span className="inline-flex items-center gap-1 text-xs text-green-600">
                                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                             <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                                         </svg>
-                                        手机已认证
+                                        Phone verified
                                     </span>
                                 ) : (
-                                    <span className="text-xs text-gray-400">手机未认证</span>
+                                    <span className="text-xs text-gray-400">Phone not verified</span>
                                 )}
                                 {u.emailVerified ? (
                                     <span className="inline-flex items-center gap-1 text-xs text-blue-600">
@@ -201,42 +205,42 @@ export default function SellerProfilePage() {
                                             <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                                             <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                                         </svg>
-                                        邮箱已认证
+                                        Email verified
                                     </span>
                                 ) : (
-                                    <span className="text-xs text-gray-400">邮箱未认证</span>
+                                    <span className="text-xs text-gray-400">Email not verified</span>
                                 )}
                             </div>
                         </div>
                     </div>
                     <button onClick={() => nav(-1)} className="btn btn-secondary text-sm">
-                        返回
+                        Back
                     </button>
                 </div>
             </section>
 
-            {/* Tabs 导航 */}
+            {/* Tabs navigation */}
             <div className="flex gap-6 border-b border-[var(--color-border)]">
                 <TabBtn active={tab === "products"} onClick={() => setTab("products")}>
-                    在售商品
+                    Active listings
                 </TabBtn>
                 <TabBtn active={tab === "reviews"} onClick={() => setTab("reviews")}>
-                    评价{avg ? <span className="ml-1 text-gray-500 text-xs">({avg}/5)</span> : null}
+                    Reviews{avg ? <span className="ml-1 text-gray-500 text-xs">({avg}/5)</span> : null}
                 </TabBtn>
             </div>
 
-            {/* Tab 内容 */}
+            {/* Tab content */}
             <section>
                 {tab === "products" ? (
                     <div>
                         {productsQ.isLoading ? (
-                            <div className="text-center py-8 text-gray-500">加载中…</div>
+                            <div className="text-center py-8 text-gray-500">Loading…</div>
                         ) : productsQ.isError ? (
-                            <div className="text-center py-8 text-gray-500">商品加载失败</div>
+                            <div className="text-center py-8 text-gray-500">Failed to load items</div>
                         ) : (productsQ.data?.content?.length ?? 0) === 0 ? (
                             <div className="text-center py-12">
                                 <div className="text-gray-400 text-6xl mb-4">📦</div>
-                                <div className="text-gray-500">暂无在售商品</div>
+                                <div className="text-gray-500">No active listings</div>
                             </div>
                         ) : (
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -249,7 +253,7 @@ export default function SellerProfilePage() {
                                     >
                                         <img
                                             src={p.images?.[0] || "https://placehold.co/400x400"}
-                                            alt={p.title || "商品图片"}
+                                            alt={p.title || "Item image"}
                                             className="w-full aspect-square object-cover"
                                             loading="lazy"
                                             decoding="async"
@@ -272,11 +276,11 @@ export default function SellerProfilePage() {
                 ) : (
                     <div>
                         {reviewsQ.isLoading ? (
-                            <div className="text-center py-8 text-gray-500">加载中…</div>
+                            <div className="text-center py-8 text-gray-500">Loading…</div>
                         ) : grouped.length === 0 ? (
                             <div className="text-center py-12">
                                 <div className="text-gray-400 text-6xl mb-4">⭐</div>
-                                <div className="text-gray-500">暂无评价</div>
+                                <div className="text-gray-500">No reviews yet</div>
                             </div>
                         ) : (
                             <div className="space-y-4">
@@ -285,13 +289,13 @@ export default function SellerProfilePage() {
                                         <div className="flex items-center gap-3">
                                             <Avatar
                                                 url={root.reviewer?.avatarUrl}
-                                                name={root.reviewer?.displayName || (root.anonymous ? "匿名" : "用户")}
+                                                name={root.reviewer?.displayName || (root.anonymous ? "Anonymous" : "User")}
                                                 size={36}
                                                 fallback={AVATAR_FALLBACK_40}
                                             />
                                             <div className="flex-1">
                                                 <div className="text-sm font-medium text-gray-900">
-                                                    {root.reviewer?.displayName ?? (root.anonymous ? "匿名" : String(root.reviewer?.id ?? "用户"))}
+                                                    {root.reviewer?.displayName ?? (root.anonymous ? "Anonymous" : String(root.reviewer?.id ?? "User"))}
                                                 </div>
                                                 <div className="text-xs text-gray-500">
                                                     {root.createdAt ? new Date(root.createdAt).toLocaleString() : ""}
@@ -302,14 +306,14 @@ export default function SellerProfilePage() {
 
                                         {!!root.comment && <p className="text-sm mt-3 text-gray-700 leading-relaxed whitespace-pre-line">{root.comment}</p>}
 
-                                        {/* 追评 */}
+                                        {/* Additional reviews */}
                                         {appends.map((ap) => (
                                             <div
-                                                key={String(ap.id)}
+                                            key={String(ap.id)}
                                                 className="mt-3 ml-3 bg-orange-50 border-l-4 border-orange-200 rounded-r p-3"
                                             >
                                                 <div className="flex items-center gap-2 mb-2">
-                                                    <span className="text-xs text-orange-600 font-medium">追评</span>
+                                                    <span className="text-xs text-orange-600 font-medium">Additional review</span>
                                                     <div className="text-xs text-gray-500">
                                                         {ap.createdAt ? new Date(ap.createdAt).toLocaleString() : ""}
                                                     </div>
@@ -366,7 +370,7 @@ function TabBtn({
 function Stars({ value = 0 }: { value?: number }) {
     const full = Math.max(0, Math.min(5, Math.round(value || 0)));
     return (
-        <div className="text-orange-500 text-sm" aria-label={`评分 ${value} / 5`}>
+        <div className="text-orange-500 text-sm" aria-label={`Rating ${value} / 5`}>
             {"★★★★★☆☆☆☆☆".slice(5 - full, 10 - full)}
         </div>
     );
@@ -375,7 +379,7 @@ function Stars({ value = 0 }: { value?: number }) {
 function formatPrice(n: number, c?: string | null) {
     try {
         if (c === "AUD" || c === "CNY")
-            return new Intl.NumberFormat("zh-CN", { style: "currency", currency: c }).format(n);
+            return new Intl.NumberFormat("en-AU", { style: "currency", currency: c }).format(n);
     } catch {}
-    return `¥${n}`;
+    return `$${n}`;
 }

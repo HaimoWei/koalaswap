@@ -14,17 +14,17 @@ import java.util.UUID;
 @Data
 public class ImageUploadRequest {
 
-    @NotNull(message = "商品ID不能为空")
+    @NotNull(message = "Item ID must not be empty.")
     private UUID productId;
 
-    @NotBlank(message = "文件名不能为空")
-    @Size(max = 255, message = "文件名长度不能超过255字符")
+    @NotBlank(message = "File name must not be empty.")
+    @Size(max = 255, message = "File name must not exceed 255 characters.")
     private String fileName;
 
-    @NotNull(message = "文件大小不能为空")
+    @NotNull(message = "File size must not be empty.")
     private Long fileSize;
 
-    @NotBlank(message = "文件类型不能为空")
+    @NotBlank(message = "File type must not be empty.")
     private String mimeType;
 
     /** 是否设为主图（可选，默认false） */

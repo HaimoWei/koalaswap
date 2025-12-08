@@ -87,11 +87,11 @@ public class ImageUploadController {
         UUID currentUserId = SecuritySupport.requireUserId(auth);
 
         ProductImage image = imageRepository.findById(imageId)
-            .orElseThrow(() -> new RuntimeException("图片不存在"));
+            .orElseThrow(() -> new RuntimeException("Image does not exist."));
 
         // 验证权限
         if (!image.getUploadedBy().equals(currentUserId)) {
-            throw new RuntimeException("无权限操作此图片");
+            throw new RuntimeException("You do not have permission to operate on this image.");
         }
 
         // 清除同商品的其他主图
@@ -121,7 +121,7 @@ public class ImageUploadController {
         UUID currentUserId = SecuritySupport.requireUserId(auth);
 
         if (requests.size() > 5) {
-            throw new RuntimeException("单次最多上传 5 张图片");
+            throw new RuntimeException("You can upload at most 5 images in a single request.");
         }
 
         List<ImageUploadResponse> responses = requests.stream()
@@ -143,11 +143,11 @@ public class ImageUploadController {
         UUID currentUserId = SecuritySupport.requireUserId(auth);
 
         ProductImage image = imageRepository.findById(imageId)
-            .orElseThrow(() -> new RuntimeException("图片不存在"));
+            .orElseThrow(() -> new RuntimeException("Image does not exist."));
 
         // 验证权限
         if (!image.getUploadedBy().equals(currentUserId)) {
-            throw new RuntimeException("无权限操作此图片");
+            throw new RuntimeException("You do not have permission to operate on this image.");
         }
 
         image.setDisplayOrder(displayOrder);

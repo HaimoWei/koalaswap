@@ -56,7 +56,7 @@ public class EmailVerificationService {
         tokenRepo.findTopByUserIdOrderByCreatedAtDesc(user.getId())
                 .ifPresent(latest -> {
                     if(latest.getCreatedAt().isAfter(now.minusSeconds(resendCooldownSec))){
-                        throw new IllegalArgumentException("请稍后再试，刚刚已发送验证邮件");
+                        throw new IllegalArgumentException("A verification email was just sent. Please try again later.");
                     }
                 });
 
@@ -87,11 +87,11 @@ public class EmailVerificationService {
         // 找到对应 Token
         String token = rawToken == null ? "" : rawToken.trim();   // ← 关键
         var t = tokenRepo.findByToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("验证链接无效"));
+                .orElseThrow(() -> new IllegalArgumentException("The verification link is invalid."));
 
         // 检查 Token 状态
-        if(t.isUsed())    throw new IllegalArgumentException("验证链接已被使用");
-        if(t.isExpired()) throw new IllegalArgumentException("验证链接已过期");
+        if(t.isUsed())    throw new IllegalArgumentException("The verification link has already been used.");
+        if(t.isExpired()) throw new IllegalArgumentException("The verification link has expired.");
 
         // 更新用户邮箱状态
         var user = userRepo.findById(t.getUserId()).orElseThrow();

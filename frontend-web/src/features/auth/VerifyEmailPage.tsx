@@ -20,7 +20,7 @@ export function VerifyEmailPage() {
             firedRef.current = true;
 
             if (!token) {
-                setMsg("缺少 token 参数");
+                setMsg("Missing token parameter.");
                 setStatus("fail");
                 return;
             }
@@ -33,12 +33,12 @@ export function VerifyEmailPage() {
                 const text = e?.message || "";
                 const used =
                     text.includes("已被使用") ||
-                    text.toLowerCase().includes("used"); // 中英都兜底
+                    text.toLowerCase().includes("used"); // handle both Chinese and English backend messages
                 if (used) {
                     setStatus("ok");
                     return;
                 }
-                setMsg(text || "验证失败");
+                setMsg(text || "Verification failed.");
                 setStatus("fail");
             }
         }
@@ -47,18 +47,18 @@ export function VerifyEmailPage() {
 
     return (
         <main className="max-w-lg mx-auto p-6 text-center">
-            {status === "pending" && <p>验证中...</p>}
+            {status === "pending" && <p>Verifying...</p>}
 
             {status === "ok" && (
                 <>
-                    <h1 className="text-xl font-semibold mb-2">邮箱验证成功</h1>
-                    <p className="text-gray-600">现在可以使用该账号登录。</p>
+                    <h1 className="text-xl font-semibold mb-2">Email verification successful</h1>
+                    <p className="text-gray-600">You can now sign in with this account.</p>
                     <div className="mt-4 flex justify-center gap-3">
                         <button onClick={() => nav("/")} className="btn btn-primary">
-                            返回首页
+                            Back to home
                         </button>
                         <button onClick={() => nav("/login")} className="btn btn-secondary">
-                            去登录
+                            Sign in
                         </button>
                     </div>
                 </>
@@ -66,13 +66,13 @@ export function VerifyEmailPage() {
 
             {status === "fail" && (
                 <>
-                    <h1 className="text-xl font-semibold mb-2">验证失败</h1>
-                    <p className="text-gray-600">{msg || "链接已失效或 token 不正确。"}</p>
+                    <h1 className="text-xl font-semibold mb-2">Verification failed</h1>
+                    <p className="text-gray-600">{msg || "The link has expired or the token is invalid."}</p>
                     <button
                         onClick={() => nav("/")}
                         className="mt-4 btn btn-secondary"
                     >
-                        返回首页
+                        Back to home
                     </button>
                 </>
             )}

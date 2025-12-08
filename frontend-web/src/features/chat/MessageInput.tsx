@@ -22,7 +22,7 @@ export function MessageInput({
         setText("");
     }
 
-    // 处理图片上传完成
+    // Handle image upload completion
     const handleImageUploaded = async (cdnUrl: string) => {
         await onSendImage(cdnUrl);
     };
@@ -31,9 +31,9 @@ export function MessageInput({
 
     return (
         <div className="border-t border-[var(--color-border)] bg-[var(--color-surface)] p-3">
-            {/* 主输入区域 */}
+            {/* Main input area */}
             <div className="flex gap-2 items-end">
-                {/* 图片上传按钮 */}
+                {/* Image upload button */}
                 <ChatImageUploader
                     conversationId={conversationId}
                     onImageUploaded={handleImageUploaded}
@@ -42,31 +42,31 @@ export function MessageInput({
                     disabled={isDisabled}
                 />
 
-                {/* 文本输入框 */}
+                {/* Text input */}
                 <input
                     className="flex-1 input text-sm"
-                    placeholder="输入消息，回车发送"
+                    placeholder="Type a message and press Enter"
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && submitText()}
                     disabled={isDisabled}
                 />
 
-                {/* 发送按钮 */}
+                {/* Send button */}
                 <button
                     onClick={submitText}
                     disabled={isDisabled || !text.trim()}
                     className="btn btn-primary disabled:opacity-50 text-sm px-4"
                 >
-                    发送
-                </button>
+                    Send
+            </button>
             </div>
 
-            {/* 上传状态提示 */}
+            {/* Upload status */}
             {uploading && (
                 <div className="mt-2 text-xs text-gray-500 flex items-center gap-2">
                     <div className="w-3 h-3 border border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                    <span>正在上传图片...</span>
+                    <span>Uploading image...</span>
                 </div>
             )}
         </div>

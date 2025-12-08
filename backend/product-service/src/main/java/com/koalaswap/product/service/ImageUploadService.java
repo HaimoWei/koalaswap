@@ -42,7 +42,7 @@ public class ImageUploadService {
      */
     @Transactional
     public ImageUploadResponse requestUpload(ImageUploadRequest request, UUID currentUserId) {
-        log.info("用户 {} 请求上传图片到商品 {}: {}", currentUserId, request.getProductId(), request.getFileName());
+        log.info("User {} requests to upload image to item {}: {}", currentUserId, request.getProductId(), request.getFileName());
 
         // 1. 验证商品存在且用户有权限
         validateProduct(request.getProductId(), currentUserId);
@@ -99,14 +99,14 @@ public class ImageUploadService {
      */
     @Transactional
     public void completeUpload(ImageUploadCompleteRequest request, UUID currentUserId) {
-        log.info("用户 {} 通知图片上传完成: {} - {}", currentUserId, request.getImageId(), request.getSuccess());
+        log.info("User {} reports image upload completion: {} - {}", currentUserId, request.getImageId(), request.getSuccess());
 
         ProductImage image = imageRepository.findById(request.getImageId())
-            .orElseThrow(() -> new RuntimeException("图片记录不存在"));
+            .orElseThrow(() -> new RuntimeException("Image record does not exist."));
 
         // 验证权限
         if (!image.getUploadedBy().equals(currentUserId)) {
-            throw new RuntimeException("无权限操作此图片");
+            throw new RuntimeException("You do not have permission to operate on this image.");
         }
 
         if (Boolean.TRUE.equals(request.getSuccess())) {
@@ -116,7 +116,7 @@ public class ImageUploadService {
         } else {
             // 上传失败
             image.markAsFailed();
-            log.warn("图片上传失败: {} - {}", request.getImageId(), request.getErrorMessage());
+            log.warn("Image upload failed: {} - {}", request.getImageId(), request.getErrorMessage());
         }
 
         imageRepository.save(image);
@@ -128,12 +128,12 @@ public class ImageUploadService {
     @Transactional
     public void deleteImage(UUID imageId, UUID currentUserId) {
         ProductImage image = imageRepository.findById(imageId)
-            .orElseThrow(() -> new RuntimeException("图片记录不存在"));
+            .orElseThrow(() -> new RuntimeException("Image record does not exist."));
 
         // 验证权限（图片上传者或商品所有者）
         if (!image.getUploadedBy().equals(currentUserId)) {
             // TODO: 检查是否为商品所有者
-            throw new RuntimeException("无权限删除此图片");
+            throw new RuntimeException("You do not have permission to delete this image.");
         }
 
         // 如果删除的是主图，自动设置下一张为主图
@@ -144,7 +144,7 @@ public class ImageUploadService {
             setNextImageAsPrimary(image.getProductId());
         }
 
-        log.info("用户 {} 删除图片: {}", currentUserId, imageId);
+        log.info("User {} deletes image: {}", currentUserId, imageId);
     }
 
     // === 私有辅助方法 ===
@@ -152,7 +152,7 @@ public class ImageUploadService {
     private void validateProduct(UUID productId, UUID currentUserId) {
         boolean exists = productRepository.existsById(productId);
         if (!exists) {
-            throw new RuntimeException("商品不存在");
+            throw new RuntimeException("Item does not exist.");
         }
         // TODO: 验证用户是否为商品所有者
     }
@@ -160,13 +160,13 @@ public class ImageUploadService {
     private void validateFile(ImageUploadRequest request) {
         // 验证文件大小
         if (request.getFileSize() > s3Properties.getUpload().getMaxFileSize()) {
-            throw new RuntimeException("文件过大，最大允许 " + (s3Properties.getUpload().getMaxFileSize() / 1024 / 1024) + "MB");
+            throw new RuntimeException("File size exceeds the maximum allowed of " + (s3Properties.getUpload().getMaxFileSize() / 1024 / 1024) + "MB.");
         }
 
         // 验证 MIME 类型
         String[] allowedTypes = s3Properties.getUpload().getAllowedMimeTypes();
         if (!Arrays.asList(allowedTypes).contains(request.getMimeType())) {
-            throw new RuntimeException("不支持的文件类型: " + request.getMimeType());
+            throw new RuntimeException("Unsupported file type: " + request.getMimeType());
         }
 
         // 验证文件扩展名
@@ -174,14 +174,14 @@ public class ImageUploadService {
         String[] allowedExts = s3Properties.getUpload().getAllowedExtensions();
         boolean validExt = Arrays.stream(allowedExts).anyMatch(fileName::endsWith);
         if (!validExt) {
-            throw new RuntimeException("不支持的文件扩展名");
+            throw new RuntimeException("Unsupported file extension.");
         }
     }
 
     private void checkImageLimit(UUID productId) {
         long currentCount = imageRepository.countByProductIdAndUploadStatus(productId, "COMPLETED");
         if (currentCount >= s3Properties.getUpload().getMaxImagesPerProduct()) {
-            throw new RuntimeException("商品图片数量已达上限 " + s3Properties.getUpload().getMaxImagesPerProduct() + " 张");
+            throw new RuntimeException("This item has reached the maximum number of images: " + s3Properties.getUpload().getMaxImagesPerProduct() + ".");
         }
     }
 
@@ -216,8 +216,8 @@ public class ImageUploadService {
             }
 
         } catch (Exception e) {
-            log.error("生成预签名 URL 失败: {}", objectKey, e);
-            throw new RuntimeException("生成上传链接失败");
+            log.error("Failed to generate presigned URL: {}", objectKey, e);
+            throw new RuntimeException("Failed to generate upload URL.");
         }
     }
 

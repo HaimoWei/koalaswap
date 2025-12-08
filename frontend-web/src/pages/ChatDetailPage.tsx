@@ -54,23 +54,23 @@ export function ChatDetailPage() {
         }
     }, [msgsQ.data]);
 
-    // 加载更多历史消息的函数
+    // Load more historical messages
     const loadMoreHistory = async () => {
         const nextPage = Math.max(...loadedPages) + 1;
         if (nextPage >= totalPages) return;
 
         try {
             const data = await listMessages({ id, page: nextPage, size });
-            setAllMessages(prev => [...data.content, ...prev]); // 历史消息加到前面
+            setAllMessages(prev => [...data.content, ...prev]); // prepend historical messages
             setLoadedPages(prev => new Set([...prev, nextPage]));
         } catch (error) {
-            console.error('加载历史消息失败:', error);
+            console.error('Failed to load historical messages:', error);
         }
     };
 
     const hasMoreHistory = Math.max(...loadedPages, -1) + 1 < totalPages;
 
-    // ====== 3) WebSocket实时消息（修复后的企业级认证） ======
+    // ====== 3) WebSocket real-time messages (enterprise-grade auth) ======
     useEffect(() => {
         if (!id) return;
         
@@ -171,9 +171,9 @@ export function ChatDetailPage() {
             });
         } catch (e: any) {
             if (e?.response?.status === 429) {
-                alert("发送太快啦，请稍后再试");
+                alert("You are sending messages too quickly. Please try again in a moment.");
             } else {
-                alert(e?.message || "发送失败");
+                alert(e?.message || "Failed to send message.");
             }
         } finally {
             setSending(false);
@@ -194,28 +194,28 @@ export function ChatDetailPage() {
             });
         } catch (e: any) {
             if (e?.response?.status === 429) {
-                alert("发送太快啦，请稍后再试");
+                alert("You are sending messages too quickly. Please try again in a moment.");
             } else {
-                alert(e?.message || "发送失败");
+                alert(e?.message || "Failed to send message.");
             }
         } finally {
             setSending(false);
         }
     }
 
-    // ====== 6) "已读"标识：从后端获取对方的已读消息ID ======
+    // ====== 6) Read indicator: get peer read-to message ID from backend ======
     const peerReadToMessageId = useMemo(
         () => getPeerReadToMessageId(convQ.data),
         [convQ.data]
     );
-    // 找到我发的最后一条消息
+    // Find my last message
     const lastMineIdx = [...allMessages].map((m, i) => [m, i] as const).filter(([m]) => m.senderId === myId).map(([,i]) => i).pop();
     const lastMineId = lastMineIdx != null ? allMessages[lastMineIdx].id : null;
     
-    // 判断我的最后一条消息是否被对方已读（使用严格相等比较，因为UUID不支持大小比较）
+    // Determine whether my last message has been read by the peer (UUIDs are compared by strict equality)
     const lastMineRead = !!(peerReadToMessageId && lastMineId && lastMineId === peerReadToMessageId);
 
-    // 自动滚动到底部
+    // Auto-scroll to bottom
     const messagesEndRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -224,46 +224,44 @@ export function ChatDetailPage() {
     return (
         <main className="max-w-6xl mx-auto p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* 左：会话侧栏入口 */}
+                {/* Left: conversation sidebar entry */}
                 <div className="md:col-span-1 space-y-3">
                     <Link to="/chat" className="block px-3 py-2 rounded card hover:shadow-[var(--shadow-2)] text-sm">
-                        ← 返回消息列表
+                        ← Back to messages
                     </Link>
                     {convQ.isLoading ? (
                         <div className="h-24 card animate-pulse" />
                     ) : convQ.isError ? (
-                        <div className="text-red-600 text-sm">会话信息加载失败</div>
+                        <div className="text-red-600 text-sm">Failed to load conversation info</div>
                     ) : (
                         <div className="card p-3">
-                            <div className="text-sm text-gray-600">会话ID</div>
+                            <div className="text-sm text-gray-600">Conversation ID</div>
                             <div className="text-sm font-mono">{id}</div>
                         </div>
                     )}
                 </div>
 
-                {/* 右：聊天窗口 */}
+                {/* Right: chat window */}
                 <div className="md:col-span-2 card flex flex-col h-[70vh]">
-                    {/* 顶部条 */}
-                    <div className="px-4 py-3 border-b border-[var(--color-border)] text-sm">聊天</div>
+                    {/* Top bar */}
+                    <div className="px-4 py-3 border-b border-[var(--color-border)] text-sm">Chat</div>
 
-                    {/* 消息区 */}
+                    {/* Messages area */}
                     <div className="flex-1 overflow-y-auto px-3 py-2">
-                        {/* 加载更多历史消息 */}
+                        {/* Load more history */}
                         {hasMoreHistory && (
                             <div className="flex justify-center my-2">
                                 <button
                                     className="btn btn-secondary text-xs"
                                     onClick={loadMoreHistory}
                                 >
-                                    加载更早消息
+                                    Load earlier messages
                                 </button>
                             </div>
                         )}
 
                         {allMessages.length === 0 ? (
-                            <div className="text-center text-gray-500 py-8">
-                                还没有消息，开始聊天吧！
-                            </div>
+                            <div className="text-center text-gray-500 py-8">No messages yet. Start chatting!</div>
                         ) : (
                             allMessages.map((m, i) => {
                                 console.log(`[Debug] 消息 ${i}:`, { id: m.id, senderId: m.senderId, myId, type: m.type, body: m.body });
@@ -271,7 +269,7 @@ export function ChatDetailPage() {
                                     <MessageBubble
                                         key={m.id}
                                         m={m}
-                                        // 仅在"我最后一条消息"处展示已读
+                                        // Only show "read" on my last message
                                         isRead={i === lastMineIdx && lastMineRead}
                                     />
                                 );

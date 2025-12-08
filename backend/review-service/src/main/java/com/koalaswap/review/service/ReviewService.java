@@ -67,12 +67,12 @@ public class ReviewService {
         // 用 slot 判断我是否是该订单的买家/卖家，以及对方是谁
         var example = slotExample(req.orderId(), me);
         var slotOpt = slots.findAll(Example.of(example)).stream().findFirst();
-        if (slotOpt.isEmpty()) throw new IllegalArgumentException("订单不存在或无评价权限");
+        if (slotOpt.isEmpty()) throw new IllegalArgumentException("Order does not exist or you do not have permission to review it.");
         var slot = slotOpt.get();
-        if (slot.getStatus() == ReviewSlotStatus.REVIEWED) throw new IllegalArgumentException("已评价");
+        if (slot.getStatus() == ReviewSlotStatus.REVIEWED) throw new IllegalArgumentException("This order has already been reviewed.");
 
         reviews.findByOrderIdAndReviewerId(req.orderId(), me).ifPresent(r -> {
-            throw new IllegalArgumentException("已评价");
+            throw new IllegalArgumentException("This order has already been reviewed.");
         });
 
         var r = new OrderReview();
@@ -112,9 +112,9 @@ public class ReviewService {
             );
 
             eventPublisher.publishEvent(event);
-            System.out.println("[ReviewService] 发布Spring事件成功");
+            System.out.println("[ReviewService] Spring event published successfully");
         } catch (Exception e) {
-            System.err.println("[ReviewService] 发布评价事件失败，但不影响评价创建: " + e.getMessage());
+            System.err.println("[ReviewService] Failed to publish review event, but review creation is still successful: " + e.getMessage());
         }
 
         // 只此一条，直接取一次 brief（含标题与首图）
@@ -129,8 +129,8 @@ public class ReviewService {
     // 追评
     @Transactional
     public void append(UUID me, UUID reviewId, ReviewAppendReq req) {
-        var r = reviews.findById(reviewId).orElseThrow(() -> new IllegalArgumentException("评价不存在"));
-        if (!r.getReviewerId().equals(me)) throw new AccessDeniedException("只能追评自己的评价");
+        var r = reviews.findById(reviewId).orElseThrow(() -> new IllegalArgumentException("Review does not exist."));
+        if (!r.getReviewerId().equals(me)) throw new AccessDeniedException("You can only add an additional comment to your own review.");
         var a = new ReviewAppend();
         a.setReview(r);
         a.setComment(req.comment());
@@ -339,7 +339,7 @@ public class ReviewService {
         if (!r.isAnonymous()) {
             return brief == null ? null : new ReviewRes.UserBrief(brief.id(), brief.displayName(), brief.avatarUrl());
         }
-        String alias = "BUYER".equalsIgnoreCase(r.getReviewerRole()) ? "匿名买家" : "匿名卖家";
+        String alias = "BUYER".equalsIgnoreCase(r.getReviewerRole()) ? "Anonymous buyer" : "Anonymous seller";
         return new ReviewRes.UserBrief(null, alias, null);
     }
 

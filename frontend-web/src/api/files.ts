@@ -1,4 +1,4 @@
-// 统一文件上传 API（调用file-service）
+// Unified file upload API (calls file-service)
 import { fileApi } from './http';
 
 export interface FileUploadRequest {
@@ -6,8 +6,8 @@ export interface FileUploadRequest {
   fileSize: number;
   mimeType: string;
   category: string; // avatar, product, chat, document
-  bizId?: string;   // 业务ID（可选）
-  bizType?: string; // 业务类型细分（可选）
+  bizId?: string;   // business ID (optional)
+  bizType?: string; // business type (optional)
 }
 
 export interface FileUploadResponse {
@@ -20,13 +20,13 @@ export interface FileUploadResponse {
   maxFileSize: number;
 }
 
-// 获取单个文件上传URL
+// Get a single file upload URL
 export const getFileUploadUrl = async (request: FileUploadRequest): Promise<FileUploadResponse> => {
   const response = await fileApi.post('/api/files/upload-url', request);
   return response.data.data;
 };
 
-// 获取头像上传URL（快捷方式）
+// Get avatar upload URL (shortcut)
 export const getAvatarUploadUrl = async (fileName: string, fileSize: number, mimeType: string): Promise<FileUploadResponse> => {
   return getFileUploadUrl({
     fileName,
@@ -36,7 +36,7 @@ export const getAvatarUploadUrl = async (fileName: string, fileSize: number, mim
   });
 };
 
-// 获取聊天图片上传URL（快捷方式）
+// Get chat image upload URL (shortcut)
 export const getChatImageUploadUrl = async (fileName: string, fileSize: number, mimeType: string, conversationId?: string): Promise<FileUploadResponse> => {
   return getFileUploadUrl({
     fileName,
@@ -47,13 +47,13 @@ export const getChatImageUploadUrl = async (fileName: string, fileSize: number, 
   });
 };
 
-// 批量获取文件上传URL
+// Get multiple file upload URLs
 export const getBatchFileUploadUrls = async (requests: FileUploadRequest[]): Promise<FileUploadResponse[]> => {
   const response = await fileApi.post('/api/files/batch-upload-urls', requests);
   return response.data.data;
 };
 
-// 直接上传文件到S3
+// Upload file directly to S3
 export const uploadFileToS3 = async (file: File, uploadUrl: string): Promise<void> => {
   const response = await fetch(uploadUrl, {
     method: 'PUT',
@@ -64,11 +64,11 @@ export const uploadFileToS3 = async (file: File, uploadUrl: string): Promise<voi
   });
 
   if (!response.ok) {
-    throw new Error(`上传失败: ${response.status} ${response.statusText}`);
+    throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
   }
 };
 
-// 完整的头像上传流程
+// Full avatar upload flow
 export const uploadAvatar = async (file: File): Promise<string> => {
   // 1. 获取上传URL
   const uploadResponse = await getAvatarUploadUrl(file.name, file.size, file.type);

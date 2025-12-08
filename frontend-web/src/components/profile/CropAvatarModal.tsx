@@ -36,7 +36,7 @@ export default function CropAvatarModal({ open, imageSrc, onClose, onConfirm }: 
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg w-full max-w-xl shadow-2xl border border-gray-200">
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
-          <h3 className="text-base font-semibold text-gray-900">裁剪头像</h3>
+          <h3 className="text-base font-semibold text-gray-900">Crop avatar</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
         </div>
 
@@ -69,9 +69,9 @@ export default function CropAvatarModal({ open, imageSrc, onClose, onConfirm }: 
         </div>
 
         <div className="flex items-center justify-end gap-3 p-4 border-t border-gray-100">
-          <button onClick={onClose} className="btn btn-secondary px-6">取消</button>
+          <button onClick={onClose} className="btn btn-secondary px-6">Cancel</button>
           <button onClick={handleConfirm} disabled={isExporting} className="btn btn-primary px-6">
-            {isExporting ? '处理中...' : '应用'}
+            {isExporting ? 'Processing...' : 'Apply'}
           </button>
         </div>
       </div>

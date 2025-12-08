@@ -33,18 +33,18 @@ public class OrderService {
     public OrderRes create(UUID buyerId, OrderCreateReq req) {
         var p = productClient.getProduct(req.productId());
         if (p.status() != ProductClient.ProductStatus.ACTIVE) {
-            throw new IllegalArgumentException("该商品已下架或不可售");
+            throw new IllegalArgumentException("This item is no longer available for sale.");
         }
         if (buyerId.equals(p.sellerId())) {
-            throw new IllegalArgumentException("不能购买自己的商品");
+            throw new IllegalArgumentException("You cannot purchase your own item.");
         }
         // 并发占用检查
         if (orders.existsByProductIdAndStatusIn(p.id(), OPEN)) {
-            throw new IllegalArgumentException("该商品已有进行中的订单");
+            throw new IllegalArgumentException("There is already an active order for this item.");
         }
         // 占用：ACTIVE -> RESERVED
         if (!productClient.reserve(p.id())) {
-            throw new IllegalArgumentException("该商品已被下单，请刷新后重试");
+            throw new IllegalArgumentException("This item has just been ordered. Please refresh and try again.");
         }
 
         var e = new OrderEntity();
@@ -68,7 +68,7 @@ public class OrderService {
 
     /** 订单详情（参与者可见） */
     public OrderRes get(UUID userId, UUID id) {
-        var e = orders.findById(id).orElseThrow(() -> new IllegalArgumentException("订单不存在"));
+        var e = orders.findById(id).orElseThrow(() -> new IllegalArgumentException("Order does not exist."));
         assertParticipant(e, userId);
         return toRes(e);
     }
@@ -79,7 +79,7 @@ public class OrderService {
         Page<OrderEntity> pageData;
         boolean buyer = "buyer".equalsIgnoreCase(role);
         boolean seller = "seller".equalsIgnoreCase(role);
-        if (!buyer && !seller) throw new IllegalArgumentException("role 只能为 buyer 或 seller");
+        if (!buyer && !seller) throw new IllegalArgumentException("role must be either 'buyer' or 'seller'");
         if (buyer) {
             pageData = (status == null) ? orders.findByBuyerId(userId, pageable) : orders.findByBuyerIdAndStatus(userId, status, pageable);
         } else {
@@ -91,8 +91,8 @@ public class OrderService {
     /** 支付（模拟）：PENDING -> PAID，仅买家；并标记商品 SOLD */
     @Transactional
     public OrderRes pay(UUID buyerId, UUID id, PayReq req) {
-        var e = orders.findById(id).orElseThrow(() -> new IllegalArgumentException("订单不存在"));
-        if (!e.getBuyerId().equals(buyerId)) throw new IllegalArgumentException("只能支付自己的订单");
+        var e = orders.findById(id).orElseThrow(() -> new IllegalArgumentException("Order does not exist."));
+        if (!e.getBuyerId().equals(buyerId)) throw new IllegalArgumentException("You can only pay for your own orders.");
         if (e.getStatus() == OrderStatus.CANCELLED || e.getStatus() == OrderStatus.COMPLETED) return toRes(e);
         if (e.getStatus() != OrderStatus.PENDING) return toRes(e); // 幂等：非 PENDING 直接返回
 
@@ -111,10 +111,10 @@ public class OrderService {
     /** 发货：PAID -> SHIPPED，仅卖家 */
     @Transactional
     public OrderRes ship(UUID sellerId, UUID id, ShipReq req) {
-        var e = orders.findById(id).orElseThrow(() -> new IllegalArgumentException("订单不存在"));
-        if (!e.getSellerId().equals(sellerId)) throw new IllegalArgumentException("只能发自己售出的订单");
+        var e = orders.findById(id).orElseThrow(() -> new IllegalArgumentException("Order does not exist."));
+        if (!e.getSellerId().equals(sellerId)) throw new IllegalArgumentException("You can only ship orders you sold.");
         if (e.getStatus() == OrderStatus.CANCELLED || e.getStatus() == OrderStatus.COMPLETED) return toRes(e);
-        if (e.getStatus() != OrderStatus.PAID) throw new IllegalArgumentException("当前状态不可发货");
+        if (e.getStatus() != OrderStatus.PAID) throw new IllegalArgumentException("The current order status does not allow shipping.");
 
         e.setStatus(OrderStatus.SHIPPED);
         var saved = orders.save(e);
@@ -129,10 +129,10 @@ public class OrderService {
     /** 确认收货：SHIPPED -> COMPLETED，仅买家；保留商品 SOLD */
     @Transactional
     public OrderRes confirm(UUID buyerId, UUID id) {
-        var e = orders.findById(id).orElseThrow(() -> new IllegalArgumentException("订单不存在"));
-        if (!e.getBuyerId().equals(buyerId)) throw new IllegalArgumentException("只能确认自己的订单");
+        var e = orders.findById(id).orElseThrow(() -> new IllegalArgumentException("Order does not exist."));
+        if (!e.getBuyerId().equals(buyerId)) throw new IllegalArgumentException("You can only confirm receipt for your own orders.");
         if (e.getStatus() == OrderStatus.CANCELLED || e.getStatus() == OrderStatus.COMPLETED) return toRes(e);
-        if (e.getStatus() != OrderStatus.SHIPPED) throw new IllegalArgumentException("当前状态不可确认收货");
+        if (e.getStatus() != OrderStatus.SHIPPED) throw new IllegalArgumentException("The current order status does not allow confirming receipt.");
 
         e.setStatus(OrderStatus.COMPLETED);
         e.setClosedAt(Instant.now());
@@ -151,15 +151,15 @@ public class OrderService {
     /** 取消：买家 PENDING/PAID；卖家 PENDING */
     @Transactional
     public OrderRes cancel(UUID actorId, UUID id, CancelReq req) {
-        var e = orders.findById(id).orElseThrow(() -> new IllegalArgumentException("订单不存在"));
+        var e = orders.findById(id).orElseThrow(() -> new IllegalArgumentException("Order does not exist."));
         boolean seller = e.getSellerId().equals(actorId);
         boolean buyer = e.getBuyerId().equals(actorId);
-        if (!seller && !buyer) throw new AccessDeniedException("只能由买家/卖家取消订单");
+        if (!seller && !buyer) throw new AccessDeniedException("Only the buyer or seller can cancel this order.");
 
         switch (e.getStatus()) {
             case CANCELLED, COMPLETED -> {
                 // 明确拒绝再次取消
-                throw new AccessDeniedException("该订单已完成或已取消，无法再次取消");
+                throw new AccessDeniedException("This order has already been completed or cancelled and cannot be cancelled again.");
             }
             case PENDING -> {
                 // 取消：恢复商品 ACTIVE（无条件）
@@ -176,7 +176,7 @@ public class OrderService {
             }
             case PAID -> {
                 // 仅买家可取消：恢复商品 ACTIVE（无条件）
-                if (!buyer) throw new AccessDeniedException("仅买家可在已支付状态取消");
+                if (!buyer) throw new AccessDeniedException("Only the buyer can cancel the order after payment.");
                 productClient.activate(e.getProductId());
                 e.setStatus(OrderStatus.CANCELLED);
                 e.setClosedAt(Instant.now());
@@ -187,8 +187,8 @@ public class OrderService {
                 ));
                 return toRes(saved);
             }
-            case SHIPPED -> throw new AccessDeniedException("订单已发货，无法取消");
-            default -> throw new IllegalStateException("未知状态：" + e.getStatus());
+            case SHIPPED -> throw new AccessDeniedException("The order has been shipped and cannot be cancelled.");
+            default -> throw new IllegalStateException("Unknown order status: " + e.getStatus());
         }
     }
 
@@ -208,7 +208,7 @@ public class OrderService {
     // ---------- helpers ----------
     private void assertParticipant(OrderEntity e, UUID userId) {
         if (!Objects.equals(e.getBuyerId(), userId) && !Objects.equals(e.getSellerId(), userId)) {
-            throw new IllegalArgumentException("无权访问该订单");
+            throw new IllegalArgumentException("You do not have permission to access this order.");
         }
     }
 

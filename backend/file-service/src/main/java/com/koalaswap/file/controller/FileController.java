@@ -40,7 +40,7 @@ public class FileController {
         Authentication auth
     ) {
         UUID userId = SecuritySupport.requireUserId(auth);
-        log.info("用户 {} 请求获取文件上传URL: {}", userId, request.getFileName());
+        log.info("User {} requests file upload URL: {}", userId, request.getFileName());
 
         FileUploadResponse response = fileUploadService.generateUploadUrl(request, userId);
         return ResponseEntity.ok(ApiResponse.ok(response));
@@ -59,11 +59,11 @@ public class FileController {
         Authentication auth
     ) {
         UUID userId = SecuritySupport.requireUserId(auth);
-        log.info("用户 {} 请求批量获取 {} 个文件上传URL", userId, requests.size());
+        log.info("User {} requests batch upload URLs for {} files", userId, requests.size());
 
         if (requests.size() > 10) {
             return ResponseEntity.badRequest()
-                .body(ApiResponse.error("单次最多上传10个文件"));
+                .body(ApiResponse.error("You can upload at most 10 files in a single request."));
         }
 
         List<FileUploadResponse> responses = fileUploadService.generateBatchUploadUrls(requests, userId);
@@ -89,7 +89,7 @@ public class FileController {
         // 设置分类
         request.setCategory(category);
 
-        log.info("用户 {} 请求获取 {} 分类文件上传URL: {}", userId, category, request.getFileName());
+        log.info("User {} requests file upload URL for category {}: {}", userId, category, request.getFileName());
 
         FileUploadResponse response = fileUploadService.generateUploadUrl(request, userId);
         return ResponseEntity.ok(ApiResponse.ok(response));

@@ -67,7 +67,7 @@ services:
       - backend-net
 
   user-service:
-    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:user-prod
+    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:user-service-prod
     container_name: koalaswap-user-service-prod
     restart: always
     depends_on:
@@ -105,7 +105,7 @@ services:
       - backend-net
 
   product-service:
-    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:product-prod
+    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:product-service-prod
     container_name: koalaswap-product-service-prod
     restart: always
     depends_on:
@@ -143,7 +143,7 @@ services:
       - backend-net
 
   order-service:
-    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:order-prod
+    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:order-service-prod
     container_name: koalaswap-order-service-prod
     restart: always
     depends_on:
@@ -185,7 +185,7 @@ services:
       - backend-net
 
   review-service:
-    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:review-prod
+    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:review-service-prod
     container_name: koalaswap-review-service-prod
     restart: always
     depends_on:
@@ -231,7 +231,7 @@ services:
       - backend-net
 
   chat-service:
-    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:chat-prod
+    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:chat-service-prod
     container_name: koalaswap-chat-service-prod
     restart: always
     depends_on:
@@ -279,7 +279,7 @@ services:
       - backend-net
 
   file-service:
-    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:file-prod
+    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:file-service-prod
     container_name: koalaswap-file-service-prod
     restart: always
     depends_on:
@@ -315,7 +315,7 @@ services:
       - backend-net
 
   gateway-service:
-    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:gateway-prod
+    image: 143223323809.dkr.ecr.ap-southeast-2.amazonaws.com/koalaswap:gateway-service-prod
     container_name: koalaswap-gateway-service-prod
     restart: always
     depends_on:

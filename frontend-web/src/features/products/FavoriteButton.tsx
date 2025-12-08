@@ -43,7 +43,7 @@ export function FavoriteButton({ productId }: { productId: string }) {
                 setFav(false);
             }
         } catch (e: any) {
-            alert(e?.message || "收藏操作失败");
+            alert(e?.message || "Failed to update favorites.");
         } finally {
             setLoading(false);
         }
@@ -55,7 +55,7 @@ export function FavoriteButton({ productId }: { productId: string }) {
             disabled={loading}
             className={`btn text-sm ${fav ? "btn-secondary" : "btn-secondary"}`}
         >
-            {loading ? "…" : fav ? "已收藏" : "收藏"}
+            {loading ? "…" : fav ? "In favorites" : "Add to favorites"}
         </button>
     );
 }

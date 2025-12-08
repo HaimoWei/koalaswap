@@ -2,14 +2,14 @@
 package com.koalaswap.common.dto;
 
 /**
- * 统一的 API 返回格式：
- * - ok:     本次调用是否成功
- * - data:   业务数据（成功时返回）
- * - message:错误提示（失败时返回）
+ * Unified API response format:
+ * - ok:     whether the call succeeded
+ * - data:   business data (returned on success)
+ * - message:error message (returned on failure)
  *
- * 使用方法：
+ * Usage examples:
  * return ApiResponse.ok(userDto);
- * return ApiResponse.error("邮箱已存在");
+ * return ApiResponse.error("Email already exists");
  */
 public record ApiResponse<T>(boolean ok, T data, String message) {
     public static <T> ApiResponse<T> ok(T data){ return new ApiResponse<>(true, data, null); }

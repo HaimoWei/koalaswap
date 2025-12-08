@@ -30,16 +30,20 @@ export function ProductDetailPage() {
     });
 
     if (productQ.isLoading) {
-        return <main className="max-w-6xl mx-auto p-6">加载中...</main>;
+        return <main className="max-w-6xl mx-auto p-6">Loading...</main>;
     }
     if (productQ.isError || !productQ.data) {
-        return <main className="max-w-6xl mx-auto p-6 text-red-600">商品不存在或已下架</main>;
+        return (
+            <main className="max-w-6xl mx-auto p-6 text-red-600">
+                This item does not exist or is no longer available.
+            </main>
+        );
     }
 
     const p = productQ.data;
     const isMine = profile?.id === p.sellerId;
 
-    // ✅ 统一规则：只有 ACTIVE 才能聊/买；其他状态一律禁用
+    // ✅ Rule: only ACTIVE items can be chatted about or purchased; other statuses are disabled
     const notActive = p.status !== "ACTIVE";
     const disabledChat = isMine || notActive;
     const disabledBuy = isMine || notActive;
@@ -51,14 +55,14 @@ export function ProductDetailPage() {
             return;
         }
         if (disabledChat) {
-            toast("该商品当前不可聊天", "warning");
+            toast("This item is currently unavailable for chat.", "warning");
             return;
         }
         try {
             const conv = await createConversation({ productId: p.id, sellerId: p.sellerId });
             window.open(`/chat/${conv.id}`, "_blank", "noopener");
         } catch (e: any) {
-            toast(e?.message || "发起聊天失败", "error");
+            toast(e?.message || "Failed to start chat.", "error");
         }
     }
 
@@ -69,7 +73,7 @@ export function ProductDetailPage() {
             return;
         }
         if (disabledBuy) {
-            toast("该商品当前不可购买", "warning");
+            toast("This item is currently unavailable for purchase.", "warning");
             return;
         }
         nav(`/checkout/${p.id}`);
@@ -81,13 +85,19 @@ export function ProductDetailPage() {
             nav(`/login?next=${next}`);
             return;
         }
-        if (!(await confirm("下架商品", "确定要下架该商品吗？"))) return;
+        if (
+            !(await confirm(
+                "Hide item",
+                "Are you sure you want to hide this item?"
+            ))
+        )
+            return;
         try {
             setBusy(true);
             await hideProduct(p.id);
             await qc.invalidateQueries({ queryKey: ["product", id] });
         } catch (e: any) {
-            toast(e?.message || "下架失败，请稍后再试", "error");
+            toast(e?.message || "Failed to hide item. Please try again later.", "error");
         } finally {
             setBusy(false);
         }
@@ -104,7 +114,7 @@ export function ProductDetailPage() {
             await relistProduct(p.id);
             await qc.invalidateQueries({ queryKey: ["product", id] });
         } catch (e: any) {
-            toast(e?.message || "操作失败，请稍后再试", "error");
+            toast(e?.message || "Operation failed. Please try again later.", "error");
         } finally {
             setBusy(false);
         }
@@ -117,7 +127,10 @@ export function ProductDetailPage() {
             return;
         }
 
-        const ok = await confirm("删除商品", "删除后不可恢复。若当前在售，将先下架再彻底删除。确认删除吗？");
+        const ok = await confirm(
+            "Delete item",
+            "This action cannot be undone. If the item is currently on sale, it will be hidden first and then permanently deleted. Are you sure you want to delete it?"
+        );
         if (!ok) return;
 
         try {
@@ -131,10 +144,13 @@ export function ProductDetailPage() {
             const msg =
                 e?.response?.data?.message ||
                 e?.message ||
-                "删除失败，请稍后再试";
+                "Failed to delete item. Please try again later.";
 
             if (/订单|无法删除|foreign|constraint/i.test(msg)) {
-                toast("该商品存在订单记录，无法彻底删除；已为你下架。", "warning");
+                toast(
+                    "This item has existing order records and cannot be permanently deleted; it has been hidden instead.",
+                    "warning"
+                );
                 await qc.invalidateQueries({ queryKey: ["product", id] });
                 return;
             }
@@ -156,21 +172,23 @@ export function ProductDetailPage() {
 
                 <div className="mt-2 flex gap-2">
                     {((p as any).freeShipping || (p as any).free_shipping) && (
-                        <span className="chip chip-primary" title="卖家承担运费">包邮</span>
+                        <span className="chip chip-primary" title="Seller covers the shipping cost">
+                            Free shipping
+                        </span>
                     )}
                     {p.condition && (
                         <span className="chip chip-secondary">
-              {mapCondition(p.condition)}
-            </span>
+                            {mapCondition(p.condition)}
+                        </span>
                     )}
                     {p.status && p.status !== "ACTIVE" && (
                         <span className="chip chip-muted">
-              {mapStatus(p.status)}
-            </span>
+                            {mapStatus(p.status)}
+                        </span>
                     )}
                 </div>
 
-                {/* 操作区 */}
+                {/* Action area */}
                 {isMine ? (
                     <div className="mt-4 flex gap-3">
                         <button
@@ -178,7 +196,7 @@ export function ProductDetailPage() {
                             disabled={busy}
                             className="btn btn-primary disabled:opacity-50"
                         >
-                            编辑商品
+                            Edit item
                         </button>
 
                         {p.status !== "HIDDEN" ? (
@@ -187,7 +205,7 @@ export function ProductDetailPage() {
                                 disabled={busy}
                                 className="btn btn-secondary disabled:opacity-50"
                             >
-                                下架
+                                Hide
                             </button>
                         ) : (
                             <button
@@ -195,7 +213,7 @@ export function ProductDetailPage() {
                                 disabled={busy}
                                 className="btn btn-secondary disabled:opacity-50"
                             >
-                                重新上架
+                                Relist
                             </button>
                         )}
 
@@ -204,7 +222,7 @@ export function ProductDetailPage() {
                             disabled={busy}
                             className="btn btn-danger disabled:opacity-50"
                         >
-                            删除
+                            Delete
                         </button>
                     </div>
                 ) : (
@@ -214,7 +232,7 @@ export function ProductDetailPage() {
                             disabled={disabledChat}
                             className="btn btn-primary disabled:opacity-50"
                         >
-                            聊一聊
+                            Chat with seller
                         </button>
 
                         <button
@@ -222,7 +240,7 @@ export function ProductDetailPage() {
                             disabled={disabledBuy}
                             className="btn btn-secondary disabled:opacity-50"
                         >
-                            立即购买
+                            Buy now
                         </button>
 
                         {/* ✅ 收藏按钮仅在 ACTIVE 且非卖家时展示 */}
@@ -230,20 +248,20 @@ export function ProductDetailPage() {
                     </div>
                 )}
 
-                {/* ✅ 非 ACTIVE 提示（保留更具体的“已预定”文案） */}
+                {/* ✅ Non-ACTIVE hints (keep specific 'reserved' copy) */}
                 {!isMine && p.status === "RESERVED" && (
                     <div className="mt-2 text-xs text-[var(--warning)]">
-                        该商品已被预定，暂不可聊天或购买
+                        This item has been reserved and is temporarily unavailable for chat or purchase.
                     </div>
                 )}
                 {!isMine && p.status && p.status !== "ACTIVE" && p.status !== "RESERVED" && (
                     <div className="mt-2 text-xs text-[var(--warning)]">
-                        该商品已失效，暂不可聊天或购买
+                        This item is no longer available and is temporarily unavailable for chat or purchase.
                     </div>
                 )}
 
                 <div className="mt-6 card p-4">
-                    <div className="text-sm text-gray-500 mb-2">卖家</div>
+                    <div className="text-sm text-gray-500 mb-2">Seller</div>
                     {sellerQ.isLoading ? (
                         <div className="h-12 bg-gray-100 rounded" />
                     ) : sellerQ.data ? (
@@ -251,11 +269,11 @@ export function ProductDetailPage() {
                             role="button"
                             onClick={() => nav(`/users/${p.sellerId}`)}
                             className="flex items-center gap-3 hover:bg-gray-50 rounded p-2 -m-2 cursor-pointer"
-                            title="查看卖家主页"
+                            title="View seller profile"
                         >
                             <img
                                 src={sellerQ.data.avatarUrl || "https://placehold.co/40x40"}
-                                alt={`${sellerQ.data.displayName || "卖家"}的头像`}
+                                alt={`${sellerQ.data.displayName || "Seller"} avatar`}
                                 className="w-10 h-10 rounded-full border"
                                 loading="lazy"
                                 decoding="async"
@@ -263,15 +281,15 @@ export function ProductDetailPage() {
                             <div className="text-sm">{sellerQ.data.displayName}</div>
                         </div>
                     ) : (
-                        <div className="text-sm text-gray-500">卖家信息不可用</div>
+                        <div className="text-sm text-gray-500">Seller information is not available.</div>
                     )}
                 </div>
 
                 {p.description && (
-                <div className="mt-6 card p-4">
-                    <div className="text-sm text-gray-500 mb-2">描述</div>
-                    <p className="text-sm leading-relaxed whitespace-pre-line">{p.description}</p>
-                </div>
+                    <div className="mt-6 card p-4">
+                        <div className="text-sm text-gray-500 mb-2">Description</div>
+                        <p className="text-sm leading-relaxed whitespace-pre-line">{p.description}</p>
+                    </div>
                 )}
             </div>
         </main>
@@ -287,7 +305,7 @@ function Gallery({ images }: { images: string[] }) {
             <div className="aspect-square bg-[var(--color-muted)] rounded-[var(--radius-xl)] overflow-hidden">
                 <img
                     src={list[Math.min(idx, list.length - 1)]}
-                    alt="商品图片"
+                    alt="Item image"
                     className="w-full h-full object-cover"
                     loading="lazy"
                     decoding="async"
@@ -301,9 +319,9 @@ function Gallery({ images }: { images: string[] }) {
                         className={`aspect-square rounded border overflow-hidden ${
                             i === idx ? "ring-2 ring-[var(--ring)]" : ""
                         }`}
-                        aria-label={`预览第 ${i + 1} 张图片`}
+                        aria-label={`Preview image ${i + 1}`}
                     >
-                        <img src={url} alt="商品图片缩略图" className="w-full h-full object-cover" />
+                        <img src={url} alt="Item thumbnail" className="w-full h-full object-cover" />
                     </button>
                 ))}
             </div>
@@ -314,21 +332,27 @@ function Gallery({ images }: { images: string[] }) {
 function formatPrice(n: number, c?: string | null) {
     try {
         if (c === "AUD" || c === "CNY") {
-            return new Intl.NumberFormat("zh-CN", { style: "currency", currency: c }).format(n);
+            return new Intl.NumberFormat("en-AU", { style: "currency", currency: c }).format(n);
         }
     } catch {}
-    return `¥${n}`;
+    return `$${n}`;
 }
 function mapCondition(c: string) {
-    const m: Record<string, string> = { NEW: "全新", LIKE_NEW: "九成新", GOOD: "良好", FAIR: "一般" };
+    const m: Record<string, string> = {
+        NEW: "Brand new",
+        LIKE_NEW: "Like new",
+        GOOD: "Good",
+        FAIR: "Fair",
+        POOR: "Well-used",
+    };
     return m[c] || c;
 }
 function mapStatus(s: string) {
     const m: Record<string, string> = {
-        ACTIVE: "在售",
-        RESERVED: "已预定",
-        SOLD: "已售出",
-        HIDDEN: "隐藏",
+        ACTIVE: "On sale",
+        RESERVED: "Reserved",
+        SOLD: "Sold",
+        HIDDEN: "Hidden",
     };
     return m[s] || s;
 }

@@ -107,8 +107,8 @@ public class ChatDomainService {
         conv.setLastMessageAt(saved.getCreatedAt());
         String preview = switch (type) {
             case TEXT -> body == null ? "" : (body.length() > 120 ? body.substring(0, 120) : body);
-            case IMAGE -> "[图片]";
-            case SYSTEM -> "[系统]";
+            case IMAGE -> "[Image]";
+            case SYSTEM -> "[System]";
         };
         conv.setLastMessagePreview(preview);
         convRepo.save(conv);
@@ -167,7 +167,7 @@ public class ChatDomainService {
     /** 订单事件 -> SYSTEM 消息；并推送会话消息 + 收件箱变化提示 */
     @Transactional
     public Message appendSystemMessageForOrderEvent(OrderStatusEvent evt) {
-        System.out.println("[ChatDomainService] 处理订单事件: orderId=" + evt.orderId +
+        System.out.println("[ChatDomainService] Handling order event: orderId=" + evt.orderId +
                          ", productId=" + evt.productId +
                          ", buyerId=" + evt.buyerId +
                          ", sellerId=" + evt.sellerId +
@@ -175,18 +175,18 @@ public class ChatDomainService {
 
         Conversation conv = convRepo.findByProductIdAndBuyerIdAndSellerId(evt.productId, evt.buyerId, evt.sellerId)
                 .orElseGet(() -> {
-                    System.out.println("[ChatDomainService] 会话不存在，创建新会话");
+                    System.out.println("[ChatDomainService] Conversation not found, creating new one");
                     Conversation c = new Conversation(evt.productId, evt.orderId, evt.buyerId, evt.sellerId, evt.sellerId);
                     c.setOrderStatusCache(evt.newStatus);
                     return convRepo.save(c);
                 });
 
-        System.out.println("[ChatDomainService] 找到会话: id=" + conv.getId() +
+        System.out.println("[ChatDomainService] Found conversation: id=" + conv.getId() +
                          ", orderId=" + conv.getOrderId() +
                          ", orderStatusCache=" + conv.getOrderStatusCache());
 
         if (conv.getOrderId() == null && evt.orderId != null) {
-            System.out.println("[ChatDomainService] 设置会话orderId: " + evt.orderId);
+            System.out.println("[ChatDomainService] Set conversation orderId: " + evt.orderId);
             conv.setOrderId(evt.orderId);
         }
 
@@ -204,9 +204,9 @@ public class ChatDomainService {
         conv.setOrderStatusCache(evt.newStatus);
         conv.setLastMessageId(saved.getId());
         conv.setLastMessageAt(saved.getCreatedAt());
-        conv.setLastMessagePreview("[系统] " + saved.getSystemEvent());
+        conv.setLastMessagePreview("[System] " + saved.getSystemEvent());
         Conversation finalConv = convRepo.save(conv);
-        System.out.println("[ChatDomainService] 保存会话: id=" + finalConv.getId() +
+        System.out.println("[ChatDomainService] Saved conversation: id=" + finalConv.getId() +
                          ", orderId=" + finalConv.getOrderId() +
                          ", orderStatusCache=" + finalConv.getOrderStatusCache());
 
@@ -278,10 +278,10 @@ public class ChatDomainService {
         java.math.BigDecimal productPrice = null;
         try {
             var productOpt = productClient.getBrief(detail.productId());
-            productTitle = productOpt.map(ProductClient.ProductBrief::title).orElse("商品详情");
+            productTitle = productOpt.map(ProductClient.ProductBrief::title).orElse("Item details");
             productPrice = productOpt.map(ProductClient.ProductBrief::price).orElse(java.math.BigDecimal.ZERO);
         } catch (Exception e) {
-            productTitle = "商品详情"; // 降级默认值
+            productTitle = "Item details"; // 降级默认值
             productPrice = java.math.BigDecimal.ZERO;
         }
         
@@ -291,10 +291,11 @@ public class ChatDomainService {
         String peerAvatar = null;
         try {
             var peerOpt = userClient.getBrief(peerUserId);
-            peerNickname = peerOpt.map(UserClient.UserBrief::displayName).orElse("用户" + peerUserId.toString().substring(0, 8));
+            peerNickname = peerOpt.map(UserClient.UserBrief::displayName)
+                    .orElse("User " + peerUserId.toString().substring(0, 8));
             peerAvatar = peerOpt.map(UserClient.UserBrief::avatarUrl).orElse(null);
         } catch (Exception e) {
-            peerNickname = "用户" + peerUserId.toString().substring(0, 8); // 降级默认值
+            peerNickname = "User " + peerUserId.toString().substring(0, 8); // 降级默认值
         }
         
         // 获取订单ID和订单详情
@@ -349,18 +350,18 @@ public class ChatDomainService {
 
     private static String systemBodyFor(OrderStatus s) {
         return switch (s) {
-            case PENDING    -> "已下单";
-            case PAID       -> "已支付";
-            case SHIPPED    -> "已发货";
-            case COMPLETED  -> "交易完成";
-            case CANCELLED  -> "订单已取消";
+            case PENDING    -> "Order placed";
+            case PAID       -> "Payment received";
+            case SHIPPED    -> "Item shipped";
+            case COMPLETED  -> "Transaction completed";
+            case CANCELLED  -> "Order cancelled";
         };
     }
 
     /** 评价事件 -> SYSTEM 消息；并推送会话消息 + 收件箱变化提示 */
     @Transactional
     public Message appendSystemMessageForReviewEvent(ReviewEvent evt) {
-        System.out.println("[ChatDomainService] 处理评价事件: orderId=" + evt.orderId() +
+        System.out.println("[ChatDomainService] Handling review event: orderId=" + evt.orderId() +
                          ", reviewerId=" + evt.reviewerId() +
                          ", reviewerRole=" + evt.reviewerRole());
 
@@ -368,13 +369,13 @@ public class ChatDomainService {
                 .orElse(null);
 
         if (conv == null) {
-            System.out.println("[ChatDomainService] 找不到对应的会话，跳过评价消息");
+            System.out.println("[ChatDomainService] Conversation not found, skipping review system message");
             return null;
         }
 
         // 确定系统事件类型
         SystemEvent systemEvent = "BUYER".equals(evt.reviewerRole()) ? SystemEvent.BUYER_REVIEWED : SystemEvent.SELLER_REVIEWED;
-        String bodyText = "BUYER".equals(evt.reviewerRole()) ? "买家已评价" : "卖家已评价";
+        String bodyText = "BUYER".equals(evt.reviewerRole()) ? "Buyer has left a review" : "Seller has left a review";
 
         Message m = new Message();
         m.setConversationId(conv.getId());
@@ -389,7 +390,7 @@ public class ChatDomainService {
         // 更新会话快照
         conv.setLastMessageId(saved.getId());
         conv.setLastMessageAt(saved.getCreatedAt());
-        conv.setLastMessagePreview("[系统] " + bodyText);
+        conv.setLastMessagePreview("[System] " + bodyText);
         convRepo.save(conv);
 
         // 未读
@@ -409,15 +410,15 @@ public class ChatDomainService {
                 saved.getId(), saved.getType(), saved.getSenderId(), saved.getBody(),
                 saved.getImageUrl(), saved.getSystemEvent(), saved.getMeta(), saved.getCreatedAt()
         );
-        System.out.println("[ChatDomainService] 🚀 准备推送评价系统消息到WebSocket: " + dto);
+        System.out.println("[ChatDomainService] 🚀 Preparing to push review system message to WebSocket: " + dto);
         ws.publishNewMessage(conv.getId(), dto);
-        System.out.println("[ChatDomainService] ✅ 评价系统消息已发送到WebSocket");
+        System.out.println("[ChatDomainService] ✅ Review system message pushed to WebSocket");
 
-        // ✅ 推送"收件箱变化"到双方个人队列（驱动列表状态徽标立即刷新）
+        // ✅ 推送收件箱变化到双方个人队列（驱动列表状态徽标立即刷新）
         Map<String, Object> hint = Map.of("kind", "CONV_UPDATED", "conversationId", conv.getId().toString());
-        System.out.println("[ChatDomainService] 📬 推送收件箱变化给买家: " + conv.getBuyerId());
+        System.out.println("[ChatDomainService] 📬 Pushed inbox change to buyer: " + conv.getBuyerId());
         ws.publishMyInboxChanged(conv.getBuyerId(), hint);
-        System.out.println("[ChatDomainService] 📬 推送收件箱变化给卖家: " + conv.getSellerId());
+        System.out.println("[ChatDomainService] 📬 Pushed inbox change to seller: " + conv.getSellerId());
         ws.publishMyInboxChanged(conv.getSellerId(), hint);
 
         return saved;

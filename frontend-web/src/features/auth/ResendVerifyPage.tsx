@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useUiStore } from "../../store/ui";
 
 const schema = z.object({
-    email: z.string().email("请输入有效邮箱"),
+    email: z.string().email("Please enter a valid email address"),
 });
 
 export function ResendVerifyPage() {
@@ -24,18 +24,18 @@ export function ResendVerifyPage() {
         setMsg("");
         try {
             await resendVerify(email);
-            setMsg("如果该邮箱存在，我们已重新发送验证邮件，请查收。");
+            setMsg("If this email exists, we have re-sent a verification email. Please check your inbox.");
         } catch (e: any) {
-            setMsg(e?.message || "发送失败，请稍后再试");
+            setMsg(e?.message || "Failed to send email. Please try again later.");
         }
     });
 
     return (
         <main className="max-w-md mx-auto p-6">
-            <h1 className="text-xl font-semibold mb-4">重新发送验证邮件</h1>
+            <h1 className="text-xl font-semibold mb-4">Resend verification email</h1>
             <form onSubmit={onSubmit} className="space-y-3 card p-4">
                 <div>
-                    <label className="block text-sm mb-1">邮箱</label>
+                    <label className="block text-sm mb-1">Email</label>
                     <input
                         className="input text-sm"
                         placeholder="you@example.com"
@@ -55,14 +55,14 @@ export function ResendVerifyPage() {
                         className="btn btn-primary text-sm"
                         disabled={formState.isSubmitting}
                     >
-                        {formState.isSubmitting ? "发送中..." : "发送邮件"}
+                        {formState.isSubmitting ? "Sending..." : "Send email"}
                     </button>
                     <button
                         type="button"
                         onClick={() => nav("/")}
                         className="btn btn-secondary text-sm"
                     >
-                        返回首页
+                        Back to home
                     </button>
                 </div>
             </form>

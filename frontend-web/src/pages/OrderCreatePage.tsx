@@ -31,35 +31,39 @@ export function OrderCreatePage() {
 
         if (!selectedAddressId) {
             const { toast } = await import("../store/overlay");
-            toast("请选择收货地址", "error");
+            toast("Please select a delivery address.", "error");
             return;
         }
 
         try {
-            // 先创建订单
+            // Create order first
             const order = await createOrder(id, selectedAddressId);
-            // 跳转到模拟支付页
+            // Then navigate to the mock payment page
             nav(`/pay/${order.id}`);
         } catch (e: any) {
-            // 使用 toast 提示错误
+            // Show error via toast
             const { toast } = await import("../store/overlay");
-            toast(e?.message || "创建订单失败", "error");
+            toast(e?.message || "Failed to create order.", "error");
         }
     }
 
     if (q.isLoading) {
-        return <main className="max-w-6xl mx-auto p-6">加载中…</main>;
+        return <main className="max-w-6xl mx-auto p-6">Loading…</main>;
     }
     if (q.isError || !p) {
-        return <main className="max-w-6xl mx-auto p-6 text-red-600">商品不存在或已下架</main>;
+        return (
+            <main className="max-w-6xl mx-auto p-6 text-red-600">
+                This item does not exist or is no longer available.
+            </main>
+        );
     }
 
     return (
         <main className="max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* 左侧：地址（占位） + 订单信息 */}
+            {/* Left: address + order info */}
             <section className="md:col-span-2 space-y-4">
                 <div className="card p-4">
-                    <div className="font-medium mb-3">收货地址</div>
+                    <div className="font-medium mb-3">Delivery address</div>
                     <AddressSelector
                         selectedAddressId={selectedAddressId}
                         onAddressChange={setSelectedAddressId}
@@ -67,7 +71,7 @@ export function OrderCreatePage() {
                 </div>
 
                 <div className="card p-4">
-                    <div className="font-medium mb-3">订单信息</div>
+                    <div className="font-medium mb-3">Order details</div>
                     <div className="flex gap-3">
                         <img
                             src={p.images?.[0] || "https://placehold.co/80"}
@@ -76,33 +80,33 @@ export function OrderCreatePage() {
                         <div className="flex-1">
                             <div className="text-sm line-clamp-2 mb-1">{p.title}</div>
                             <div className="text-base font-semibold">{formatPrice(p.price, p.currency)}</div>
-                            <div className="mt-1 text-xs text-gray-500">数量：1</div>
+                            <div className="mt-1 text-xs text-gray-500">Quantity: 1</div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* 右侧：金额与确认 */}
+            {/* Right: totals and confirmation */}
             <aside className="space-y-4">
                 <div className="card p-4">
-                    <div className="text-sm text-gray-600">价格明细</div>
+                    <div className="text-sm text-gray-600">Price breakdown</div>
                     <div className="mt-2 flex justify-between">
-                        <span className="text-sm">商品总价</span>
+                        <span className="text-sm">Item total</span>
                         <span>{formatPrice(p.price, p.currency)}</span>
                     </div>
                     <div className="mt-1 flex justify-between">
-                        <span className="text-sm">运费</span>
+                        <span className="text-sm">Shipping</span>
                         <span>{formatPrice(0, p.currency)}</span>
                     </div>
                     <div className="mt-2 pt-2 border-t font-semibold text-orange-600 flex justify-between">
-                        <span>合计：</span>
+                        <span>Total:</span>
                         <span>{formatPrice(p.price, p.currency)}</span>
                     </div>
                     <button
                         onClick={onConfirm}
                         className="mt-4 w-full btn btn-primary"
                     >
-                        确认下单并去支付
+                        Confirm order and proceed to payment
                     </button>
                 </div>
             </aside>
@@ -113,8 +117,8 @@ export function OrderCreatePage() {
 function formatPrice(n: number, c?: string | null) {
     try {
         if (c === "AUD" || c === "CNY") {
-            return new Intl.NumberFormat("zh-CN", { style: "currency", currency: c }).format(n);
+            return new Intl.NumberFormat("en-AU", { style: "currency", currency: c }).format(n);
         }
     } catch {}
-    return `¥${n.toFixed(2)}`;
+    return `$${n.toFixed(2)}`;
 }

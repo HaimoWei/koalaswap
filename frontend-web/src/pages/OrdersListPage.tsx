@@ -5,14 +5,14 @@ import { getProduct } from "../api/products";
 import { OrderStatusTag } from "../components/OrderStatusTag";
 import type { Page } from "../api/types";
 
-// 状态选项
+// Status options
 const STATUS_OPTIONS = [
-    ["all", "全部"],
-    ["PENDING", "待支付"],
-    ["PAID", "已支付"],
-    ["SHIPPED", "已发货"],
-    ["CONFIRMED", "已收货"],
-    ["CANCELLED", "已取消"],
+    ["all", "All"],
+    ["PENDING", "Pending payment"],
+    ["PAID", "Paid"],
+    ["SHIPPED", "Shipped"],
+    ["CONFIRMED", "Received"],
+    ["CANCELLED", "Cancelled"],
 ] as const;
 
 function OrderCard({ o }: { o: OrderRes }) {
@@ -29,16 +29,18 @@ function OrderCard({ o }: { o: OrderRes }) {
             <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                     <Link to={`/orders/${o.id}`} className="font-medium hover:underline">
-                        {prod?.title || `订单 ${o.id}`}
+                        {prod?.title || `Order ${o.id}`}
                     </Link>
                     <OrderStatusTag status={o.status} />
                 </div>
                 <div className="text-sm text-gray-600 mt-1">￥{o.priceSnapshot}</div>
-                <div className="text-xs text-gray-500 mt-1">创建时间：{new Date(o.createdAt).toLocaleString()}</div>
+                <div className="text-xs text-gray-500 mt-1">
+                    Created at: {new Date(o.createdAt).toLocaleString()}
+                </div>
             </div>
             <div className="flex flex-col items-end justify-between">
                 <Link to={`/orders/${o.id}`} className="btn btn-primary text-sm">
-                    查看详情
+                    View details
                 </Link>
             </div>
         </div>
@@ -68,7 +70,7 @@ export function OrdersListPage() {
     const list: OrderRes[] = query.data?.content ?? [];
     const totalPages = query.data?.totalPages ?? 1;
 
-    // 角色切换仅通过左侧导航，不在页面内提供切换按钮
+    // Role switching is handled by left-side navigation
     const setStatus = (s: string) => {
         const next = new URLSearchParams(sp);
         next.set("status", s);
@@ -83,10 +85,10 @@ export function OrdersListPage() {
 
     return (
         <main className="max-w-6xl mx-auto p-6 space-y-4">
-            {/* 角色切换已移除：请通过左侧导航进入“我买到的/我卖出的” */}
+            {/* Role switching removed: use left-side navigation to access "Bought" / "Sold" views */}
 
             <div className="flex items-center gap-2 text-sm whitespace-nowrap">
-                <span className="text-gray-600">状态：</span>
+                <span className="text-gray-600">Status:</span>
                 <select className="input text-sm w-40 sm:w-44 md:w-56" value={status} onChange={(e) => setStatus(e.target.value)}>
                     {STATUS_OPTIONS.map(([v, l]) => (
                         <option key={v} value={v}>{l}</option>
@@ -97,18 +99,32 @@ export function OrdersListPage() {
             {query.isLoading ? (
                 <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-32 card animate-pulse" />)}</div>
             ) : query.isError ? (
-                <div className="text-red-600">加载失败：{(query.error as Error)?.message}</div>
+                <div className="text-red-600">Failed to load: {(query.error as Error)?.message}</div>
             ) : list.length === 0 ? (
-                <div className="text-gray-600 text-sm">暂无订单</div>
+                <div className="text-gray-600 text-sm">No orders yet</div>
             ) : (
                 <div className="space-y-3">{list.map((o) => <OrderCard key={o.id} o={o} />)}</div>
             )}
 
             {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2">
-                    <button className="btn btn-secondary" disabled={page <= 0} onClick={() => setPage(page - 1)}>上一页</button>
-                    <span className="text-sm text-gray-600">第 {page + 1} / {totalPages} 页</span>
-                    <button className="btn btn-secondary" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>下一页</button>
+                    <button
+                        className="btn btn-secondary"
+                        disabled={page <= 0}
+                        onClick={() => setPage(page - 1)}
+                    >
+                        Previous
+                    </button>
+                    <span className="text-sm text-gray-600">
+                        Page {page + 1} / {totalPages}
+                    </span>
+                    <button
+                        className="btn btn-secondary"
+                        disabled={page >= totalPages - 1}
+                        onClick={() => setPage(page + 1)}
+                    >
+                        Next
+                    </button>
                 </div>
             )}
         </main>

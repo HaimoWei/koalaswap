@@ -16,15 +16,15 @@ function statusIn(s: string, arr: string[]) {
 function mapStatus(s: string) {
     const up = (s || "").toUpperCase();
     const m: Record<string,string> = {
-        PENDING: "待支付",          // ← 新增
-        CREATED: "待支付",
-        NEW: "待支付",
-        PAID: "已支付",
-        SHIPPED: "已发货",
-        CONFIRMED: "已收货",
-        COMPLETED: "已完成",
-        CANCELLED: "已取消",
-        CANCELED: "已取消",
+        PENDING: "Pending payment",
+        CREATED: "Pending payment",
+        NEW: "Pending payment",
+        PAID: "Paid",
+        SHIPPED: "Shipped",
+        CONFIRMED: "Received",
+        COMPLETED: "Completed",
+        CANCELLED: "Cancelled",
+        CANCELED: "Cancelled",
     };
     return m[up] || s || "-";
 }

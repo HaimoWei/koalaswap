@@ -7,7 +7,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useUiStore } from "../../store/ui";
 
 const schema = z.object({
-    email: z.string().email("请输入有效邮箱"),
+    email: z.string().email("Please enter a valid email address"),
 });
 
 export function ForgotPasswordPage() {
@@ -38,26 +38,26 @@ export function ForgotPasswordPage() {
         try {
             await requestPasswordReset(email);
             // 后端无论邮箱是否存在都返回 200：统一提示
-            setMsg("如果该邮箱存在，我们已发送重置密码邮件，请查收。");
+            setMsg("If this email exists, we have sent a password reset email. Please check your inbox.");
         } catch (e: any) {
-            setMsg(e?.message || "发送失败，请稍后再试");
+            setMsg(e?.message || "Failed to send email. Please try again later.");
         }
     });
 
-    const isSuccess = msg && !msg.includes("失败");
+    const isSuccess = msg && !msg.toLowerCase().includes("fail");
 
     return (
         <main className="flex min-h-[calc(100vh-120px)] items-center justify-center bg-gray-50 px-4 py-12">
             <div className="card w-full max-w-md p-6">
                 <header className="mb-6 space-y-1">
-                    <p className="text-xs tracking-wide text-[var(--color-secondary-700)]">找回密码</p>
-                    <h1 className="text-2xl font-semibold text-[var(--color-text-strong)]">发送重置密码邮件</h1>
-                    <p className="text-sm text-gray-600">输入注册邮箱，我们会发送包含重置步骤的邮件。</p>
+                    <p className="text-xs tracking-wide text-[var(--color-secondary-700)]">Forgot password</p>
+                    <h1 className="text-2xl font-semibold text-[var(--color-text-strong)]">Send password reset email</h1>
+                    <p className="text-sm text-gray-600">Enter your registered email and we will send you an email with steps to reset your password.</p>
                 </header>
 
                 <form onSubmit={onSubmit} className="space-y-4">
                     <div>
-                        <label className="mb-1 block text-sm text-[var(--color-text-strong)]">注册邮箱</label>
+                        <label className="mb-1 block text-sm text-[var(--color-text-strong)]">Registered email</label>
                         <input
                             className="input text-sm"
                             placeholder="you@example.com"
@@ -87,14 +87,14 @@ export function ForgotPasswordPage() {
                             className="btn w-full bg-[var(--color-primary)] text-[var(--color-text-strong)] hover:bg-[var(--color-primary-600)]"
                             disabled={formState.isSubmitting}
                         >
-                            {formState.isSubmitting ? "发送中..." : "发送重置邮件"}
+                            {formState.isSubmitting ? "Sending..." : "Send reset email"}
                         </button>
                         <button
                             type="button"
                             onClick={() => nav(`/login?next=${encodeURIComponent(next)}`)}
                             className="btn w-full border border-[var(--color-border)] bg-white text-[var(--color-text)] hover:bg-[var(--color-muted)]"
                         >
-                            返回登录
+                            Back to sign in
                         </button>
                     </div>
                 </form>

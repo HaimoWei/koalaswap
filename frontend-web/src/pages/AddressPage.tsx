@@ -38,29 +38,29 @@ export default function AddressPage() {
   });
   const [editing, setEditing] = useState<boolean>(false);
 
-  // 查询地址列表
+  // Fetch address list
   const { data: addresses = [], isLoading, error } = useQuery({
     queryKey: ['addresses'],
     queryFn: getAddressList,
     retry: 2
   });
 
-  // 创建地址
+  // Create address
   const createMutation = useMutation({
     mutationFn: createAddress,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['addresses'] });
       setEditing(false);
       resetForm();
-      toastSuccess("地址添加成功");
+      toastSuccess("Address added successfully.");
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || error.message || "添加失败";
+      const message = error?.response?.data?.message || error.message || "Failed to add address.";
       toastError(message);
     }
   });
 
-  // 更新地址
+  // Update address
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateAddressRequest }) =>
       updateAddress(id, data),
@@ -68,36 +68,36 @@ export default function AddressPage() {
       queryClient.invalidateQueries({ queryKey: ['addresses'] });
       setEditing(false);
       resetForm();
-      toastSuccess("地址更新成功");
+      toastSuccess("Address updated successfully.");
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || error.message || "更新失败";
+      const message = error?.response?.data?.message || error.message || "Failed to update address.";
       toastError(message);
     }
   });
 
-  // 删除地址
+  // Delete address
   const deleteMutation = useMutation({
     mutationFn: deleteAddress,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['addresses'] });
-      toastSuccess("地址删除成功");
+      toastSuccess("Address deleted successfully.");
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || error.message || "删除失败";
+      const message = error?.response?.data?.message || error.message || "Failed to delete address.";
       toastError(message);
     }
   });
 
-  // 设置默认地址
+  // Set default address
   const setDefaultMutation = useMutation({
     mutationFn: setDefaultAddress,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['addresses'] });
-      toastSuccess("默认地址设置成功");
+      toastSuccess("Default address set successfully.");
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || error.message || "设置失败";
+      const message = error?.response?.data?.message || error.message || "Failed to set default address.";
       toastError(message);
     }
   });
@@ -140,7 +140,7 @@ export default function AddressPage() {
   }
 
   async function onDelete(id: string) {
-    if (!(await confirm("删除地址", "删除后不可恢复，确定删除吗？"))) return;
+    if (!(await confirm("Delete address", "This action cannot be undone. Are you sure you want to delete this address?"))) return;
     deleteMutation.mutate(id);
   }
 
@@ -150,35 +150,35 @@ export default function AddressPage() {
   }
 
   function onSave() {
-    // 前端验证，与后端验证规则保持一致
+    // Front-end validation, aligned with backend rules
     const errors = [];
 
     if (!form.receiverName || form.receiverName.trim().length < 2 || form.receiverName.length > 100) {
-      errors.push("收件人姓名长度需在2-100个字符之间");
+      errors.push("Recipient name length must be between 2 and 100 characters.");
     }
 
     if (!form.phone || form.phone.length < 10 || form.phone.length > 20) {
-      errors.push("电话号码长度需在10-20个字符之间");
+      errors.push("Phone number length must be between 10 and 20 characters.");
     }
 
     if (!form.province || form.province.length > 50) {
-      errors.push("省份名称不能超过50个字符");
+      errors.push("State or province name cannot exceed 50 characters.");
     }
 
     if (!form.city || form.city.length > 50) {
-      errors.push("城市名称不能超过50个字符");
+      errors.push("City name cannot exceed 50 characters.");
     }
 
     if (!form.district || form.district.length > 50) {
-      errors.push("区县名称不能超过50个字符");
+      errors.push("Suburb or district name cannot exceed 50 characters.");
     }
 
     if (!form.detailAddress || form.detailAddress.trim().length < 5) {
-      errors.push("详细地址不能少于5个字符");
+      errors.push("Address line must be at least 5 characters.");
     }
 
     if (form.postalCode && form.postalCode.length > 10) {
-      errors.push("邮政编码不能超过10个字符");
+      errors.push("Postal code cannot exceed 10 characters.");
     }
 
     if (errors.length > 0) {
@@ -213,9 +213,9 @@ export default function AddressPage() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="text-lg font-semibold">收货地址管理</div>
+        <div className="text-lg font-semibold">Shipping addresses</div>
         <div className="flex items-center justify-center py-8">
-          <div className="text-gray-500">加载中...</div>
+          <div className="text-gray-500">Loading...</div>
         </div>
       </div>
     );
@@ -224,15 +224,15 @@ export default function AddressPage() {
   if (error) {
     return (
       <div className="space-y-4">
-        <div className="text-lg font-semibold">收货地址管理</div>
+        <div className="text-lg font-semibold">Shipping addresses</div>
         <div className="card p-4 text-center">
-          <div className="text-red-600 mb-2">加载失败</div>
+          <div className="text-red-600 mb-2">Failed to load addresses</div>
           <div className="text-sm text-gray-600">{(error as Error).message}</div>
           <button
             className="btn btn-primary btn-sm mt-3"
             onClick={() => queryClient.invalidateQueries({ queryKey: ['addresses'] })}
           >
-            重试
+            Retry
           </button>
         </div>
       </div>
@@ -242,13 +242,13 @@ export default function AddressPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="text-lg font-semibold">收货地址管理</div>
-        <button className="btn btn-primary" onClick={onAdd}>新增地址</button>
+        <div className="text-lg font-semibold">Shipping addresses</div>
+        <button className="btn btn-primary" onClick={onAdd}>Add address</button>
       </div>
 
-      {/* 地址列表 */}
+      {/* Address list */}
       {addresses.length === 0 ? (
-        <div className="text-sm text-gray-600">暂无地址，点击"新增地址"进行添加。</div>
+          <div className="text-sm text-gray-600">No addresses yet. Click "Add address" to create one.</div>
       ) : (
         <div className="space-y-3">
           {addresses.map((address) => (
@@ -256,7 +256,7 @@ export default function AddressPage() {
               <div className="text-sm">
                 <div className="font-medium">
                   {address.receiverName}（{address.phone}）
-                  {address.isDefault && <span className="ml-2 tag tag-info">默认</span>}
+                  {address.isDefault && <span className="ml-2 tag tag-info">Default</span>}
                 </div>
                 <div className="text-gray-600 mt-0.5">
                   {address.province} {address.city} {address.district} {address.detailAddress}
@@ -268,23 +268,23 @@ export default function AddressPage() {
                   <button
                     className="btn btn-secondary btn-sm"
                     onClick={() => onSetDefault(address.id)}
-                    disabled={setDefaultMutation.isPending}
+                disabled={setDefaultMutation.isPending}
                   >
-                    {setDefaultMutation.isPending ? "设置中..." : "设为默认"}
+                    {setDefaultMutation.isPending ? "Setting..." : "Set as default"}
                   </button>
                 )}
                 <button
                   className="btn btn-secondary btn-sm"
                   onClick={() => onEdit(address)}
                 >
-                  编辑
+                  Edit
                 </button>
                 <button
                   className="btn btn-danger btn-sm"
                   onClick={() => onDelete(address.id)}
                   disabled={deleteMutation.isPending}
                 >
-                  {deleteMutation.isPending ? "删除中..." : "删除"}
+                  {deleteMutation.isPending ? "Deleting..." : "Delete"}
                 </button>
               </div>
             </div>
@@ -292,78 +292,78 @@ export default function AddressPage() {
         </div>
       )}
 
-      {/* 表单 */}
+      {/* Form */}
       {editing && (
         <div className="card p-4 space-y-3">
           <div className="text-medium font-medium">
-            {form.id ? "编辑地址" : "新增地址"}
+            {form.id ? "Edit address" : "Add new address"}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <label className="block">
-              <span className="text-sm text-gray-600">收件人 *</span>
+              <span className="text-sm text-gray-600">Recipient *</span>
               <input
                 className="input mt-1"
                 value={form.receiverName}
                 onChange={(e) => setField('receiverName', e.target.value)}
-                placeholder="姓名"
+                placeholder="Full name"
               />
             </label>
             <label className="block">
-              <span className="text-sm text-gray-600">手机号 *</span>
+              <span className="text-sm text-gray-600">Phone number *</span>
               <input
                 className="input mt-1"
                 value={form.phone}
                 onChange={(e) => setField('phone', e.target.value)}
-                placeholder="11位手机号"
+                placeholder="Phone number"
               />
             </label>
             <label className="block">
-              <span className="text-sm text-gray-600">省份 *</span>
+              <span className="text-sm text-gray-600">State/Province *</span>
               <input
                 className="input mt-1"
                 value={form.province}
                 onChange={(e) => setField('province', e.target.value)}
-                placeholder="如：上海市"
+                placeholder="e.g. Victoria"
               />
             </label>
             <label className="block">
-              <span className="text-sm text-gray-600">城市 *</span>
+              <span className="text-sm text-gray-600">City *</span>
               <input
                 className="input mt-1"
                 value={form.city}
                 onChange={(e) => setField('city', e.target.value)}
-                placeholder="如：上海市"
+                placeholder="e.g. Melbourne"
               />
             </label>
             <label className="block">
-              <span className="text-sm text-gray-600">区/县 *</span>
+              <span className="text-sm text-gray-600">Suburb/District *</span>
               <input
                 className="input mt-1"
                 value={form.district}
                 onChange={(e) => setField('district', e.target.value)}
-                placeholder="如：浦东新区"
+                placeholder="e.g. Docklands"
               />
             </label>
             <label className="block">
-              <span className="text-sm text-gray-600">邮政编码</span>
+              <span className="text-sm text-gray-600">Postal code</span>
               <input
                 className="input mt-1"
                 value={form.postalCode}
                 onChange={(e) => setField('postalCode', e.target.value)}
-                placeholder="如：200000"
+                placeholder="e.g. 3008"
               />
             </label>
             <label className="block md:col-span-2">
-              <span className="text-sm text-gray-600">详细地址 * (至少5个字符)</span>
+              <span className="text-sm text-gray-600">Address line * (at least 5 characters)</span>
               <input
                 className="input mt-1"
                 value={form.detailAddress}
                 onChange={(e) => setField('detailAddress', e.target.value)}
-                placeholder="街道、门牌号等详细信息，如：张江高科技园区XXX路123号"
+                placeholder="Street, unit number, etc."
               />
               {form.detailAddress && form.detailAddress.trim().length < 5 && (
                 <div className="text-xs text-red-500 mt-1">
-                  详细地址至少需要5个字符，当前 {form.detailAddress.trim().length} 个字符
+                  Address must be at least 5 characters; currently {form.detailAddress.trim().length}.
                 </div>
               )}
             </label>
@@ -374,7 +374,7 @@ export default function AddressPage() {
                 onChange={(e) => setField('isDefault', e.target.checked)}
                 className="mr-2"
               />
-              <span className="text-sm text-gray-600">设为默认地址</span>
+              <span className="text-sm text-gray-600">Set as default address</span>
             </label>
           </div>
           <div className="flex gap-2">
@@ -383,9 +383,9 @@ export default function AddressPage() {
               onClick={onSave}
               disabled={createMutation.isPending || updateMutation.isPending}
             >
-              {createMutation.isPending || updateMutation.isPending ? "保存中..." : "保存"}
+              {createMutation.isPending || updateMutation.isPending ? "Saving..." : "Save"}
             </button>
-            <button className="btn btn-secondary" onClick={onCancel}>取消</button>
+            <button className="btn btn-secondary" onClick={onCancel}>Cancel</button>
           </div>
         </div>
       )}

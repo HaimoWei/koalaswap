@@ -44,18 +44,18 @@ public class ConversationController {
 
         UUID sellerId = req.sellerId();
         if (current.equals(sellerId)) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("不能与自己建立会话"));
+            return ResponseEntity.badRequest().body(ApiResponse.error("You cannot start a conversation with yourself."));
         }
 
         var briefOpt = productClient.getBrief(req.productId());
         if (briefOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("商品不存在或已下架"));
+            return ResponseEntity.badRequest().body(ApiResponse.error("The item does not exist or is no longer available."));
         }
         var brief = briefOpt.get();
         UUID realSeller = brief.sellerId();
         if (sellerId == null) sellerId = realSeller;
         else if (!sellerId.equals(realSeller))
-            return ResponseEntity.badRequest().body(ApiResponse.error("卖家与商品不匹配"));
+            return ResponseEntity.badRequest().body(ApiResponse.error("The seller does not match this item."));
 
         String cover = Optional.ofNullable(brief.firstImageUrl())
                 .filter(s -> !s.isBlank())
@@ -99,14 +99,14 @@ public class ConversationController {
         UUID current = CurrentUser.idRequired();
         String key = conversationId + ":" + current;
         if (!rateLimit.allowSend(key)) {
-            return ResponseEntity.status(429).body(ApiResponse.error("发送过于频繁，请稍后再试"));
+            return ResponseEntity.status(429).body(ApiResponse.error("You are sending messages too frequently. Please try again shortly."));
         }
 
         if (req.type() == MessageType.TEXT && (req.body() == null || req.body().isBlank())) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("文本消息内容不能为空"));
+            return ResponseEntity.badRequest().body(ApiResponse.error("Text message content must not be empty."));
         }
         if (req.type() == MessageType.IMAGE && (req.imageUrl() == null || req.imageUrl().isBlank())) {
-            return ResponseEntity.badRequest().body(ApiResponse.error("图片消息地址不能为空"));
+            return ResponseEntity.badRequest().body(ApiResponse.error("Image message URL must not be empty."));
         }
 
         var m = chat.sendMessage(conversationId, current, req.type(), req.body(), req.imageUrl());
