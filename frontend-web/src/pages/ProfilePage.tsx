@@ -48,14 +48,14 @@ export default function ProfilePage() {
   };
 
   function startCropWithFile(file: File) {
-    // 验证文件类型
+    // Validate file type
     if (!file.type.startsWith('image/')) {
-      addToast({ message: '请选择图片文件', type: 'error' });
+      addToast({ message: 'Please select an image file.', type: 'error' });
       return;
     }
-    // 验证文件大小 (建议 ≤ 5MB)
+    // Validate file size (recommended ≤ 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      addToast({ message: '图片大小不能超过5MB', type: 'error' });
+      addToast({ message: 'Image size must not exceed 5MB.', type: 'error' });
       return;
     }
     const reader = new FileReader();
@@ -75,12 +75,12 @@ export default function ProfilePage() {
         setAuth(token, updatedProfile);
       }
       setAvatarUrl(newAvatarUrl);
-      addToast({ message: '头像更新成功', type: 'success' });
+      addToast({ message: 'Avatar updated successfully.', type: 'success' });
       setCropModalOpen(false);
       setCropImageSrc(null);
     } catch (error: any) {
-      console.error('头像上传失败:', error);
-      addToast({ message: error.message || '头像上传失败，请重试', type: 'error' });
+      console.error('Avatar upload failed:', error);
+      addToast({ message: error.message || 'Failed to upload avatar, please try again.', type: 'error' });
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -96,35 +96,35 @@ export default function ProfilePage() {
     e.preventDefault();
   };
 
-  // 移除“恢复默认头像”功能（后端不接受空URL；且产品不需要）
+  // Removed "reset to default avatar" feature (backend does not accept empty URLs; product does not need it)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 表单验证
+    // Form validation
     if (!formData.displayName.trim()) {
-      addToast({ message: '请输入昵称', type: 'error' });
+      addToast({ message: 'Please enter a display name.', type: 'error' });
       return;
     }
 
     if (formData.displayName.length > 50) {
-      addToast({ message: '昵称不能超过50个字符', type: 'error' });
+      addToast({ message: 'Display name cannot exceed 50 characters.', type: 'error' });
       return;
     }
 
     if (formData.bio && formData.bio.length > 200) {
-      addToast({ message: '个人简介不能超过200个字符', type: 'error' });
+      addToast({ message: 'Bio cannot exceed 200 characters.', type: 'error' });
       return;
     }
 
     if (formData.location && formData.location.length > 50) {
-      addToast({ message: '地区信息不能超过50个字符', type: 'error' });
+      addToast({ message: 'Location cannot exceed 50 characters.', type: 'error' });
       return;
     }
 
     setIsLoading(true);
     try {
-      // 提交基本信息
+      // Submit basic profile info
       const payload = {
         displayName: formData.displayName.trim(),
         bio: formData.bio?.trim() || null,
@@ -133,13 +133,13 @@ export default function ProfilePage() {
 
       const updated = await updateMyProfile(payload);
 
-      // 用后端返回的最新资料刷新本地
+      // Refresh local profile with backend response
       if (token) setAuth(token, updated);
 
-      addToast({ message: '个人资料更新成功', type: 'success' });
+      addToast({ message: 'Profile updated successfully.', type: 'success' });
       navigate('/me/center');
     } catch (error: any) {
-      addToast({ message: error.message || '更新失败，请稍后重试', type: 'error' });
+      addToast({ message: error.message || 'Update failed, please try again later.', type: 'error' });
     } finally {
       setIsLoading(false);
     }
@@ -154,17 +154,17 @@ export default function ProfilePage() {
   };
 
   const handleVerificationSubmit = async (type: 'phone' | 'email', value: string, code: string) => {
-    // 模拟验证流程
+    // Simulate verification flow
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // 模拟成功认证
-    if (Math.random() > 0.1) { // 90%成功率
+    // Simulate successful verification
+    if (Math.random() > 0.1) { // 90% success rate
       setFormData(prev => ({
         ...prev,
         [type === 'phone' ? 'phoneVerified' : 'emailVerified']: true
       }));
 
-      // 更新本地存储
+      // Update local store
       if (profile && token) {
         const updatedProfile = {
           ...profile,
@@ -173,29 +173,29 @@ export default function ProfilePage() {
         setAuth(token, updatedProfile);
       }
 
-      addToast({ message: `${type === 'phone' ? '手机' : '邮箱'}认证成功`, type: 'success' });
+      addToast({ message: `${type === 'phone' ? 'Phone' : 'Email'} verified successfully.`, type: 'success' });
       setVerificationModal({ type, open: false });
     } else {
-      throw new Error('验证码错误，请重试');
+      throw new Error('Incorrect verification code, please try again.');
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* 页面标题 */}
+      {/* Page title */}
       <div className="card p-6">
-        <h1 className="text-xl font-semibold text-gray-900">编辑个人资料</h1>
+        <h1 className="text-xl font-semibold text-gray-900">Edit profile</h1>
       </div>
 
-      {/* 头像设置区域 - 淘宝风格 */}
+      {/* Avatar settings */}
       <div className="card p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-100">头像设置</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-100">Avatar</h2>
         <div className="grid grid-cols-1 md:grid-cols-[140px,1fr] gap-6 items-start">
-          {/* 主预览 */}
+          {/* Main preview */}
           <div className="relative w-[120px] h-[120px]">
             <img
               src={avatarUrl || `/assets/avatars/default-avatar.svg`}
-              alt="头像预览"
+              alt="Avatar preview"
               className="w-[120px] h-[120px] rounded-full object-cover border border-gray-200"
             />
             {isUploadingAvatar && (
@@ -205,7 +205,7 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* 操作区 + 拖拽区 + 规范说明 */}
+          {/* Actions + drag-and-drop + guidelines */}
           <div>
             <div className="flex flex-wrap items-center gap-3 mb-3">
               <button
@@ -214,9 +214,9 @@ export default function ProfilePage() {
                 disabled={isUploadingAvatar}
                 className="btn btn-primary"
               >
-                {isUploadingAvatar ? '处理中...' : '上传/更换头像'}
+                {isUploadingAvatar ? 'Processing...' : 'Upload/Change avatar'}
               </button>
-              {/* 恢复默认按钮已移除 */}
+              {/* Reset to default button removed */}
             </div>
 
             <div
@@ -224,32 +224,32 @@ export default function ProfilePage() {
               onDrop={handleDrop}
               className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-sm text-gray-500 hover:border-orange-400 transition-colors"
             >
-              将图片拖拽到此处，或
-              <button type="button" onClick={handleAvatarClick} className="text-orange-600 hover:text-orange-700 ml-1">点击上传</button>
+              Drag an image here, or
+              <button type="button" onClick={handleAvatarClick} className="text-orange-600 hover:text-orange-700 ml-1">click to upload</button>
             </div>
 
             <div className="text-xs text-gray-500 mt-3 space-y-1">
-              <p>支持 JPG、PNG 格式，大小 ≤ 5MB；建议 400×400 以上，1:1 比例。</p>
-              <p>裁剪后预览如下。</p>
+              <p>Supports JPG and PNG, up to 5MB; recommended 400×400+ and 1:1 ratio.</p>
+              <p>Cropped preview appears below.</p>
             </div>
 
-            {/* 多尺寸预览 */}
+            {/* Multi-size preview */}
             <div className="mt-4 flex items-center gap-6">
               <div className="flex flex-col items-center gap-2">
                 <div className="w-32 h-32 rounded-full overflow-hidden border border-gray-200">
-                  <img src={avatarUrl || `/assets/avatars/default-avatar.svg`} alt="128预览" className="w-full h-full object-cover" />
+                  <img src={avatarUrl || `/assets/avatars/default-avatar.svg`} alt="128 preview" className="w-full h-full object-cover" />
                 </div>
                 <span className="text-xs text-gray-500">128×128</span>
               </div>
               <div className="flex flex-col items-center gap-2">
                 <div className="w-16 h-16 rounded-full overflow-hidden border border-gray-200">
-                  <img src={avatarUrl || `/assets/avatars/default-avatar.svg`} alt="64预览" className="w-full h-full object-cover" />
+                  <img src={avatarUrl || `/assets/avatars/default-avatar.svg`} alt="64 preview" className="w-full h-full object-cover" />
                 </div>
                 <span className="text-xs text-gray-500">64×64</span>
               </div>
               <div className="flex flex-col items-center gap-2">
                 <div className="w-8 h-8 rounded-full overflow-hidden border border-gray-200">
-                  <img src={avatarUrl || `/assets/avatars/default-avatar.svg`} alt="32预览" className="w-full h-full object-cover" />
+                  <img src={avatarUrl || `/assets/avatars/default-avatar.svg`} alt="32 preview" className="w-full h-full object-cover" />
                 </div>
                 <span className="text-xs text-gray-500">32×32</span>
               </div>
@@ -266,13 +266,13 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* 基本信息区域 - 独立卡片 */}
+      {/* Basic information */}
       <div className="card p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-100">基本信息</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-100">Basic information</h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="pb-6 border-b border-gray-200">
             <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-2">
-              昵称 <span className="text-red-500">*</span>
+              Display name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -281,7 +281,7 @@ export default function ProfilePage() {
               value={formData.displayName}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-colors"
-              placeholder="请输入昵称"
+              placeholder="Enter your display name"
               maxLength={50}
               required
             />
@@ -292,7 +292,7 @@ export default function ProfilePage() {
 
           <div className="pb-6 border-b border-gray-200">
             <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
-              所在地区
+              Location
             </label>
             <input
               type="text"
@@ -301,7 +301,7 @@ export default function ProfilePage() {
               value={formData.location}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-colors"
-              placeholder="如：北京市朝阳区"
+              placeholder="e.g. Melbourne, VIC"
               maxLength={50}
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -311,7 +311,7 @@ export default function ProfilePage() {
 
           <div>
             <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-2">
-              个人简介
+              Bio
             </label>
             <textarea
               id="bio"
@@ -320,7 +320,7 @@ export default function ProfilePage() {
               onChange={handleInputChange}
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-colors resize-none"
-              placeholder="介绍一下自己吧..."
+              placeholder="Introduce yourself..."
               maxLength={200}
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -329,23 +329,23 @@ export default function ProfilePage() {
           </div>
 
 
-      {/* 账户认证区域 */}
+      {/* Account verification */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* 手机认证 */}
+        {/* Phone verification */}
         <div className="bg-white border border-gray-200 rounded-lg p-5 text-center">
           <div className="mb-3">
             <svg className="w-8 h-8 mx-auto text-green-500" fill="currentColor" viewBox="0 0 20 20">
               <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
             </svg>
           </div>
-          <h4 className="font-medium text-gray-900 mb-2">手机认证</h4>
-          <p className="text-xs text-gray-500 mb-4">认证后可提高账户安全性</p>
+          <h4 className="font-medium text-gray-900 mb-2">Phone verification</h4>
+          <p className="text-xs text-gray-500 mb-4">Verify your phone number to improve account security.</p>
           {formData.phoneVerified ? (
             <div className="flex items-center justify-center gap-2">
               <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
-              <span className="text-sm text-green-600 font-medium">已认证</span>
+              <span className="text-sm text-green-600 font-medium">Verified</span>
             </div>
           ) : (
             <button
@@ -353,12 +353,12 @@ export default function ProfilePage() {
               onClick={() => handleVerificationModal('phone')}
               className="w-full bg-orange-50 hover:bg-orange-100 text-orange-600 font-medium py-2 px-4 rounded-lg transition-colors"
             >
-              立即认证
+              Verify now
             </button>
           )}
         </div>
 
-        {/* 邮箱认证 */}
+        {/* Email verification */}
         <div className="bg-white border border-gray-200 rounded-lg p-5 text-center">
           <div className="mb-3">
             <svg className="w-8 h-8 mx-auto text-blue-500" fill="currentColor" viewBox="0 0 20 20">
@@ -366,14 +366,14 @@ export default function ProfilePage() {
               <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
             </svg>
           </div>
-          <h4 className="font-medium text-gray-900 mb-2">邮箱认证</h4>
-          <p className="text-xs text-gray-500 mb-4">认证后可找回密码和接收通知</p>
+          <h4 className="font-medium text-gray-900 mb-2">Email verification</h4>
+          <p className="text-xs text-gray-500 mb-4">Verify your email to recover password and receive notifications.</p>
           {formData.emailVerified ? (
             <div className="flex items-center justify-center gap-2">
               <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
-              <span className="text-sm text-green-600 font-medium">已认证</span>
+              <span className="text-sm text-green-600 font-medium">Verified</span>
             </div>
           ) : (
             <button
@@ -381,20 +381,20 @@ export default function ProfilePage() {
               onClick={() => handleVerificationModal('email')}
               className="w-full bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium py-2 px-4 rounded-lg transition-colors"
             >
-              立即认证
+              Verify now
             </button>
           )}
         </div>
       </div>
 
-      {/* 操作按钮 */}
+      {/* Action buttons */}
       <div className="flex gap-3 pt-4">
             <button
               type="submit"
               disabled={isLoading || isUploadingAvatar}
               className="btn btn-primary flex-1"
             >
-              {isLoading ? '保存中...' : '保存更改'}
+              {isLoading ? 'Saving...' : 'Save changes'}
             </button>
             <button
               type="button"
@@ -402,7 +402,7 @@ export default function ProfilePage() {
               disabled={isLoading}
               className="btn btn-secondary px-8"
             >
-              取消
+              Cancel
             </button>
           </div>
         </form>
@@ -428,7 +428,7 @@ export default function ProfilePage() {
   );
 }
 
-// 认证弹窗组件
+// Verification modal
 function VerificationModal({
   type,
   onSubmit,
@@ -446,11 +446,11 @@ function VerificationModal({
   const addToast = useToastStore((s) => s.add);
 
   const isPhone = type === 'phone';
-  const title = isPhone ? '手机认证' : '邮箱认证';
-  const placeholder = isPhone ? '请输入手机号' : '请输入邮箱地址';
-  const codeLabel = isPhone ? '短信验证码' : '邮箱验证码';
+  const title = isPhone ? 'Phone verification' : 'Email verification';
+  const placeholder = isPhone ? 'Phone number' : 'Email address';
+  const codeLabel = isPhone ? 'SMS verification code' : 'Email verification code';
 
-  // 倒计时效果
+  // Countdown
   React.useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
@@ -460,30 +460,30 @@ function VerificationModal({
 
   const handleSendCode = async () => {
     if (!value.trim()) {
-      addToast({ message: `请输入${isPhone ? '手机号' : '邮箱'}`, type: 'error' });
+      addToast({ message: `Please enter your ${isPhone ? 'phone number' : 'email address'}.`, type: 'error' });
       return;
     }
 
-    // 简单验证格式
+    // Simple format validation
     if (isPhone && !/^1[3-9]\d{9}$/.test(value)) {
-      addToast({ message: '手机号格式不正确', type: 'error' });
+      addToast({ message: 'Invalid phone number format.', type: 'error' });
       return;
     }
 
     if (!isPhone && !/\S+@\S+\.\S+/.test(value)) {
-      addToast({ message: '邮箱格式不正确', type: 'error' });
+      addToast({ message: 'Invalid email format.', type: 'error' });
       return;
     }
 
     setIsLoading(true);
     try {
-      // 模拟发送验证码
+      // Simulate sending verification code
       await new Promise(resolve => setTimeout(resolve, 1000));
-      addToast({ message: `验证码已发送到您的${isPhone ? '手机' : '邮箱'}`, type: 'success' });
+      addToast({ message: `Verification code has been sent to your ${isPhone ? 'phone' : 'email'}.`, type: 'success' });
       setStep('verify');
       setCountdown(60);
     } catch (error) {
-      addToast({ message: '发送失败，请重试', type: 'error' });
+      addToast({ message: 'Failed to send verification code, please try again.', type: 'error' });
     } finally {
       setIsLoading(false);
     }
@@ -491,7 +491,7 @@ function VerificationModal({
 
   const handleVerify = async () => {
     if (!code.trim()) {
-      addToast({ message: '请输入验证码', type: 'error' });
+      addToast({ message: 'Please enter the verification code.', type: 'error' });
       return;
     }
 
@@ -499,7 +499,7 @@ function VerificationModal({
     try {
       await onSubmit(type, value, code);
     } catch (error: any) {
-      addToast({ message: error.message || '验证失败，请重试', type: 'error' });
+      addToast({ message: error.message || 'Verification failed, please try again.', type: 'error' });
     } finally {
       setIsLoading(false);
     }
@@ -550,20 +550,20 @@ function VerificationModal({
                 disabled={isLoading}
                 className="btn btn-primary flex-1"
               >
-                {isLoading ? '发送中...' : '发送验证码'}
+                {isLoading ? 'Sending...' : 'Send code'}
               </button>
               <button
                 onClick={onClose}
                 className="btn btn-secondary px-6"
               >
-                取消
+                Cancel
               </button>
             </div>
           </div>
         ) : (
           <div className="space-y-4">
             <div className="text-sm text-gray-600 mb-4">
-              验证码已发送到 <span className="font-medium">{value}</span>
+              A verification code has been sent to <span className="font-medium">{value}</span>
             </div>
 
             <div>
@@ -575,7 +575,7 @@ function VerificationModal({
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 className="input-field"
-                placeholder="请输入6位验证码"
+                placeholder="Enter the 6-digit code"
                 maxLength={6}
               />
             </div>
@@ -585,16 +585,16 @@ function VerificationModal({
                 onClick={() => setStep('input')}
                 className="text-gray-500 hover:text-gray-700"
               >
-                修改{isPhone ? '手机号' : '邮箱'}
+                Change {isPhone ? 'phone number' : 'email address'}
               </button>
               {countdown > 0 ? (
-                <span className="text-gray-500">{countdown}秒后可重发</span>
+                <span className="text-gray-500">You can resend in {countdown}s</span>
               ) : (
                 <button
                   onClick={handleSendCode}
                   className="text-orange-600 hover:text-orange-700"
                 >
-                  重新发送
+                  Resend code
                 </button>
               )}
             </div>
@@ -605,13 +605,13 @@ function VerificationModal({
                 disabled={isLoading}
                 className="btn btn-primary flex-1"
               >
-                {isLoading ? '验证中...' : '完成认证'}
+                {isLoading ? 'Verifying...' : 'Confirm verification'}
               </button>
               <button
                 onClick={onClose}
                 className="btn btn-secondary px-6"
               >
-                取消
+                Cancel
               </button>
             </div>
           </div>

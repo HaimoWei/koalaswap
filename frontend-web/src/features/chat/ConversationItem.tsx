@@ -7,11 +7,11 @@ interface ConversationItemProps {
 }
 
 export function ConversationItem({ conversation, isSelected, onClick }: ConversationItemProps) {
-    const peerName = conversation.peerNickname || `用户${conversation.peerUserId?.slice(0, 8)}`;
+    const peerName = conversation.peerNickname || `User ${conversation.peerUserId?.slice(0, 8)}`;
     const preview = conversation.lastMessagePreview || "";
     const hasOrderStatus = conversation.orderStatus && conversation.orderStatus !== 'PENDING';
     
-    // 格式化时间显示
+    // Format relative time
     const formatTime = (dateStr: string) => {
         const date = new Date(dateStr);
         const now = new Date();
@@ -20,13 +20,13 @@ export function ConversationItem({ conversation, isSelected, onClick }: Conversa
         const diffDays = diffHours / 24;
         
         if (diffHours < 1) {
-            return "刚刚";
+            return "Just now";
         } else if (diffHours < 24) {
-            return `${Math.floor(diffHours)}小时前`;
+            return `${Math.floor(diffHours)} hours ago`;
         } else if (diffDays < 7) {
-            return `${Math.floor(diffDays)}天前`;
+            return `${Math.floor(diffDays)} days ago`;
         } else {
-            return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+            return date.toLocaleDateString('en-AU', { month: 'short', day: 'numeric' });
         }
     };
 
@@ -42,7 +42,7 @@ export function ConversationItem({ conversation, isSelected, onClick }: Conversa
             `}
             onClick={onClick}
         >
-            {/* 头像 */}
+            {/* Avatar */}
             <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[var(--color-muted)] flex items-center justify-center overflow-hidden">
                 {conversation.peerAvatar ? (
                     <img 
@@ -57,9 +57,9 @@ export function ConversationItem({ conversation, isSelected, onClick }: Conversa
                 )}
             </div>
             
-            {/* 主要内容 */}
+            {/* Main content */}
             <div className="ml-3 flex-1 min-w-0">
-                {/* 顶部：昵称、置顶、订单状态、时间 */}
+                {/* Top row: name, pin, order status, time */}
                 <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center space-x-2 min-w-0">
                         <span className={`font-medium truncate ${isSelected ? 'text-[var(--color-text-strong)]' : 'text-gray-900'}`}>
@@ -81,10 +81,10 @@ export function ConversationItem({ conversation, isSelected, onClick }: Conversa
                     </div>
                 </div>
                 
-                {/* 底部：最后消息预览、未读徽标 */}
+                {/* Bottom row: message preview, unread badge */}
                 <div className="flex items-center justify-between">
                     <span className={`text-sm truncate ${isSelected ? 'text-[var(--color-text)]' : 'text-gray-600'}`}>
-                        {preview || "还没有消息..."}
+                        {preview || "No messages yet..."}
                     </span>
                     {conversation.unread > 0 && (
                         <span className="ml-2 text-xs px-2 py-1 rounded-full bg-red-500 text-white min-w-[20px] text-center flex-shrink-0">
@@ -94,12 +94,12 @@ export function ConversationItem({ conversation, isSelected, onClick }: Conversa
                 </div>
             </div>
 
-            {/* 商品图片 */}
+            {/* Product image */}
             {conversation.productFirstImage && (
                 <div className="ml-2 flex-shrink-0 w-14 h-14 rounded-md bg-[var(--color-muted)] overflow-hidden border border-[var(--color-border)]">
                     <img 
                         src={conversation.productFirstImage} 
-                        alt={conversation.productTitle || "商品图片"} 
+                        alt={conversation.productTitle || "Item image"} 
                         className="w-full h-full object-cover"
                         loading="lazy"
                     />

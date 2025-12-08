@@ -1,4 +1,4 @@
-// 头像上传相关API
+// Avatar upload related APIs
 import { userApi } from './http';
 
 interface AvatarUploadUrlRequest {
@@ -22,20 +22,20 @@ interface AvatarUploadUrlResponse {
 }
 
 /**
- * 获取头像上传URL
+ * Get avatar upload URL
  */
 export async function getAvatarUploadUrl(request: AvatarUploadUrlRequest): Promise<AvatarUploadUrlResponse> {
   const { data } = await userApi.post<AvatarUploadUrlResponse>('/api/users/me/avatar/upload-url', request);
 
   if (!data.ok || !data.data) {
-    throw new Error(data.message || '获取上传URL失败');
+    throw new Error(data.message || 'Failed to get upload URL');
   }
 
   return data;
 }
 
 /**
- * 上传文件到S3
+ * Upload file to S3
  */
 export async function uploadFileToS3(uploadUrl: string, file: File, mimeType: string): Promise<void> {
   const response = await fetch(uploadUrl, {
@@ -47,27 +47,27 @@ export async function uploadFileToS3(uploadUrl: string, file: File, mimeType: st
   });
 
   if (!response.ok) {
-    throw new Error(`上传失败: ${response.status} ${response.statusText}`);
+    throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
   }
 }
 
 /**
- * 更新用户头像URL
+ * Update user avatar URL
  */
 export async function updateUserAvatar(avatarUrl: string): Promise<void> {
   const { data } = await userApi.put('/api/users/me/avatar', { avatarUrl });
 
   if (!data.ok) {
-    throw new Error(data.message || '更新头像失败');
+    throw new Error(data.message || 'Failed to update avatar');
   }
 }
 
 /**
- * 完整的头像上传流程
+ * Full avatar upload flow
  */
 export async function uploadAvatar(file: File): Promise<string> {
   try {
-    // 1. 获取上传URL
+    // 1. Get upload URL
     const uploadUrlResponse = await getAvatarUploadUrl({
       fileName: file.name,
       fileSize: file.size,
@@ -76,22 +76,22 @@ export async function uploadAvatar(file: File): Promise<string> {
 
 
     if (!uploadUrlResponse.ok || !uploadUrlResponse.data) {
-      throw new Error('获取上传URL失败');
+      throw new Error('Failed to get upload URL');
     }
 
     const { uploadUrl, cdnUrl } = uploadUrlResponse.data.data;
 
-    // 2. 上传文件到S3
+    // 2. Upload file to S3
     await uploadFileToS3(uploadUrl, file, file.type);
 
-    // 3. 更新用户头像URL
+    // 3. Update avatar URL
     await updateUserAvatar(cdnUrl);
 
-    // 4. 返回CDN URL
+    // 4. Return CDN URL
     return cdnUrl;
 
   } catch (error) {
-    console.error('头像上传失败:', error);
+    console.error('Avatar upload failed:', error);
     throw error;
   }
 }

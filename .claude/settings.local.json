@@ -61,7 +61,11 @@
       "Bash(ssh:*)",
       "Bash(scp:*)",
       "Bash(wsl ls:*)",
-      "Bash(aws ecr describe-images:*)"
+      "Bash(aws ecr describe-images:*)",
+      "WebFetch(domain:koalaswap.lightspot.uk)",
+      "WebFetch(domain:api.koalaswap.lightspot.uk)",
+      "Bash(git pull:*)",
+      "Bash(aws ecr put-lifecycle-policy:*)"
     ],
     "deny": [],
     "ask": []

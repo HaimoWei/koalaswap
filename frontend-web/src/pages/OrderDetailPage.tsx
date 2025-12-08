@@ -49,7 +49,7 @@ export function OrderDetailPage() {
         staleTime: 60_000,
     });
 
-    // 查询该订单的双方评价，用来判断我是否已评价
+    // Fetch reviews from both parties to see whether I have already reviewed
     const orderReviewsQ = useQuery({
         queryKey: ["orderReviews", id],
         queryFn: () => getOrderReviews(id!),
@@ -57,7 +57,7 @@ export function OrderDetailPage() {
         staleTime: 60_000,
     });
 
-    // 动作
+    // Mutations
     const shipM = useMutation({
         mutationFn: () => shipOrder(id!),
         onSuccess: () => qc.invalidateQueries({ queryKey: ["order", id] }),
@@ -71,22 +71,28 @@ export function OrderDetailPage() {
         onSuccess: () => qc.invalidateQueries({ queryKey: ["order", id] }),
     });
 
-    if (orderQ.isLoading) return <main className="max-w-6xl mx-auto p-6">加载中...</main>;
-    if (orderQ.isError || !orderQ.data) return <main className="max-w-6xl mx-auto p-6 text-red-600">订单不存在</main>;
+    if (orderQ.isLoading) return <main className="max-w-6xl mx-auto p-6">Loading...</main>;
+    if (orderQ.isError || !orderQ.data) {
+        return (
+            <main className="max-w-6xl mx-auto p-6 text-red-600">
+                Order does not exist.
+            </main>
+        );
+    }
 
     const o = orderQ.data;
     const role = whoAmI({ buyerId: o.buyerId, sellerId: o.sellerId }, myId);
     const p = prodQ.data;
     const up = (o.status || "").toUpperCase();
 
-    // 评价 CTA：订单完成后（CONFIRMED/COMPLETED），且我还没评价
+    // Review CTA: show after order is completed (CONFIRMED/COMPLETED) and I have not reviewed yet
     const isDone = up === "CONFIRMED" || up === "COMPLETED";
     const myReviewed =
         !!myId &&
         (orderReviewsQ.data || []).some((rv) => String(rv.reviewer?.id) === String(myId));
 
-    // 只显示可执行的按钮
-    const canPay = false; // 支付在详情页用“去支付页”呈现；本页不直接调 pay
+    // Only show actions that are actually available
+    const canPay = false; // Payment is handled by a separate page; no direct pay action here
     const canShip = can("ship", o.status, role as any);
     const canConfirm = can("confirm", o.status, role as any);
     const canCancel = can("cancel", o.status, role as any);
@@ -94,38 +100,38 @@ export function OrderDetailPage() {
 
     return (
         <main className="max-w-6xl mx-auto p-6 space-y-6">
-            {/* 顶部：订单号 + 状态 */}
+            {/* Header: order ID + status */}
             <div className="card p-4 flex items-center justify-between">
                 <div className="text-sm text-gray-600">
-                    订单号：<b>{o.id}</b>
+                    Order ID: <b>{o.id}</b>
                 </div>
                 <OrderStatusTag status={o.status} />
             </div>
 
-            {/* PENDING 提示条（仿闲鱼） */}
+            {/* PENDING status banner */}
             {up === "PENDING" && (
                 <div className="tag-warning p-3 rounded-lg border border-[var(--warning)] bg-[var(--warning-bg)] text-[var(--warning)] text-sm">
                     {role === "buyer"
-                        ? "订单已为你锁定 30 分钟，请尽快完成支付，否则可能被抢拍。"
-                        : "买家正在支付，若异常可取消订单。"}
+                        ? "This order has been reserved for you for 30 minutes. Please complete the payment as soon as possible."
+                        : "The buyer is currently paying. You may cancel the order if something looks wrong."}
                 </div>
             )}
 
-            {/* 商品快照 */}
+            {/* Product snapshot */}
             <div className="card p-4 flex gap-4">
                 <img
                     src={p?.images?.[0] || "https://placehold.co/120x120"}
                     className="w-28 h-28 rounded object-cover border border-[var(--color-border)]"
                 />
                 <div className="flex-1 min-w-0">
-                    <div className="font-medium">{p?.title || `商品 ${o.productId}`}</div>
-                    <div className="text-sm text-gray-600 mt-1">订单价格：￥{o.priceSnapshot}</div>
+                    <div className="font-medium">{p?.title || `Item ${o.productId}`}</div>
+                    <div className="text-sm text-gray-600 mt-1">Order price: ¥{o.priceSnapshot}</div>
                     <div className="text-xs text-gray-500 mt-1">
-                        创建时间：{new Date(o.createdAt).toLocaleString()}
+                        Created at: {new Date(o.createdAt).toLocaleString()}
                     </div>
                     {o.closedAt && (
                         <div className="text-xs text-gray-500 mt-1">
-                            完成/关闭：{new Date(o.closedAt).toLocaleString()}
+                            Completed/closed at: {new Date(o.closedAt).toLocaleString()}
                         </div>
                     )}
                 </div>
@@ -133,37 +139,39 @@ export function OrderDetailPage() {
                     to={`/product/${o.productId}`}
                     className="self-start btn btn-secondary text-sm"
                 >
-                    查看商品
+                    View item
                 </Link>
             </div>
 
-            {/* 时间线 */}
+            {/* Timeline */}
             <div className="card p-4">
-                <div className="text-sm text-gray-600 mb-2">订单进度</div>
+                <div className="text-sm text-gray-600 mb-2">Order timeline</div>
                 <OrderTimeline status={o.status} />
             </div>
 
-            {/* 评价 CTA：已完成但我还没评时出现 */}
+            {/* Review CTA: visible when order is completed but I have not reviewed yet */}
             {isDone && role !== "guest" && (
                 <div className="card p-4 flex items-center justify-between">
                     <div className="text-sm text-gray-600">
-                        {myReviewed ? "你已完成该订单的评价。" : "交易已完成，写个评价分享一下体验吧～"}
+                        {myReviewed
+                            ? "You have already left a review for this order."
+                            : "Your transaction is complete. Share your experience with a review."}
                     </div>
                     {!myReviewed && (
                         <button
                             onClick={() => nav(`/reviews/new/${o.id}`)}
                             className="btn btn-primary"
                         >
-                            去评价
+                            Write a review
                         </button>
                     )}
                 </div>
             )}
 
-            {/* 操作条：仅在有可操作项时显示 */}
+            {/* Actions bar: only visible when there are available actions */}
             {hasAnyAction && (
                 <div className="card p-4">
-                    <div className="text-sm text-gray-600 mb-3">可执行操作</div>
+                    <div className="text-sm text-gray-600 mb-3">Available actions</div>
                     <div className="flex flex-wrap gap-3">
                         {/* 去支付入口跳到支付页，这里不直接展示（如需展示可放开）
             {canPay && (
@@ -178,31 +186,40 @@ export function OrderDetailPage() {
                                 disabled={shipM.isPending}
                                 className="btn btn-secondary disabled:opacity-50"
                             >
-                                {shipM.isPending ? "发货中..." : "发货"}
+                                {shipM.isPending ? "Shipping..." : "Ship item"}
                             </button>
                         )}
 
                         {canConfirm && (
                             <button
                                 onClick={async () => {
-                                    if (await confirm("确认收货", "确认已收到商品？确认后将无法撤销")) {
+                                    if (
+                                        await confirm(
+                                            "Confirm receipt",
+                                            "Have you received the item? This action cannot be undone."
+                                        )
+                                    ) {
                                         confirmM.mutate();
                                     }
                                 }}
                                 disabled={confirmM.isPending}
                                 className="btn btn-primary disabled:opacity-50"
                             >
-                                {confirmM.isPending ? "确认中..." : "确认收货"}
+                                {confirmM.isPending ? "Confirming..." : "Confirm receipt"}
                             </button>
                         )}
 
                         {canCancel && (
                             <button
-                                onClick={async () => { if (await confirm("取消订单", "确认要取消该订单？")) cancelM.mutate(); }}
+                                onClick={async () => {
+                                    if (await confirm("Cancel order", "Are you sure you want to cancel this order?")) {
+                                        cancelM.mutate();
+                                    }
+                                }}
                                 disabled={cancelM.isPending}
                                 className="btn btn-secondary disabled:opacity-50"
                             >
-                                {cancelM.isPending ? "取消中..." : "取消订单"}
+                                {cancelM.isPending ? "Cancelling..." : "Cancel order"}
                             </button>
                         )}
                     </div>
@@ -212,22 +229,22 @@ export function OrderDetailPage() {
                             {(shipM.error as Error)?.message ||
                                 (confirmM.error as Error)?.message ||
                                 (cancelM.error as Error)?.message ||
-                                "操作失败"}
+                                "Action failed"}
                         </div>
                     )}
                 </div>
             )}
 
-            {/* 返回 */}
+            {/* Back links */}
             <div className="flex gap-3">
                 <button
                     onClick={() => nav(role === "seller" ? "/me/center/orders?role=seller" : "/me/center/orders?role=buyer")}
                     className="btn btn-primary text-sm"
                 >
-                    返回我的订单
+                    Back to my orders
                 </button>
                 <Link to="/" className="text-blue-600 underline">
-                    返回首页
+                    Back to home
                 </Link>
             </div>
         </main>

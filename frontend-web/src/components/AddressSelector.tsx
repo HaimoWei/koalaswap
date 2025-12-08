@@ -54,13 +54,13 @@ export function AddressSelector({ selectedAddressId, onAddressChange }: AddressS
     return (
       <>
         <div className="text-center py-8 border-2 border-dashed border-orange-200 rounded-lg bg-orange-50">
-          <div className="text-orange-600 text-lg mb-2">📍 请添加收货地址</div>
-          <div className="text-gray-600 text-sm mb-4">下单前需要选择收货地址</div>
+          <div className="text-orange-600 text-lg mb-2">📍 Please add a shipping address</div>
+          <div className="text-gray-600 text-sm mb-4">You need to select a shipping address before placing an order.</div>
           <button
             onClick={() => setIsModalOpen(true)}
             className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
           >
-            立即添加地址
+            Add address
           </button>
         </div>
         <AddressModal
@@ -94,7 +94,7 @@ export function AddressSelector({ selectedAddressId, onAddressChange }: AddressS
                 </div>
                 <span className="text-gray-600 font-medium">{selectedAddress.phone}</span>
                 {selectedAddress.isDefault && (
-                  <span className="text-xs bg-orange-500 text-white px-2 py-1 rounded-full font-medium">默认地址</span>
+                  <span className="text-xs bg-orange-500 text-white px-2 py-1 rounded-full font-medium">Default address</span>
                 )}
               </div>
               <div className="text-sm text-gray-700 leading-relaxed">
@@ -104,7 +104,7 @@ export function AddressSelector({ selectedAddressId, onAddressChange }: AddressS
             </div>
             <div className="ml-3 flex items-center">
               <span className="text-xs text-orange-600 mr-2">
-                {addresses.length > 1 ? '点击切换' : '当前地址'}
+                {addresses.length > 1 ? 'Click to change' : 'Current address'}
               </span>
               {addresses.length > 1 && (
                 <svg
@@ -125,7 +125,7 @@ export function AddressSelector({ selectedAddressId, onAddressChange }: AddressS
       {isExpanded && addresses.length > 1 && (
         <div className="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm">
           <div className="bg-gray-100 px-4 py-3 text-sm font-semibold text-gray-800 border-b border-gray-200">
-            选择其他收货地址
+            Choose another shipping address
           </div>
           <div className="max-h-64 overflow-y-auto">
             {addresses.filter(addr => addr.id !== selectedAddress?.id).map((address) => (
@@ -142,7 +142,7 @@ export function AddressSelector({ selectedAddressId, onAddressChange }: AddressS
                   <span className="font-medium text-gray-800">{address.receiverName}</span>
                   <span className="text-gray-600">{address.phone}</span>
                   {address.isDefault && (
-                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">默认</span>
+                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">Default</span>
                   )}
                 </div>
                 <div className="text-sm text-gray-600 ml-6">
@@ -164,7 +164,7 @@ export function AddressSelector({ selectedAddressId, onAddressChange }: AddressS
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          添加新地址
+          Add new address
         </button>
       </div>
 

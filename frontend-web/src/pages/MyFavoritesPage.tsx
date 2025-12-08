@@ -40,9 +40,9 @@ export function MyFavoritesPage() {
     return (
         <main className="page py-6">
             <div className="flex items-center justify-between mb-6">
-                <h1 className="text-xl font-semibold text-gray-900">我的收藏</h1>
+                <h1 className="text-xl font-semibold text-gray-900">My favorites</h1>
                 <div className="text-sm text-gray-500">
-                    共 {list.length} 件商品
+                    Total <b>{list.length}</b> items
                 </div>
             </div>
 
@@ -53,9 +53,9 @@ export function MyFavoritesPage() {
                     ))}
                 </div>
             ) : q.isError ? (
-                <div className="text-red-600">加载失败：{(q.error as Error).message}</div>
+                <div className="text-red-600">Failed to load: {(q.error as Error).message}</div>
             ) : list.length === 0 ? (
-                <div className="text-sm text-gray-600">暂无收藏</div>
+                <div className="text-sm text-gray-600">No favorites yet</div>
             ) : (
                 <>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
@@ -89,9 +89,23 @@ export function MyFavoritesPage() {
 
                     {totalPages > 1 && (
                         <div className="flex items-center justify-center gap-2">
-                            <button className="btn btn-secondary" disabled={page <= 0} onClick={() => onPage(page - 1)}>上一页</button>
-                            <span className="text-sm text-gray-600">第 {page + 1} / {totalPages} 页</span>
-                            <button className="btn btn-secondary" disabled={page >= totalPages - 1} onClick={() => onPage(page + 1)}>下一页</button>
+                            <button
+                                className="btn btn-secondary"
+                                disabled={page <= 0}
+                                onClick={() => onPage(page - 1)}
+                            >
+                                Previous
+                            </button>
+                            <span className="text-sm text-gray-600">
+                                Page {page + 1} / {totalPages}
+                            </span>
+                            <button
+                                className="btn btn-secondary"
+                                disabled={page >= totalPages - 1}
+                                onClick={() => onPage(page + 1)}
+                            >
+                                Next
+                            </button>
                         </div>
                     )}
                 </>

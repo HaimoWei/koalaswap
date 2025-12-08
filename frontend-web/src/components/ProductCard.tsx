@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getUserBrief } from "../api/users";
 
-// 商品卡片：点击跳转到 /product/:id
+// Product card: click to go to /product/:id
 export function ProductCard({ p }: { p: ProductRes }) {
     const img = p.images?.[0] || "https://placehold.co/600x600?text=No+Image";
     return (
@@ -17,13 +17,13 @@ export function ProductCard({ p }: { p: ProductRes }) {
             >
                 <div className="relative aspect-square bg-[var(--color-muted)] overflow-hidden">
                     <img src={img} alt={p.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
-                    {/* 包邮标签 */}
+                    {/* Free shipping badge */}
                     {((p as any).freeShipping || (p as any).free_shipping) && (
                         <div className="absolute top-2 left-2">
-                            <span className="chip chip-primary text-xs px-2 py-1">包邮</span>
+                            <span className="chip chip-primary text-xs px-2 py-1">Free shipping</span>
                         </div>
                     )}
-                    {/* 商品状态标签 */}
+                    {/* Item status badge */}
                     {p.status && p.status !== "ACTIVE" && (
                         <div className="absolute top-2 right-2">
                             <span className="chip chip-muted text-xs px-2 py-1">{mapStatus(p.status)}</span>
@@ -35,11 +35,11 @@ export function ProductCard({ p }: { p: ProductRes }) {
                     <div className="mt-3 flex items-center justify-between">
                         <span className="font-bold text-lg text-[var(--color-text-strong)]">{formatPrice(p.price, p.currency)}</span>
                         <div className="flex items-center gap-2">
-                            {((p as any).freeShipping || (p as any).free_shipping) && <span className="tag tag-success text-xs">包邮</span>}
+                            {((p as any).freeShipping || (p as any).free_shipping) && <span className="tag tag-success text-xs">Free shipping</span>}
                             {p.condition && <span className="chip chip-secondary text-xs">{mapCondition(p.condition)}</span>}
                         </div>
                     </div>
-                    {/* 卖家头像与昵称 */}
+                    {/* Seller avatar and name */}
                     {p.sellerId && <SellerBriefRow sellerId={String(p.sellerId)} />}
                 </div>
             </Link>
@@ -60,14 +60,28 @@ function SellerBriefRow({ sellerId }: { sellerId: string }) {
 }
 
 function formatPrice(n: number, c?: string | null) {
-    try { if (c === "AUD" || c === "CNY") return new Intl.NumberFormat("zh-CN", { style: "currency", currency: c }).format(n); } catch {}
-    return `¥${n}`;
+    try {
+        if (c === "AUD" || c === "CNY") {
+            return new Intl.NumberFormat("en-AU", { style: "currency", currency: c === "CNY" ? "CNY" : "AUD" }).format(n);
+        }
+    } catch {}
+    return `$${n}`;
 }
 function mapCondition(c: string) {
-    const m: Record<string, string> = { NEW: "全新", LIKE_NEW: "九成新", GOOD: "良好", FAIR: "一般" };
+    const m: Record<string, string> = {
+        NEW: "Brand new",
+        LIKE_NEW: "Like new",
+        GOOD: "Good",
+        FAIR: "Fair",
+    };
     return m[c] || c;
 }
 function mapStatus(s: string) {
-    const m: Record<string, string> = { ACTIVE: "在售", RESERVED: "已预定", SOLD: "已售出", HIDDEN: "隐藏" };
+    const m: Record<string, string> = {
+        ACTIVE: "On sale",
+        RESERVED: "Reserved",
+        SOLD: "Sold",
+        HIDDEN: "Hidden",
+    };
     return m[s] || s;
 }

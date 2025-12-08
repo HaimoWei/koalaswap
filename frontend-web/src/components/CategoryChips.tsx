@@ -11,12 +11,12 @@ export function CategoryChips() {
     fetchTopCategories()
       .then(setCategories)
       .catch((err) => {
-        console.error("加载分类失败:", err);
-        // 失败时使用默认分类
+        console.error("Failed to load categories:", err);
+        // Fallback to default categories on failure
         setCategories([
-          { id: 1000, name: "数码电子", parentId: null, children: [] },
-          { id: 2000, name: "生活用品", parentId: null, children: [] },
-          { id: 3000, name: "图书文娱", parentId: null, children: [] },
+          { id: 1000, name: "Electronics", parentId: null, children: [] },
+          { id: 2000, name: "Home & living", parentId: null, children: [] },
+          { id: 3000, name: "Books & entertainment", parentId: null, children: [] },
         ]);
       })
       .finally(() => setLoading(false));
@@ -26,7 +26,7 @@ export function CategoryChips() {
     return (
       <div className="mb-6">
         <div className="flex gap-2 overflow-auto no-scrollbar py-1">
-          <div className="chip chip-secondary animate-pulse shrink-0">加载中...</div>
+          <div className="chip chip-secondary animate-pulse shrink-0">Loading...</div>
         </div>
       </div>
     );

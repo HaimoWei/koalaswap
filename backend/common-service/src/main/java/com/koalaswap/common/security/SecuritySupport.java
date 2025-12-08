@@ -11,12 +11,12 @@ public final class SecuritySupport {
     /** 需要登录的接口：强制取 userId，取不到抛异常（交给全局异常处理 → 401） */
     public static UUID requireUserId(Authentication auth) {
         if (auth == null || auth.getName() == null) {
-            throw new IllegalStateException("未登录");
+            throw new IllegalStateException("Not authenticated.");
         }
         try {
             return UUID.fromString(auth.getName());
         } catch (Exception e) {
-            throw new IllegalStateException("无效的用户身份");
+            throw new IllegalStateException("Invalid user identity.");
         }
     }
 

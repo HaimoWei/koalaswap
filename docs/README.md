@@ -21,6 +21,7 @@
 ### 开发相关
 - **[数据集导入计划](./development/DATASET_IMPORT_PLAN.md)** - 数据集导入说明
 - **[API规范](./development/api-spec.md)** - API接口规范
+ - **[文案英文化与多语言规划](./development/TRANSLATION_AND_I18N_PLAN.md)** - 将中文文案系统翻译为英文的执行计划
 
 ## 🎯 根据场景查找文档
 

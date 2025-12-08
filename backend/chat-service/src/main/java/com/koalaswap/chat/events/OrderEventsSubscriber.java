@@ -29,10 +29,10 @@ public class OrderEventsSubscriber implements MessageListener {
     public void onMessage(org.springframework.data.redis.connection.Message message, byte[] pattern) {
         try {
             String json = new String(message.getBody());
-            System.out.println("[OrderEventsSubscriber] 收到Redis事件: " + json);
+            System.out.println("[OrderEventsSubscriber] Received Redis event: " + json);
 
             OrderStatusEvent evt = om.readValue(json, OrderStatusEvent.class);
-            System.out.println("[OrderEventsSubscriber] 解析事件: orderId=" + evt.orderId +
+            System.out.println("[OrderEventsSubscriber] Parsed event: orderId=" + evt.orderId +
                              ", productId=" + evt.productId +
                              ", buyerId=" + evt.buyerId +
                              ", sellerId=" + evt.sellerId +
@@ -41,10 +41,10 @@ public class OrderEventsSubscriber implements MessageListener {
             // 将订单事件转为 SYSTEM 消息落库，并刷新会话快照/未读；
             // 该方法内部已负责广播 WS（会话消息 + 收件箱变化），此处无需重复推送。
             chatDomain.appendSystemMessageForOrderEvent(evt);
-            System.out.println("[OrderEventsSubscriber] 事件处理完成");
+            System.out.println("[OrderEventsSubscriber] Event handled successfully");
         } catch (Exception e) {
             // 记录日志即可；为简洁未引入日志框架
-            System.err.println("[OrderEventsSubscriber] 处理事件失败: " + e.getMessage());
+            System.err.println("[OrderEventsSubscriber] Failed to handle event: " + e.getMessage());
             e.printStackTrace();
         }
     }

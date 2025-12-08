@@ -4,10 +4,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record ChangePasswordReq(
-    @NotBlank(message = "当前密码不能为空")
+    @NotBlank(message = "Current password must not be empty.")
     String currentPassword,
 
-    @NotBlank(message = "新密码不能为空")
-    @Size(min = 6, max = 50, message = "新密码长度必须在6-50字符之间")
+    @NotBlank(message = "New password must not be empty.")
+    @Size(min = 6, max = 50, message = "New password length must be between 6 and 50 characters.")
     String newPassword
 ) {}

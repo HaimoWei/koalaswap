@@ -76,7 +76,7 @@ public class CategoryService {
      */
     public CategoryRes getCategory(Integer id) {
         var category = categoryRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("分类不存在: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("Category does not exist: " + id));
         return toRes(category);
     }
 

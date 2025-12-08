@@ -15,7 +15,7 @@ export function MyProductsPage() {
     const { data, isLoading, isError, error } = useQuery<Page<ProductRes>>({
         queryKey: ["mine", tab, page, size],
         queryFn: () => fetchMyProducts({ tab, page, size, sort: "updatedAt,desc" }),
-        // v5: 用 placeholderData 复刻 keepPreviousData 行为
+        // v5: use placeholderData to mimic keepPreviousData behavior
         placeholderData: (prev) => prev,
     });
 
@@ -34,24 +34,24 @@ export function MyProductsPage() {
 
     return (
         <main className="page py-6">
-            {/* 顶部：标题 + 右侧发布按钮（圆润样式） */}
+            {/* Top: title + publish button */}
             <div className="flex items-center justify-between mb-2">
-                <h1 className="text-xl font-semibold text-gray-900">我发布的商品</h1>
+                <h1 className="text-xl font-semibold text-gray-900">My listings</h1>
                 <Link
                   to="/publish"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-primary)] text-black shadow hover:brightness-105 transition-colors text-sm"
-                  title="发布闲置"
+                  title="List an item"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                   </svg>
-                  发布闲置
+                  List an item
                 </Link>
             </div>
 
-            {/* 次级：在售/隐藏 切换（分段控件样式） */}
+            {/* Secondary: on-sale / hidden tabs */}
             <div className="mb-6">
                 <div className="inline-flex p-1 rounded-full bg-gray-100 border border-gray-200">
                     <button
@@ -62,7 +62,7 @@ export function MyProductsPage() {
                         }`}
                         onClick={() => setTab("onsale")}
                     >
-                        在售 {tab === "onsale" && `(${data?.totalElements || 0})`}
+                        On sale {tab === "onsale" && `(${data?.totalElements || 0})`}
                     </button>
                     <button
                         className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
@@ -72,7 +72,7 @@ export function MyProductsPage() {
                         }`}
                         onClick={() => setTab("hidden")}
                     >
-                        隐藏 {tab === "hidden" && `(${data?.totalElements || 0})`}
+                        Hidden {tab === "hidden" && `(${data?.totalElements || 0})`}
                     </button>
                 </div>
             </div>
@@ -84,7 +84,7 @@ export function MyProductsPage() {
                     ))}
                 </div>
             ) : isError ? (
-                <div className="text-red-600">加载失败：{(error as Error)?.message}</div>
+                <div className="text-red-600">Failed to load: {(error as Error)?.message}</div>
             ) : (
                 <>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-6">

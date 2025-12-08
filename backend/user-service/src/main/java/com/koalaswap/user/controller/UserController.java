@@ -138,13 +138,13 @@ public class UserController {
         String mimeType = (String) request.get("mimeType");
 
         if (fileName == null || fileSize == null || mimeType == null) {
-            throw new RuntimeException("fileName, fileSize, mimeType 为必填参数");
+            throw new RuntimeException("fileName, fileSize, and mimeType are required parameters.");
         }
 
         // 获取JWT token（从当前请求的Authorization header中）
         String authHeader = httpRequest.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("缺少有效的Authorization header");
+            throw new RuntimeException("Missing or invalid Authorization header.");
         }
         String jwtToken = authHeader.substring(7); // 移除 "Bearer " 前缀
 

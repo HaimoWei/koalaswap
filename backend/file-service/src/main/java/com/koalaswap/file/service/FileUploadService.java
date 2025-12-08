@@ -38,7 +38,7 @@ public class FileUploadService {
      * @return 上传响应，包含预签名URL和CDN地址
      */
     public FileUploadResponse generateUploadUrl(FileUploadRequest request, UUID userId) {
-        log.info("用户 {} 请求上传文件: {} (分类: {}, 大小: {})",
+        log.info("User {} requests to upload file: {} (category: {}, size: {})",
             userId, request.getFileName(), request.getCategory(), request.getFileSize());
 
         // 1. 验证文件
@@ -62,7 +62,7 @@ public class FileUploadService {
             .plus(Duration.ofMinutes(fileProperties.getPresignedUrlExpirationMinutes()))
             .toEpochMilli();
 
-        log.info("生成文件上传URL成功: {}", objectKey);
+        log.info("Successfully generated file upload URL: {}", objectKey);
 
         return FileUploadResponse.builder()
             .uploadUrl(uploadUrl)
@@ -83,11 +83,11 @@ public class FileUploadService {
      * @return 上传响应列表
      */
     public List<FileUploadResponse> generateBatchUploadUrls(List<FileUploadRequest> requests, UUID userId) {
-        log.info("用户 {} 请求批量上传 {} 个文件", userId, requests.size());
+        log.info("User {} requests to batch upload {} files", userId, requests.size());
 
         // 限制批量上传数量
         if (requests.size() > 10) {
-            throw new RuntimeException("单次最多上传10个文件");
+            throw new RuntimeException("You can upload at most 10 files in a single request.");
         }
 
         return requests.stream()
@@ -103,8 +103,10 @@ public class FileUploadService {
 
         // 验证文件大小
         if (request.getFileSize() > config.getMaxFileSize()) {
-            throw new RuntimeException(String.format("文件过大，最大允许 %d MB",
-                config.getMaxFileSize() / 1024 / 1024));
+            throw new RuntimeException(String.format(
+                "File size exceeds the maximum allowed of %d MB",
+                config.getMaxFileSize() / 1024 / 1024
+            ));
         }
 
         // 验证 MIME 类型
@@ -122,7 +124,7 @@ public class FileUploadService {
                 });
 
             if (!isValidMimeType) {
-                throw new RuntimeException("不支持的文件类型: " + request.getMimeType());
+                throw new RuntimeException("Unsupported file type: " + request.getMimeType());
             }
         }
 
@@ -133,7 +135,7 @@ public class FileUploadService {
             boolean validExt = Arrays.stream(allowedExts)
                 .anyMatch(fileName::endsWith);
             if (!validExt) {
-                throw new RuntimeException("不支持的文件扩展名");
+                throw new RuntimeException("Unsupported file extension.");
             }
         }
     }
@@ -158,8 +160,8 @@ public class FileUploadService {
             return presignedRequest.url().toString();
 
         } catch (Exception e) {
-            log.error("生成预签名URL失败: {}", e.getMessage(), e);
-            throw new RuntimeException("生成上传URL失败: " + e.getMessage());
+            log.error("Failed to generate presigned URL: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to generate upload URL: " + e.getMessage());
         }
     }
 }

@@ -31,7 +31,7 @@ public class SimpleImageUploadService {
      * 生成图片上传URL（独立于商品，直接上传到云存储）
      */
     public SimpleImageUploadResponse generateUploadUrl(SimpleImageUploadRequest request, UUID currentUserId) {
-        log.info("用户 {} 请求上传图片: {}", currentUserId, request.getFileName());
+        log.info("User {} requests to upload image: {}", currentUserId, request.getFileName());
 
         // 1. 验证文件
         validateFile(request);
@@ -48,7 +48,7 @@ public class SimpleImageUploadService {
         // 5. 过期时间
         long expiresAt = Instant.now().plus(Duration.ofMinutes(s3Properties.getPresignedUrlExpirationMinutes())).toEpochMilli();
 
-        log.info("生成图片上传URL成功: {}", objectKey);
+        log.info("Successfully generated image upload URL: {}", objectKey);
 
         return new SimpleImageUploadResponse(uploadUrl, objectKey, cdnUrl, expiresAt);
     }
@@ -59,13 +59,13 @@ public class SimpleImageUploadService {
     private void validateFile(SimpleImageUploadRequest request) {
         // 验证文件大小
         if (request.getFileSize() > s3Properties.getUpload().getMaxFileSize()) {
-            throw new RuntimeException("文件过大，最大允许 " + (s3Properties.getUpload().getMaxFileSize() / 1024 / 1024) + "MB");
+            throw new RuntimeException("File size exceeds the maximum allowed of " + (s3Properties.getUpload().getMaxFileSize() / 1024 / 1024) + "MB.");
         }
 
         // 验证 MIME 类型
         String[] allowedTypes = s3Properties.getUpload().getAllowedMimeTypes();
         if (!Arrays.asList(allowedTypes).contains(request.getMimeType())) {
-            throw new RuntimeException("不支持的文件类型: " + request.getMimeType());
+            throw new RuntimeException("Unsupported file type: " + request.getMimeType());
         }
 
         // 验证文件扩展名
@@ -73,7 +73,7 @@ public class SimpleImageUploadService {
         String[] allowedExts = s3Properties.getUpload().getAllowedExtensions();
         boolean validExt = Arrays.stream(allowedExts).anyMatch(fileName::endsWith);
         if (!validExt) {
-            throw new RuntimeException("不支持的文件扩展名");
+            throw new RuntimeException("Unsupported file extension.");
         }
     }
 
@@ -107,8 +107,8 @@ public class SimpleImageUploadService {
             return presignedRequest.url().toString();
 
         } catch (Exception e) {
-            log.error("生成预签名URL失败: {}", e.getMessage(), e);
-            throw new RuntimeException("生成上传URL失败: " + e.getMessage());
+            log.error("Failed to generate presigned URL: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to generate upload URL: " + e.getMessage());
         }
     }
 }

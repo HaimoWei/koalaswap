@@ -35,23 +35,23 @@ export default function ChatImageUploader({
   const [imagePreview, setImagePreview] = useState<ImagePreview | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 验证文件
+  // Validate file
   const validateFile = (file: File): string | null => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    const maxSize = 20 * 1024 * 1024; // 20MB (file-service中chat分类的限制)
+    const maxSize = 20 * 1024 * 1024; // 20MB (limit for chat category in file-service)
 
     if (!allowedTypes.includes(file.type)) {
-      return '只支持 JPG、PNG、WebP、GIF 格式的图片';
+      return 'Only JPG, PNG, WebP, and GIF images are supported.';
     }
 
     if (file.size > maxSize) {
-      return '图片大小不能超过 20MB';
+      return 'Image size must not exceed 20MB.';
     }
 
     return null;
   };
 
-  // 上传单个图片
+  // Upload a single image
   const uploadImage = useCallback(async (file: File) => {
     const validation = validateFile(file);
     if (validation) {
@@ -59,7 +59,7 @@ export default function ChatImageUploader({
       return;
     }
 
-    // 创建预览
+    // Create preview
     const preview = URL.createObjectURL(file);
     const imageId = Date.now().toString();
 
@@ -75,7 +75,7 @@ export default function ChatImageUploader({
     onUploadStart?.();
 
     try {
-      // 1. 获取上传URL
+      // 1. Get upload URL
       setUploadingImage(prev => prev ? { ...prev, progress: 10 } : null);
 
       const uploadResponse = await getChatImageUploadUrl(
@@ -85,32 +85,32 @@ export default function ChatImageUploader({
         conversationId
       );
 
-      // 2. 上传到S3
+      // 2. Upload to S3
       setUploadingImage(prev => prev ? { ...prev, progress: 30 } : null);
 
       await uploadFileToS3(file, uploadResponse.uploadUrl);
 
-      // 3. 上传完成
+      // 3. Upload completed
       setUploadingImage(prev => prev ? { ...prev, progress: 100, status: 'completed' } : null);
 
-      // 4. 通知父组件
+      // 4. Notify parent
       onImageUploaded(uploadResponse.cdnUrl);
 
-      // 5. 清理状态
+      // 5. Cleanup
       setTimeout(() => {
         setUploadingImage(null);
         URL.revokeObjectURL(preview);
       }, 1000);
 
     } catch (error: any) {
-      console.error('图片上传失败:', error);
+      console.error('Image upload failed:', error);
       setUploadingImage(prev => prev ? {
         ...prev,
         status: 'failed',
-        errorMessage: error.message || '上传失败，请重试'
+        errorMessage: error.message || 'Upload failed, please try again.'
       } : null);
 
-      // 3秒后清理失败状态
+      // Clear failed state after 3 seconds
       setTimeout(() => {
         setUploadingImage(null);
         URL.revokeObjectURL(preview);
@@ -120,12 +120,12 @@ export default function ChatImageUploader({
     }
   }, [conversationId, onImageUploaded, onUploadStart, onUploadEnd]);
 
-  // 处理文件选择 - 先预览，后确认上传
+  // Handle file selection - preview first, then confirm to upload
   const handleFileSelect = useCallback((files: FileList | null) => {
     if (!files || files.length === 0) return;
-    if (uploadingImage || imagePreview) return; // 正在上传或预览时不允许新选择
+    if (uploadingImage || imagePreview) return; // Do not select a new file during upload or preview
 
-    const file = files[0]; // 聊天中一次只上传一张图片
+    const file = files[0]; // Only one image per upload in chat
 
     const validation = validateFile(file);
     if (validation) {
@@ -133,7 +133,7 @@ export default function ChatImageUploader({
       return;
     }
 
-    // 创建预览
+    // Create preview
     const preview = URL.createObjectURL(file);
     const imageId = Date.now().toString();
 
@@ -144,30 +144,30 @@ export default function ChatImageUploader({
     });
   }, [uploadingImage, imagePreview]);
 
-  // 确认上传
+  // Confirm upload
   const confirmUpload = useCallback(() => {
     if (!imagePreview) return;
     uploadImage(imagePreview.file);
 
-    // 清理预览
+    // Cleanup preview
     URL.revokeObjectURL(imagePreview.preview);
     setImagePreview(null);
   }, [imagePreview, uploadImage]);
 
-  // 取消预览
+  // Cancel preview
   const cancelPreview = useCallback(() => {
     if (!imagePreview) return;
     URL.revokeObjectURL(imagePreview.preview);
     setImagePreview(null);
   }, [imagePreview]);
 
-  // 点击选择文件
+  // Click to select file
   const handleClick = () => {
     if (disabled || uploadingImage || imagePreview) return;
     fileInputRef.current?.click();
   };
 
-  // 拖拽处理
+  // Drag-and-drop handling
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -195,7 +195,7 @@ export default function ChatImageUploader({
   return (
     <>
       <div className="flex items-center gap-2">
-        {/* 文件选择器 */}
+        {/* File input */}
         <input
           ref={fileInputRef}
           type="file"
@@ -204,7 +204,7 @@ export default function ChatImageUploader({
           className="hidden"
         />
 
-        {/* 上传按钮 */}
+        {/* Upload button */}
         {!uploadingImage && !imagePreview ? (
           <button
             onClick={handleClick}
@@ -221,12 +221,12 @@ export default function ChatImageUploader({
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            title="发送图片"
+            title="Send image"
           >
             📷
           </button>
         ) : uploadingImage ? (
-          /* 上传状态显示 */
+          /* Upload status */
           <div className="flex items-center gap-2">
             {uploadingImage.status === 'uploading' && (
               <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -245,57 +245,57 @@ export default function ChatImageUploader({
             {uploadingImage.status === 'completed' && (
               <div className="flex items-center gap-2 text-sm text-green-600">
                 <span>✅</span>
-                <span>上传成功</span>
+                <span>Upload successful</span>
               </div>
             )}
           </div>
         ) : null}
 
-        {/* 拖拽提示 */}
+        {/* Drag-and-drop hint */}
         {isDragOver && (
           <div className="fixed inset-0 bg-blue-500/10 border-2 border-dashed border-blue-500 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-4 shadow-lg">
-              <p className="text-blue-600 font-medium">拖拽图片到这里上传</p>
+              <p className="text-blue-600 font-medium">Drag an image here to upload</p>
             </div>
           </div>
         )}
       </div>
 
-      {/* 图片预览确认弹窗 */}
+      {/* Image preview confirmation modal */}
       {imagePreview && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full shadow-2xl">
             <div className="p-4">
-              <h3 className="text-lg font-medium mb-4">确认发送图片</h3>
+              <h3 className="text-lg font-medium mb-4">Confirm image to send</h3>
 
-              {/* 图片预览 */}
+              {/* Image preview */}
               <div className="mb-4">
                 <img
                   src={imagePreview.preview}
-                  alt="预览"
+                  alt="Preview"
                   className="w-full max-h-64 object-contain rounded-lg border"
                 />
               </div>
 
-              {/* 图片信息 */}
+              {/* Image info */}
               <div className="text-sm text-gray-600 mb-4">
-                <div>文件名: {imagePreview.file.name}</div>
-                <div>大小: {(imagePreview.file.size / 1024 / 1024).toFixed(2)} MB</div>
+                <div>File name: {imagePreview.file.name}</div>
+                <div>Size: {(imagePreview.file.size / 1024 / 1024).toFixed(2)} MB</div>
               </div>
 
-              {/* 操作按钮 */}
+              {/* Actions */}
               <div className="flex gap-2 justify-end">
                 <button
                   onClick={cancelPreview}
                   className="btn btn-secondary text-sm"
                 >
-                  取消
+                  Cancel
                 </button>
                 <button
                   onClick={confirmUpload}
                   className="btn btn-primary text-sm"
                 >
-                  发送
+                  Send
                 </button>
               </div>
             </div>

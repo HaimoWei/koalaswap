@@ -23,13 +23,13 @@ export function ReviewSuccessPage() {
           </div>
 
           <div>
-            <h1 className="text-2xl font-semibold text-[var(--color-text-strong)]">评价提交成功！</h1>
-            <p className="text-sm text-gray-600 mt-3">感谢您的评价，您的反馈对其他买家非常有帮助。</p>
+            <h1 className="text-2xl font-semibold text-[var(--color-text-strong)]">Review submitted successfully!</h1>
+            <p className="text-sm text-gray-600 mt-3">Thank you for your review. Your feedback is very helpful to other buyers.</p>
           </div>
 
           {orderId && (
             <div className="bg-[var(--color-primary-50)] border border-[var(--color-primary-300)] rounded-xl p-4 text-sm text-[var(--color-text)]">
-              <div className="text-xs text-[var(--color-secondary-700)]">评价订单</div>
+              <div className="text-xs text-[var(--color-secondary-700)]">Reviewed order</div>
               <div className="font-mono mt-1">{orderId}</div>
             </div>
           )}
@@ -39,18 +39,18 @@ export function ReviewSuccessPage() {
               onClick={() => nav('/me/center/reviews?tab=commented')}
               className="btn btn-primary w-full"
             >
-              查看我的评价
+              View my reviews
             </button>
             <button
               onClick={() => nav('/')}
               className="btn btn-ghost w-full"
             >
-              返回主页
+              Back to home
             </button>
           </div>
 
           <p className="text-xs text-gray-500">
-            您还可以在个人中心查看和管理所有评价记录。
+            You can view and manage all your reviews in your profile center.
           </p>
         </div>
       </div>

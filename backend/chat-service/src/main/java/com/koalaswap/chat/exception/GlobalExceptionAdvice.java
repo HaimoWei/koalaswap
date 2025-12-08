@@ -75,6 +75,6 @@ public class GlobalExceptionAdvice {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> others(Exception e) {
         log.error("Unhandled exception", e);
-        return ResponseEntity.status(500).body(ApiResponse.error("服务器开小差了，请稍后再试"));
+        return ResponseEntity.status(500).body(ApiResponse.error("The server encountered an error. Please try again later."));
     }
 }

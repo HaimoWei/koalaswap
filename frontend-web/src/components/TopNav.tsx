@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listConversations } from "../api/chat";
 import { Icon } from "./Icon";
 
-// TopNav现在保持简洁统一的设计
+// TopNav keeps a clean, unified design
 
 export function TopNav({
     showSearch = true,
@@ -24,7 +24,7 @@ export function TopNav({
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
-    // 移除返回按钮和页面标题逻辑，统一显示KoalaSwap
+    // Remove back button and page title; always show KoalaSwap
 
     useEffect(() => {
         const sp = new URLSearchParams(loc.search);
@@ -43,7 +43,7 @@ export function TopNav({
         nav(`/search?${params.toString()}`);
     }
 
-    // 未读消息统计（轻量轮询）
+    // Unread messages count (light polling)
     const convQ = useQuery({
         queryKey: ["conversations", "header"],
         queryFn: () => listConversations({ page: 0, size: 30, aggregate: true }),
@@ -69,18 +69,18 @@ export function TopNav({
                         KoalaSwap
                     </div>
                 </div>
-                {/* 居中搜索框（按需显示） */}
+                {/* Centered search box (optional) */}
                 <div className="flex-1 flex items-center justify-center">
                     {showSearch && (
                         <div className="w-full max-w-3xl flex gap-2">
                             <input
                                 className="input flex-1"
-                                placeholder="搜索全站（商品 / 关键词）"
+                                placeholder="Search items or keywords"
                                 value={q}
                                 onChange={(e) => setQ(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && onSubmitSearch()}
                             />
-                            <button className="btn btn-primary" onClick={onSubmitSearch} aria-label="搜索">
+                            <button className="btn btn-primary" onClick={onSubmitSearch} aria-label="Search">
                                 <Icon name="search" />
                             </button>
                         </div>
@@ -89,16 +89,17 @@ export function TopNav({
                 {!token ? (
                     <div className="flex items-center gap-2">
                         <button onClick={() => nav(`/login?next=${encodeURIComponent(loc.pathname + (loc.search || ""))}`)} className="btn btn-primary">
-                            登录
+                            Sign in
                         </button>
                         <button onClick={() => nav(`/register?next=${encodeURIComponent(loc.pathname + (loc.search || ""))}`)} className="btn btn-secondary">
-                            注册
+                            Register
                         </button>
                     </div>
 
                 ) : (
                     <div className="flex items-center gap-3">
                         {/* 发布（按需） */}
+                        {/* Publish (optional) */}
                         {showPublish && (
                             <a
                                 href="/publish"
@@ -106,17 +107,17 @@ export function TopNav({
                                 rel="noopener noreferrer"
                                 className="btn btn-primary"
                             >
-                                发布
+                                List an item
                             </a>
                         )}
-                        {/* 消息（按需） */}
+                        {/* Messages (optional) */}
                         {showMessages && (
                             <a
                                 className="relative btn btn-secondary"
                                 href="/chat"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                aria-label="我的消息"
+                                aria-label="My messages"
                             >
                                 <Icon name="bell" />
                                 {unread > 0 && (
@@ -126,7 +127,7 @@ export function TopNav({
                                 )}
                             </a>
                         )}
-                        {/* 头像 + 菜单 */}
+                        {/* Avatar + menu */}
                         <div className="relative" ref={menuRef}>
                             <div
                                 className="flex items-center gap-2 hover:bg-gray-50 rounded-lg px-2 py-1 transition-colors cursor-pointer"
@@ -134,8 +135,8 @@ export function TopNav({
                                 onMouseLeave={() => setMenuOpen(false)}
                             >
                                 <img src={profile?.avatarUrl || "https://placehold.co/28x28"}
-                                     className="w-8 h-8 rounded-full border border-[var(--color-border)]"/>
-                                <span className="text-sm">{profile?.displayName || "我"}</span>
+                                    className="w-8 h-8 rounded-full border border-[var(--color-border)]"/>
+                                <span className="text-sm">{profile?.displayName || "Me"}</span>
                                 <svg className={`w-4 h-4 transition-transform ${menuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                                 </svg>
@@ -146,23 +147,23 @@ export function TopNav({
                                     onMouseEnter={() => setMenuOpen(true)}
                                     onMouseLeave={() => setMenuOpen(false)}
                                 >
-                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center/listings" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>我发布的</a>
-                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center/orders?role=seller" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>我卖出的</a>
-                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center/orders?role=buyer" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>我买到的</a>
-                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center/favorites" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>我的收藏</a>
-                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center/reviews?tab=commented" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>我的评价</a>
-                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center/profile" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>账户管理</a>
+                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center/listings" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>My listings</a>
+                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center/orders?role=seller" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>Orders I sold</a>
+                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center/orders?role=buyer" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>Orders I bought</a>
+                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center/favorites" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>My favorites</a>
+                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center/reviews?tab=commented" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>My reviews</a>
+                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center/profile" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>Account settings</a>
                                     <div className="my-1 h-px bg-[var(--color-border)]" />
-                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>进入个人中心</a>
+                                    <a className="block px-4 py-2 text-sm hover:bg-[var(--color-muted)]" href="/me/center" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>Go to my center</a>
                                     <div className="my-1 h-px bg-[var(--color-border)]" />
-                                    <button className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-muted)]" onClick={onLogout}>退出登录</button>
+                                    <button className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--color-muted)]" onClick={onLogout}>Sign out</button>
                                 </div>
                             )}
                         </div>
                     </div>
                 )}
             </div>
-            {/* 分类条移除（在首页 Hero 下方处理） */}
+            {/* Category bar removed (handled under home hero) */}
         </header>
     );
 }

@@ -5,22 +5,22 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * "我的资料"视图（仅本人可见）：
- * - 可以包含邮箱、注册时间、认证状态等相对私密的信息。
- * - 用于注册/登录成功后的回包，或 GET /users/me。
+ * "My profile" view (only visible to the owner):
+ * - May include email, registration time, verification status and other private information.
+ * - Used for responses after signup/login success, or GET /users/me.
  */
 public record MyProfileRes(
-        UUID id,                            // 用户唯一标识（UUID）
-        String email,                       // 邮箱（只在"本人"场景返回）
-        String displayName,                 // 昵称
-        String avatarUrl,                   // 头像
-        String bio,                         // 个人简介
-        String location,                    // 地理位置
-        boolean phoneVerified,              // 手机验证状态
-        boolean emailVerified,              // 邮箱是否已验证
-        Double ratingAvg,                   // 平均评分（从订单评价聚合）
-        Integer ratingCount,                // 评分次数
-        java.time.LocalDate memberSince,    // 会员加入日期
-        Instant lastActiveAt,               // 最后活跃时间
+        UUID id,                            // Unique user identifier (UUID)
+        String email,                       // Email (only returned in "self" scenarios)
+        String displayName,                 // Display name
+        String avatarUrl,                   // Avatar URL
+        String bio,                         // Short bio
+        String location,                    // Location
+        boolean phoneVerified,              // Phone verification status
+        boolean emailVerified,              // Whether email is verified
+        Double ratingAvg,                   // Average rating (aggregated from order reviews)
+        Integer ratingCount,                // Number of ratings
+        java.time.LocalDate memberSince,    // Member since (date)
+        Instant lastActiveAt,               // Last active time
         Instant createdAt                   // 注册时间（审计/展示）
 ) {}

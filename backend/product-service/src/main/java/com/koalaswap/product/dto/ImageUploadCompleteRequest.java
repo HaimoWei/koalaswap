@@ -12,10 +12,10 @@ import java.util.UUID;
 @Data
 public class ImageUploadCompleteRequest {
 
-    @NotNull(message = "图片ID不能为空")
+    @NotNull(message = "Image ID must not be empty.")
     private UUID imageId;
 
-    @NotNull(message = "上传状态不能为空")
+    @NotNull(message = "Upload status must not be empty.")
     private Boolean success;
 
     /** 错误信息（上传失败时提供） */

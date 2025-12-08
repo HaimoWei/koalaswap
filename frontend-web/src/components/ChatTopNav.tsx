@@ -34,32 +34,32 @@ export function ChatTopNav() {
     const menuItems = [
         {
             icon: "👤",
-            label: "个人中心", 
+            label: "My account", 
             onClick: () => nav("/me")
         },
         {
             icon: "⚙️",
-            label: "账户设置",
+            label: "Account settings",
             onClick: () => nav("/me")
         },
         {
             icon: "📋",
-            label: "我的订单",
+            label: "My orders",
             onClick: () => nav("/me/center/orders")
         },
         {
             icon: "❤️",
-            label: "我的收藏",
+            label: "My favorites",
             onClick: () => nav("/me/favorites")
         },
         {
             icon: "🏠",
-            label: "返回首页",
+            label: "Back to home",
             onClick: () => nav("/")
         },
         {
             icon: "📤",
-            label: "退出登录",
+            label: "Sign out",
             onClick: handleLogout,
             isLogout: true
         }
@@ -87,11 +87,11 @@ export function ChatTopNav() {
                         >
                             <img 
                                 src={profile.avatarUrl || "https://placehold.co/32x32"} 
-                                alt={profile.displayName || "用户"}
+                                alt={profile.displayName || "User avatar"}
                                 className="w-8 h-8 rounded-full border border-[var(--color-border)]"
                             />
                             <span className="font-medium text-gray-900">
-                                {profile.displayName || "用户"}
+                                {profile.displayName || "User"}
                             </span>
                             <svg 
                                 className={`w-4 h-4 text-gray-400 transition-transform ${showDropdown ? 'rotate-180' : ''}`}
@@ -134,7 +134,7 @@ export function ChatTopNav() {
                         onClick={() => nav(`/login?next=${encodeURIComponent('/chat')}`)}
                         className="btn btn-primary"
                     >
-                        去登录
+                        Sign in
                     </button>
                 )}
             </div>

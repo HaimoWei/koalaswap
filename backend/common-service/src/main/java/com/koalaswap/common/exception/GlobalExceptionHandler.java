@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
     public ApiResponse<Void> handleArgValid(MethodArgumentNotValidException ex){
         var first = ex.getBindingResult().getFieldErrors().stream()
                 .findFirst().map(err -> err.getField()+": "+err.getDefaultMessage())
-                .orElse("参数不合法");
+                .orElse("Invalid request parameters.");
         return ApiResponse.error(first);
     }
 
@@ -44,28 +44,28 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiResponse<Void> handleNotReadable(HttpMessageNotReadableException ex){
-        return ApiResponse.error("请求体格式不正确");
+        return ApiResponse.error("Request body format is invalid.");
     }
 
     // 401: 未认证（统一把“未登录/身份无效”映射为 401）
     @ExceptionHandler(IllegalStateException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ApiResponse<Void> handleIllegalState(IllegalStateException ex){
-        return ApiResponse.error("未登录或凭证无效");
+        return ApiResponse.error("Not authenticated or token is invalid.");
     }
 
     // 403: 已认证但权限不足（Controller/Service 主动抛 AccessDeniedException）
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ApiResponse<Void> handleDenied(AccessDeniedException ex){
-        return ApiResponse.error("无权限执行该操作");
+        return ApiResponse.error("You do not have permission to perform this action.");
     }
 
     // 409: 唯一约束/外键冲突
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiResponse<Void> handleUniqueConflict(DataIntegrityViolationException ex) {
-        return ApiResponse.error("数据唯一性或约束冲突");
+        return ApiResponse.error("Data uniqueness or constraint conflict.");
     }
 
     // 500: 兜底（避免把内部异常信息直接暴露给前端）
@@ -73,6 +73,6 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiResponse<Void> handleOther(Exception ex){
         log.error("Unhandled exception", ex);
-        return ApiResponse.error("服务器开小差了，请稍后再试");
+        return ApiResponse.error("The server encountered an error. Please try again later.");
     }
 }

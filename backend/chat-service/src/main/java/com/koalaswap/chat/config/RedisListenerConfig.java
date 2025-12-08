@@ -29,9 +29,9 @@ public class RedisListenerConfig {
         container.addMessageListener(orderSubscriber, new ChannelTopic(ordersChannel));
         container.addMessageListener(reviewSubscriber, new ChannelTopic(reviewsChannel));
 
-        System.out.println("[RedisListenerConfig] 配置Redis订阅:");
-        System.out.println("  - 订单频道: " + ordersChannel);
-        System.out.println("  - 评价频道: " + reviewsChannel);
+        System.out.println("[RedisListenerConfig] Configure Redis subscriptions:");
+        System.out.println("  - Orders channel: " + ordersChannel);
+        System.out.println("  - Reviews channel: " + reviewsChannel);
 
         return container;
     }

@@ -33,15 +33,15 @@ public class ReviewEventPublisher {
         try {
             String payload = om.writeValueAsString(event);
 
-            System.out.println("[ReviewEventPublisher] 发布评价事件到 Redis 频道: " + channel);
-            System.out.println("[ReviewEventPublisher] 事件内容: " + payload);
+            System.out.println("[ReviewEventPublisher] Publishing review event to Redis channel: " + channel);
+            System.out.println("[ReviewEventPublisher] Event payload: " + payload);
 
             redis.convertAndSend(channel, payload);
 
-            System.out.println("[ReviewEventPublisher] 评价事件发布成功");
+            System.out.println("[ReviewEventPublisher] Review event published successfully");
             log.debug("review-event published: {}", payload);
         } catch (Exception ex) {
-            System.err.println("[ReviewEventPublisher] 发布评价事件失败: " + ex.getMessage());
+            System.err.println("[ReviewEventPublisher] Failed to publish review event: " + ex.getMessage());
             log.warn("publish review-event failed: {}", ex.toString());
         }
     }

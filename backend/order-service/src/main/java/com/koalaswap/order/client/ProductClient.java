@@ -36,7 +36,7 @@ public class ProductClient {
                 .retrieve()
                 .body(type);
         if (resp == null || !resp.ok() || resp.data() == null) {
-            throw new IllegalArgumentException("商品不存在");
+            throw new IllegalArgumentException("Item does not exist.");
         }
         return resp.data();
     }

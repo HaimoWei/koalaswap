@@ -75,7 +75,7 @@ public class AuthService {
     public MyProfileRes register(RegisterReq req){
         // 1) 唯一邮箱校验
         if (repo.existsByEmail(req.email())) {
-            throw new IllegalArgumentException("该邮箱已注册");
+            throw new IllegalArgumentException("This email address is already registered.");
         }
 
         // 2) 组装实体（只在服务层做）并加密密码
@@ -99,9 +99,11 @@ public class AuthService {
         var link = verifyRedirectBase + "?token=" + token;
 
         // 发邮件
-        mailService.sendPlainText(u.getEmail(),
-                "请验证你的邮箱",
-                "点击以下链接完成验证: " + link);
+        mailService.sendPlainText(
+                u.getEmail(),
+                "Please verify your email address",
+                "Click the link below to verify your email address: " + link
+        );
 
         // 4) 转换成“我的资料”视图返回
         return toMyProfile(u);
@@ -120,11 +122,11 @@ public class AuthService {
     public LoginRes login(LoginReq req){
         // 1) 根据邮箱查用户（不存在也给“账号或密码错误”，避免暴露账号存在性）
         var u = repo.findByEmail(req.email())
-                .orElseThrow(() -> new IllegalArgumentException("账号或密码错误"));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password."));
 
         // 2) 先校验密码（BCrypt 会处理盐）
         if (!encoder.matches(req.password(), u.getPasswordHash())) {
-            throw new IllegalArgumentException("账号或密码错误");
+            throw new IllegalArgumentException("Invalid email or password.");
         }
 
         // 3) 邮箱未验证 → 自动重发验证邮件（带冷却）+ 返回可识别的错误码
@@ -147,7 +149,7 @@ public class AuthService {
     @Transactional
     public void logoutAll(UUID userId) {
         int n = repo.bumpTokenVersion(userId);
-        if (n == 0) throw new IllegalArgumentException("用户不存在");
+        if (n == 0) throw new IllegalArgumentException("User does not exist.");
         // 事务提交后发布事件 → 由监听器写 Redis 并 Pub/Sub
         events.publishEvent(new PvBumpedEvent(userId));
     }
@@ -162,11 +164,11 @@ public class AuthService {
     public void changePassword(UUID userId, String currentPassword, String newPassword) {
         // 1) 查找用户
         User user = repo.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+                .orElseThrow(() -> new IllegalArgumentException("User does not exist."));
 
         // 2) 验证当前密码
         if (!encoder.matches(currentPassword, user.getPasswordHash())) {
-            throw new IllegalArgumentException("当前密码错误");
+            throw new IllegalArgumentException("Current password is incorrect.");
         }
 
         // 3) 更新密码

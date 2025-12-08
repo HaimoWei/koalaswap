@@ -7,9 +7,9 @@ import { register as apiRegister } from "../api/auth";
 import { useAuthStore } from "../store/auth";
 
 const registerSchema = z.object({
-    displayName: z.string().min(1, "请输入昵称"),
-    email: z.string().email("请输入有效邮箱"),
-    password: z.string().min(6, "至少 6 位密码"),
+    displayName: z.string().min(1, "Please enter a display name"),
+    email: z.string().email("Please enter a valid email address"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export default function RegisterPage() {
@@ -40,7 +40,7 @@ export default function RegisterPage() {
                         onClick={() => nav(next)}
                         className="text-sm text-gray-600 transition hover:text-[var(--color-text-strong)]"
                     >
-                        继续浏览
+                        Continue browsing
                     </button>
                 </div>
             </header>
@@ -48,12 +48,14 @@ export default function RegisterPage() {
             <main className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-10 md:grid-cols-2">
                 <section className="hidden md:block">
                     <p className="text-xs tracking-wide text-[var(--color-secondary-700)]">WELCOME TO KOALASWAP</p>
-                    <h1 className="mt-2 text-3xl font-extrabold text-[var(--color-text-strong)]">创建你的账户</h1>
-                    <p className="mt-3 text-sm text-gray-600">注册后可发布闲置、与卖家聊天、管理订单与收藏。</p>
+                    <h1 className="mt-2 text-3xl font-extrabold text-[var(--color-text-strong)]">Create your account</h1>
+                    <p className="mt-3 text-sm text-gray-600">
+                        Sign up to list items, chat with sellers, and manage your orders and favorites.
+                    </p>
                     <ul className="mt-6 space-y-3 text-sm text-gray-700">
-                        <li>• 邮箱验证保障账户安全</li>
-                        <li>• 随时管理你的发布与收藏</li>
-                        <li>• 即时消息与订单提醒</li>
+                        <li>• Email verification keeps your account secure</li>
+                        <li>• Manage your listings and favorites anytime</li>
+                        <li>• Instant messages and order notifications</li>
                     </ul>
                 </section>
 
@@ -61,14 +63,19 @@ export default function RegisterPage() {
                     <div className="card p-6">
                         <header className="mb-5 space-y-1">
                             <div className="text-xs tracking-wide text-[var(--color-secondary-700)]">REGISTER</div>
-                            <div className="text-2xl font-semibold text-[var(--color-text-strong)]">注册新账户</div>
-                            <div className="text-xs text-gray-500">完成注册后请前往邮箱完成验证</div>
+                            <div className="text-2xl font-semibold text-[var(--color-text-strong)]">Register a new account</div>
+                            <div className="text-xs text-gray-500">
+                                After signing up, please check your email to complete verification.
+                            </div>
                         </header>
                         <RegisterForm />
                         <div className="mt-4 text-sm text-gray-600">
-                            已有账号？
-                            <Link className="ml-1 font-medium text-[var(--color-secondary)] underline" to={`/login?next=${encodeURIComponent(next)}`}>
-                                直接登录
+                            Already have an account?
+                            <Link
+                                className="ml-1 font-medium text-[var(--color-secondary)] underline"
+                                to={`/login?next=${encodeURIComponent(next)}`}
+                            >
+                                Sign in instead
                             </Link>
                         </div>
                     </div>
@@ -86,27 +93,34 @@ function RegisterForm() {
         setServerMsg("");
         try {
             await apiRegister(values);
-            setServerMsg("注册成功，请前往邮箱点击验证链接。验证后再登录。");
+            setServerMsg(
+                "Signed up successfully. Please click the verification link sent to your email before signing in."
+            );
         } catch (e: any) {
-            setServerMsg(e?.message || "注册失败，请重试");
+            setServerMsg(e?.message || "Sign-up failed, please try again");
         }
     });
 
     return (
         <form onSubmit={onSubmit} className="space-y-4">
             <div>
-                <label className="mb-1 block text-sm text-[var(--color-text-strong)]">昵称</label>
-                <input className="input text-sm" placeholder="你的昵称" {...register("displayName")} />
+                <label className="mb-1 block text-sm text-[var(--color-text-strong)]">Display name</label>
+                <input className="input text-sm" placeholder="Your display name" {...register("displayName")} />
                 {formState.errors.displayName && <p className="mt-1 text-xs text-red-600">{formState.errors.displayName.message}</p>}
             </div>
             <div>
-                <label className="mb-1 block text-sm text-[var(--color-text-strong)]">邮箱</label>
+                <label className="mb-1 block text-sm text-[var(--color-text-strong)]">Email</label>
                 <input className="input text-sm" placeholder="you@example.com" {...register("email")} />
                 {formState.errors.email && <p className="mt-1 text-xs text-red-600">{formState.errors.email.message}</p>}
             </div>
             <div>
-                <label className="mb-1 block text-sm text-[var(--color-text-strong)]">密码</label>
-                <input type="password" className="input text-sm" placeholder="至少 6 位" {...register("password")} />
+                <label className="mb-1 block text-sm text-[var(--color-text-strong)]">Password</label>
+                <input
+                    type="password"
+                    className="input text-sm"
+                    placeholder="At least 6 characters"
+                    {...register("password")}
+                />
                 {formState.errors.password && <p className="mt-1 text-xs text-red-600">{formState.errors.password.message}</p>}
             </div>
             {serverMsg && (
@@ -114,8 +128,11 @@ function RegisterForm() {
                     {serverMsg}
                 </div>
             )}
-            <button className="btn w-full bg-[var(--color-primary)] text-[var(--color-text-strong)] hover:bg-[var(--color-primary-600)] disabled:opacity-60" disabled={formState.isSubmitting}>
-                {formState.isSubmitting ? "提交中..." : "注册"}
+            <button
+                className="btn w-full bg-[var(--color-primary)] text-[var(--color-text-strong)] hover:bg-[var(--color-primary-600)] disabled:opacity-60"
+                disabled={formState.isSubmitting}
+            >
+                {formState.isSubmitting ? "Submitting..." : "Sign up"}
             </button>
         </form>
     );

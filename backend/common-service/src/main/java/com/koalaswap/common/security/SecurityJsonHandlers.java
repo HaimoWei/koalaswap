@@ -18,11 +18,19 @@ public class SecurityJsonHandlers {
     private final ObjectMapper objectMapper;
 
     public AuthenticationEntryPoint json401() {
-        return (req, res, ex) -> write(res, HttpServletResponse.SC_UNAUTHORIZED, ApiResponse.error("未登录或凭证无效"));
+        return (req, res, ex) -> write(
+                res,
+                HttpServletResponse.SC_UNAUTHORIZED,
+                ApiResponse.error("Not authenticated or token is invalid.")
+        );
     }
 
     public AccessDeniedHandler json403() {
-        return (req, res, ex) -> write(res, HttpServletResponse.SC_FORBIDDEN, ApiResponse.error("无权限执行该操作"));
+        return (req, res, ex) -> write(
+                res,
+                HttpServletResponse.SC_FORBIDDEN,
+                ApiResponse.error("You do not have permission to perform this action.")
+        );
     }
 
     private void write(HttpServletResponse res, int status, Object body) throws java.io.IOException {

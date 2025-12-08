@@ -79,14 +79,14 @@ export function HomePage() {
                 <div className="mb-6">
                     <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                         <span className="text-2xl">🎯</span>
-                        猜你喜欢
+                        Recommended for you
                     </h2>
-                    <p className="text-sm text-gray-600 mt-1">为你精选的优质二手商品</p>
+                    <p className="text-sm text-gray-600 mt-1">Handpicked pre-owned items for you</p>
                 </div>
 
                 {isError ? (
                     <div className="text-center text-red-600 py-8">
-                        加载失败：{(error as Error)?.message}
+                        Failed to load: {(error as Error)?.message}
                     </div>
                 ) : (
                     <>
@@ -108,16 +108,16 @@ export function HomePage() {
                             {isFetchingNextPage ? (
                                 <div className="flex items-center justify-center gap-2 text-gray-600">
                                     <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                                    <span>加载更多商品...</span>
+                                    <span>Loading more items...</span>
                                 </div>
                             ) : hasNextPage ? (
-                                <div className="text-gray-400 text-sm">向下滚动加载更多</div>
+                                <div className="text-gray-400 text-sm">Scroll down to load more</div>
                             ) : allProducts.length > 0 ? (
                                 <div className="text-gray-400 text-sm py-4">
-                                    已经到底啦~ 共 {allProducts.length} 件商品
+                                    You've reached the end. Total {allProducts.length} items.
                                 </div>
                             ) : (
-                                <div className="text-gray-400 text-sm py-8">暂无商品</div>
+                                <div className="text-gray-400 text-sm py-8">No items available</div>
                             )}
                         </div>
                     </>

@@ -33,10 +33,10 @@ export function FiltersBar() {
     return (
         <div className="sticky top-[72px] z-10 card p-3 flex flex-col md:flex-row gap-3 md:items-end">
             <div className="flex-1">
-                <label className="block text-xs text-gray-500">关键词</label>
+                <label className="block text-xs text-gray-500">Keyword</label>
                 <input
                     className="input text-sm"
-                    placeholder="手机 / 显卡 / Switch ..."
+                    placeholder="Phone / GPU / Switch ..."
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && submit(0)}
@@ -44,7 +44,7 @@ export function FiltersBar() {
             </div>
 
             <div>
-                <label className="block text-xs text-gray-500">最低价</label>
+                <label className="block text-xs text-gray-500">Min price</label>
                 <input
                     className="input w-32 text-sm"
                     placeholder="min"
@@ -54,7 +54,7 @@ export function FiltersBar() {
             </div>
 
             <div>
-                <label className="block text-xs text-gray-500">最高价</label>
+                <label className="block text-xs text-gray-500">Max price</label>
                 <input
                     className="input w-32 text-sm"
                     placeholder="max"
@@ -64,19 +64,19 @@ export function FiltersBar() {
             </div>
 
             <div className="flex flex-col">
-                <span className="block text-xs text-gray-500">排序</span>
+                <span className="block text-xs text-gray-500">Sort</span>
                 <div className="mt-1 inline-flex rounded-[var(--radius-lg)] border border-[var(--color-border)] overflow-hidden">
                     {[
-                        { key: "createdAt,desc", label: "最新" },
-                        { key: "price,asc", label: "价格↑" },
-                        { key: "price,desc", label: "价格↓" },
+                        { key: "createdAt,desc", label: "Newest" },
+                        { key: "price,asc", label: "Price ↑" },
+                        { key: "price,desc", label: "Price ↓" },
                     ].map((s) => (
                         <button key={s.key} onClick={() => setSort(s.key)} className={`px-3 py-1 text-sm ${sort === s.key ? 'bg-[var(--color-secondary-50)] text-[var(--color-text-strong)]' : ''}`}>{s.label}</button>
                     ))}
                 </div>
             </div>
 
-            <button onClick={() => submit(0)} className="md:ml-auto btn btn-primary">搜索</button>
+            <button onClick={() => submit(0)} className="md:ml-auto btn btn-primary">Search</button>
         </div>
     );
 }

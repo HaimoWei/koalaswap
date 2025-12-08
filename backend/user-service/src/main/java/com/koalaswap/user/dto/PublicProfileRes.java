@@ -4,21 +4,21 @@ package com.koalaswap.user.dto;
 import java.util.UUID;
 
 /**
- * "公共资料"视图（别人看到）：
- * - 不暴露邮箱等隐私。
- * - 用于用户主页、商品详情里的"卖家信息"、评价列表等。
+ * "Public profile" view (visible to others):
+ * - Does not expose email or other private data.
+ * - Used for user profile pages, seller info on item detail pages, review lists, etc.
  */
 public record PublicProfileRes(
-        UUID id,                    // 公共可见的用户ID（可用于路由/链接）
-        String displayName,         // 昵称
-        String avatarUrl,           // 头像
-        String bio,                 // 个人简介
-        String location,            // 地理位置
-        boolean phoneVerified,      // 手机验证状态
-        boolean emailVerified,      // 邮箱验证状态
-        Double ratingAvg,           // 平均评分
-        Integer ratingCount,        // 评分次数
-        java.time.LocalDate memberSince,  // 会员加入日期
-        java.time.Instant lastActiveAt,   // 最后活跃时间
-        java.time.Instant createdAt       // 注册时间
+        UUID id,                    // Public user ID (can be used in routes/links)
+        String displayName,         // Display name
+        String avatarUrl,           // Avatar URL
+        String bio,                 // Short bio
+        String location,            // Location
+        boolean phoneVerified,      // Phone verification status
+        boolean emailVerified,      // Email verification status
+        Double ratingAvg,           // Average rating
+        Integer ratingCount,        // Number of ratings
+        java.time.LocalDate memberSince,  // Member since (date)
+        java.time.Instant lastActiveAt,   // Last active time
+        java.time.Instant createdAt       // Registration time
 ) {}

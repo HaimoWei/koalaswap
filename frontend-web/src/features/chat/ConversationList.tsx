@@ -59,13 +59,13 @@ export function ConversationList({
 
     return (
         <div className="flex flex-col h-full">
-            {/* 顶部标题和搜索 */}
+            {/* Header and search */}
             <div className="px-4 py-4 border-b border-[var(--color-border)] bg-[var(--color-surface)]">
-                <h1 className="text-xl font-semibold mb-3">消息</h1>
+                <h1 className="text-xl font-semibold mb-3">Messages</h1>
                 <div className="relative">
                     <input 
                         type="text"
-                        placeholder="搜索会话..." 
+                        placeholder="Search conversations..." 
                         className="input text-sm"
                     />
                     <svg 
@@ -79,7 +79,7 @@ export function ConversationList({
                 </div>
             </div>
             
-            {/* 会话列表 */}
+            {/* Conversation list */}
             <div className="flex-1 overflow-y-auto">
                 {q.isLoading ? (
                     <div className="space-y-1">
@@ -89,11 +89,11 @@ export function ConversationList({
                     </div>
                 ) : q.isError ? (
                     <div className="p-4 text-center text-red-600 text-sm">
-                        加载失败：{(q.error as Error).message}
+                        Failed to load conversations: {(q.error as Error).message}
                     </div>
                 ) : (q.data?.content.length ?? 0) === 0 ? (
                     <div className="p-4 text-center text-gray-500 text-sm">
-                        暂无会话
+                        No conversations yet
                     </div>
                 ) : (
                     <div className="py-1">

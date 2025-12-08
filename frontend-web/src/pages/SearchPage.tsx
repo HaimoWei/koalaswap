@@ -46,11 +46,11 @@ export function SearchPage() {
                     </div>
                 </section>
             ) : isError ? (
-                <div className="text-red-600">搜索失败：{(error as Error)?.message}</div>
+                <div className="text-red-600">Search failed: {(error as Error)?.message}</div>
             ) : (
                 <section className="card p-4 md:p-6">
                     <div className="text-sm text-gray-600 mb-3">
-                        共 <b>{data?.totalElements ?? 0}</b> 件相关商品
+                        Found <b>{data?.totalElements ?? 0}</b> related items
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">

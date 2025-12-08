@@ -4,12 +4,12 @@ import { Link } from "react-router-dom";
 
 function ConversationItem({ c }: { c: ConversationListItem }) {
     const preview = c.lastMessagePreview || "";
-    const peerName = c.peerNickname || `用户${c.peerUserId?.slice(0,8)}`;
+    const peerName = c.peerNickname || `User ${c.peerUserId?.slice(0, 8)}`;
     const hasOrderStatus = c.orderStatus && c.orderStatus !== 'PENDING';
     
     return (
         <Link to={`/chat/${c.id}`} className="p-3 card flex items-center space-x-3 hover:shadow-[var(--shadow-2)]">
-            {/* 头像区域 */}
+            {/* Avatar */}
             <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[var(--color-muted)] flex items-center justify-center overflow-hidden">
                 {c.peerAvatar ? (
                     <img src={c.peerAvatar} alt={peerName} className="w-full h-full object-cover" />
@@ -18,7 +18,7 @@ function ConversationItem({ c }: { c: ConversationListItem }) {
                 )}
             </div>
             
-            {/* 主要内容 */}
+            {/* Main content */}
             <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2">
                     <span className="font-medium truncate">{peerName}</span>
@@ -39,7 +39,7 @@ function ConversationItem({ c }: { c: ConversationListItem }) {
                 )}
             </div>
 
-            {/* 右侧状态 */}
+            {/* Right-side status */}
             <div className="flex-shrink-0 flex flex-col items-end space-y-1">
                 {c.unread > 0 && (
                     <span className="text-xs px-2 py-0.5 rounded-full bg-red-500 text-white min-w-[20px] text-center">
@@ -55,21 +55,21 @@ export function ChatListPage() {
     const q = useQuery({
         queryKey: ["conversations"],
         queryFn: () => listConversations({ page: 0, size: 50, aggregate: true }),
-        refetchInterval: 15000, // 简易轮询；高级做法可订阅 /user/{uid}/queue/chat
+        refetchInterval: 15000, // Simple polling; advanced approach: subscribe to /user/{uid}/queue/chat
     });
 
     return (
         <main className="max-w-4xl mx-auto p-6 space-y-3">
-            <h1 className="text-xl font-semibold">消息</h1>
+            <h1 className="text-xl font-semibold">Messages</h1>
 
             {q.isLoading ? (
                 <div className="space-y-2">
                     {Array.from({ length: 6 }).map((_,i) => <div key={i} className="h-16 card animate-pulse" />)}
                 </div>
             ) : q.isError ? (
-                <div className="text-red-600">加载失败：{(q.error as Error).message}</div>
+                <div className="text-red-600">Failed to load: {(q.error as Error).message}</div>
             ) : (q.data?.content.length ?? 0) === 0 ? (
-                <div className="text-sm text-gray-600">暂无会话</div>
+                <div className="text-sm text-gray-600">No conversations yet</div>
             ) : (
                 <div className="space-y-2">
                     {q.data!.content.map((c) => <ConversationItem key={c.id} c={c} />)}

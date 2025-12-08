@@ -59,28 +59,28 @@ export function ConfirmModal() {
           )}
         </div>
 
-        {/* 按钮区域 */}
+        {/* Actions */}
         <div className="px-6 pb-6 flex justify-end gap-3">
           <button
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
             onClick={() => close(false)}
           >
-            取消
+            Cancel
           </button>
           <button
             className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors duration-200 shadow-sm"
             onClick={() => close(true)}
             autoFocus
           >
-            确认
+            Confirm
           </button>
         </div>
 
-        {/* 关闭按钮（可选） */}
+        {/* Close button (optional) */}
         <button
           className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200"
           onClick={() => close(false)}
-          aria-label="关闭"
+          aria-label="Close"
         >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
