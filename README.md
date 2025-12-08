@@ -9,6 +9,16 @@
 ![AWS](https://img.shields.io/badge/AWS-S3%20%7C%20CloudFront%20%7C%20ECR-orange?logo=amazonaws)
 ![Deployed](https://img.shields.io/badge/Deployed-Production-success)
 
+## Live Demo
+
+**Website**: [https://koalaswap.lightspot.uk](https://koalaswap.lightspot.uk)
+
+**Test Account**:
+- Email: `weihaimoau@gmail.com`
+- Password: `weihaimo`
+
+![Homepage](docs/images/homepage.png)
+
 
 ---
 
@@ -29,16 +39,6 @@ This is a **production-deployed platform** running on AWS, designed to solve rea
 - Event-driven design using Redis Pub/Sub for cross-service communication
 - Full CI/CD automation with GitHub Actions → AWS ECR → EC2
 - Multi-platform support (Web + React Native Mobile)
-
----
-
-## Live Demo
-
-**Website**: [https://koalaswap.lightspot.uk](https://koalaswap.lightspot.uk)
-
-**Test Account**:
-- Email: `weihaimoau@gmail.com`
-- Password: `weihaimo`
 
 ---
 
