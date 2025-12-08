@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main  # 当推送到main分支时触发
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'LICENSE'
   workflow_dispatch:  # 允许手动触发
 
 env:
