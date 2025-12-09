@@ -158,8 +158,8 @@ sudo systemctl reload nginx
 # 配置 AWS 凭证（用于拉取 ECR 镜像）
 aws configure
 # 输入：
-# - AWS Access Key ID: AKIASCWGGPSQ5EEMG4EC
-# - AWS Secret Access Key: (从 .env 文件获取)
+# - AWS Access Key ID: <your-aws-access-key-id>
+# - AWS Secret Access Key: <your-aws-secret-access-key>
 # - Default region: ap-southeast-2
 # - Default output format: json
 

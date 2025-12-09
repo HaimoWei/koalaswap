@@ -26,10 +26,10 @@ git push origin main  # 会触发GitHub Actions自动部署
 
 | Secret | 值 |
 |--------|---|
-| `AWS_ACCESS_KEY_ID` | `AKIASCWGGPSQ5EEMG4EC` |
-| `AWS_SECRET_ACCESS_KEY` | `kV07fNWSGyUYiKle/UJAAuHr1ZMK6C0KVoJesdZU` |
+| `AWS_ACCESS_KEY_ID` | `<your-aws-access-key-id>` |
+| `AWS_SECRET_ACCESS_KEY` | `<your-aws-secret-access-key>` |
 | `EC2_SSH_PRIVATE_KEY` | koalaswap-ec2.pem的完整内容 |
-| `EC2_HOST` | `3.104.120.29` |
+| `EC2_HOST` | `<your-ec2-ip>` |
 
 ## 🌐 域名和URL
 
@@ -43,8 +43,8 @@ git push origin main  # 会触发GitHub Actions自动部署
 
 | 环境 | 数据库名 | 用户 | 密码 |
 |------|---------|------|------|
-| 本地 | koalaswap_dev | koalaswap | secret |
-| 生产 | koalaswap_prod | koalaswap | secret |
+| 本地 | koalaswap_dev | koalaswap | `<local-db-password>` |
+| 生产 | koalaswap_prod | koalaswap | `<prod-db-password>` |
 
 ## 🐳 常用Docker命令
 
@@ -66,14 +66,14 @@ docker compose -f docker-compose.prod.yml restart   # 重启所有服务
 
 ### 查看生产环境日志
 ```bash
-ssh -i koalaswap-ec2.pem ubuntu@3.104.120.29
+ssh -i koalaswap-ec2.pem ubuntu@<your-ec2-ip>
 cd /opt/koalaswap
 docker compose -f docker-compose.prod.yml logs -f [service-name]
 ```
 
 ### 重启生产服务
 ```bash
-ssh -i koalaswap-ec2.pem ubuntu@3.104.120.29
+ssh -i koalaswap-ec2.pem ubuntu@<your-ec2-ip>
 cd /opt/koalaswap
 docker compose -f docker-compose.prod.yml restart [service-name]
 ```
@@ -171,7 +171,7 @@ koalaswap/
 ### 网站访问不了
 ```bash
 # 1. 检查服务状态
-ssh -i koalaswap-ec2.pem ubuntu@3.104.120.29
+ssh -i koalaswap-ec2.pem ubuntu@<your-ec2-ip>
 cd /opt/koalaswap
 docker compose -f docker-compose.prod.yml ps
 
@@ -204,9 +204,9 @@ git push origin main  # 触发自动部署旧版本
 
 ## 📞 联系方式
 
-- **客服邮箱**: weihaimoau@gmail.com
-- **服务器IP**: 3.104.120.29
-- **AWS账号**: 143223323809
+- **客服邮箱**: `<your-email>`
+- **服务器IP**: `<your-ec2-ip>`
+- **AWS账号**: `<your-aws-account-id>`
 
 ## 📚 详细文档
 

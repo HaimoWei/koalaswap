@@ -17,10 +17,10 @@
 
 | Secret名称 | 说明 | 示例值 |
 |-----------|------|--------|
-| `AWS_ACCESS_KEY_ID` | AWS访问密钥ID | `AKIASCWGGPSQ5EEMG4EC` |
-| `AWS_SECRET_ACCESS_KEY` | AWS秘密访问密钥 | `kV07fNWS...` |
+| `AWS_ACCESS_KEY_ID` | AWS访问密钥ID | `<your-aws-access-key-id>` |
+| `AWS_SECRET_ACCESS_KEY` | AWS秘密访问密钥 | `<your-aws-secret-access-key>` |
 | `EC2_SSH_PRIVATE_KEY` | EC2 SSH私钥（完整内容） | `-----BEGIN RSA PRIVATE KEY-----\n...` |
-| `EC2_HOST` | EC2公网IP或域名 | `3.104.120.29` |
+| `EC2_HOST` | EC2公网IP或域名 | `<your-ec2-ip>` |
 
 ### 2. 获取EC2 SSH私钥内容
 
@@ -165,7 +165,7 @@ main (生产环境)
 2. 或SSH到服务器查看Docker日志：
 
 ```bash
-ssh -i koalaswap-ec2.pem ubuntu@3.104.120.29
+ssh -i koalaswap-ec2.pem ubuntu@<your-ec2-ip>
 cd /opt/koalaswap
 docker compose -f docker-compose.prod.yml logs -f
 ```
@@ -180,7 +180,7 @@ git revert HEAD
 git push origin main  # 触发重新部署
 
 # 方法2: SSH到服务器手动回滚
-ssh -i koalaswap-ec2.pem ubuntu@3.104.120.29
+ssh -i koalaswap-ec2.pem ubuntu@<your-ec2-ip>
 cd /opt/koalaswap
 
 # 拉取上一个版本的镜像（需要知道tag）
