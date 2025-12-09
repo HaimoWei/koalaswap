@@ -116,7 +116,7 @@
    docker compose logs -f
 
    # 生产
-   ssh -i koalaswap-ec2.pem ubuntu@3.104.120.29
+   ssh -i koalaswap-ec2.pem ubuntu@<your-ec2-ip>
    cd /opt/koalaswap
    docker compose -f docker-compose.prod.yml logs -f
    ```

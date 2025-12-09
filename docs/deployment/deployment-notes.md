@@ -61,7 +61,7 @@ aws s3api put-bucket-cors --bucket koalaswap --cors-configuration '{
 2. **准备EC2服务器**
    ```bash
    # SSH连接
-   ssh -i koalaswap-ec2.pem ubuntu@3.104.120.29
+   ssh -i koalaswap-ec2.pem ubuntu@<your-ec2-ip>
 
    # 安装Docker和Docker Compose
    sudo apt update
@@ -75,8 +75,8 @@ aws s3api put-bucket-cors --bucket koalaswap --cors-configuration '{
 
 3. **上传配置文件**
    ```bash
-   scp -i koalaswap-ec2.pem infra/docker-compose.prod.yml ubuntu@3.104.120.29:/opt/koalaswap/
-   scp -i koalaswap-ec2.pem infra/.env.production ubuntu@3.104.120.29:/opt/koalaswap/.env
+   scp -i koalaswap-ec2.pem infra/docker-compose.prod.yml ubuntu@<your-ec2-ip>:/opt/koalaswap/
+   scp -i koalaswap-ec2.pem infra/.env.production ubuntu@<your-ec2-ip>:/opt/koalaswap/.env
    # ... 其他文件
    ```
 
@@ -110,7 +110,7 @@ aws s3api put-bucket-cors --bucket koalaswap --cors-configuration '{
 
 2. **服务器更新**
    ```bash
-   ssh -i koalaswap-ec2.pem ubuntu@3.104.120.29
+   ssh -i koalaswap-ec2.pem ubuntu@<your-ec2-ip>
    cd /opt/koalaswap
 
    # 登录ECR
@@ -138,7 +138,7 @@ aws s3api put-bucket-cors --bucket koalaswap --cors-configuration '{
 
 2. **上传到服务器**
    ```bash
-   scp -i koalaswap-ec2.pem postgres_data.tar.gz ubuntu@3.104.120.29:/tmp/
+   scp -i koalaswap-ec2.pem postgres_data.tar.gz ubuntu@<your-ec2-ip>:/tmp/
    ```
 
 3. **在服务器上导入**

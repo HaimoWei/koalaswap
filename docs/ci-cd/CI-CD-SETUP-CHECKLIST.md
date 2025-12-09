@@ -19,10 +19,10 @@ cat D:\Code\Project\koalaswap\koalaswap-ec2.pem
 
 | Name | Value |
 |------|-------|
-| `AWS_ACCESS_KEY_ID` | `AKIASCWGGPSQ5EEMG4EC` |
-| `AWS_SECRET_ACCESS_KEY` | `kV07fNWSGyUYiKle/UJAAuHr1ZMK6C0KVoJesdZU` |
+| `AWS_ACCESS_KEY_ID` | `<your-aws-access-key-id>` |
+| `AWS_SECRET_ACCESS_KEY` | `<your-aws-secret-access-key>` |
 | `EC2_SSH_PRIVATE_KEY` | 完整的.pem文件内容（包括BEGIN和END行） |
-| `EC2_HOST` | `3.104.120.29` |
+| `EC2_HOST` | `<your-ec2-ip>` |
 
 **重要**: `EC2_SSH_PRIVATE_KEY`必须包含完整内容，格式如：
 ```
